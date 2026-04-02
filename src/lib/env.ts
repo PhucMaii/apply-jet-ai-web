@@ -1,0 +1,18 @@
+const url = import.meta.env.VITE_SUPABASE_URL ?? ""
+const anon = import.meta.env.VITE_SUPABASE_ANON_KEY ?? ""
+
+/** Stripe Price ID for Pro subscription (recurring). Set in Dashboard. */
+const stripeProPriceId = import.meta.env.VITE_STRIPE_PRICE_PRO ?? ""
+
+export const env = {
+	supabaseUrl: url,
+	supabaseAnonKey: anon,
+	isSupabaseConfigured: Boolean(url && anon),
+	extensionDownloadUrl:
+		import.meta.env.VITE_EXTENSION_DOWNLOAD_URL ?? "#extension",
+	edgeFunctionExampleName:
+		import.meta.env.VITE_SUPABASE_EDGE_FUNCTION_NAME ?? "hello",
+	stripeProPriceId,
+	isStripePriceConfigured: Boolean(stripeProPriceId),
+	xsecretkey: import.meta.env.VITE_X_SECRET_KEY ?? "",
+} as const

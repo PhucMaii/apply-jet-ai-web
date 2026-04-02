@@ -1,0 +1,33 @@
+export const APP_NAME = "ApplyJet AI"
+
+/** Served from `public/logo.png` */
+export const BRAND_LOGO_SRC = "/logo.png"
+
+export const ROUTES = {
+	home: "/",
+	login: "/login",
+	signup: "/signup",
+	applications: "/applications",
+	profile: "/profile",
+	privacy: "/privacy",
+	terms: "/terms",
+	support: "/support",
+} as const
+
+/** Supabase Edge Function names for Stripe billing */
+export const EDGE_FUNCTIONS = {
+	stripeCheckout: "stripe-checkout",
+	stripeCustomerPortal: "stripe-customer-portal",
+} as const
+
+export const LINKS = {
+	extensionDownload:
+		import.meta.env.VITE_EXTENSION_DOWNLOAD_URL ?? "#chrome-web-store",
+	contactMail: "mailto:maithienphuc0102@gmail.com",
+} as const
+
+export const META = {
+	title: "ApplyJet AI — Tailored applications that get past ATS",
+	description:
+		"ApplyJet AI is a Chrome extension that reads each job post and helps you generate ATS-aligned resumes, cover letters, and long-form answers—so you are not stopped before a human sees you.",
+} as const

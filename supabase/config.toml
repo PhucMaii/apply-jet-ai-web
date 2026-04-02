@@ -1,0 +1,18 @@
+[functions.stripe-checkout]
+enabled = true
+verify_jwt = false
+import_map = "./functions/stripe-checkout/deno.json"
+entrypoint = "./functions/stripe-checkout/index.ts"
+
+[functions.stripe-webhook]
+enabled = true
+verify_jwt = false
+import_map = "./functions/stripe-webhook/deno.json"
+entrypoint = "./functions/stripe-webhook/index.ts"
+
+[functions.stripe-customer-portal]
+enabled = true
+verify_jwt = false
+import_map = "./functions/stripe-customer-portal/deno.json"
+entrypoint = "./functions/stripe-customer-portal/index.ts"
+
