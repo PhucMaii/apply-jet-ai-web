@@ -68,7 +68,11 @@ Deno.serve(async (req) => {
 
     let event: Stripe.Event;
     try {
-      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
+      event = await stripe.webhooks.constructEventAsync(
+        body,
+        signature,
+        webhookSecret,
+      );
     } catch (err) {
       console.error("Something went wrong verifying webhook:", err);
       return new Response("invalid signature", { status: 400 });
@@ -132,7 +136,8 @@ Deno.serve(async (req) => {
       }
 
       case "customer.subscription.updated":
-      case "customer.subscription.deleted": {
+      case "customer.subscription.deleted":
+      case "customer.subscription.created": {
         const sub = event.data.object as Stripe.Subscription;
         const subId = sub.id;
 
@@ -146,7 +151,9 @@ Deno.serve(async (req) => {
           .update({
             plan,
             status: mapStripeStatus(sub.status),
-            canceled_at: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
+            canceled_at: sub.canceled_at
+              ? new Date(sub.canceled_at * 1000).toISOString()
+              : null,
             updated_at: new Date().toISOString(),
           })
           .eq("stripe_subscription_id", subId);
@@ -164,7 +171,10 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         if (!subscriptionRow) {
-          console.error("Something went wrong getting user id from subscription:", subId);
+          console.error(
+            "Something went wrong getting user id from subscription:",
+            subId,
+          );
           return new Response("db error", { status: 500 });
         }
 
@@ -182,29 +192,21 @@ Deno.serve(async (req) => {
             .eq("user_id", subscriptionRow.user_id);
 
           if (usageError) {
-            console.error("Something went wrong resetting user usage:", usageError);
+            console.error(
+              "Something went wrong resetting user usage:",
+              usageError,
+            );
             return new Response("db error", { status: 500 });
           }
         }
         break;
-      } 
+      }
 
       // Handle renewal of subscription
       case "invoice.paid": {
         // Get user id from subscription id
         const invoice = event.data.object as Stripe.Invoice;
-        const subId = invoice.subscription;
-
-        const { data: subscriptionRow } = await admin
-          .from("user_subscriptions")
-          .select("user_id")
-          .eq("stripe_subscription_id", subId)
-          .maybeSingle();
-
-        if (!subscriptionRow) {
-          console.error("Something went wrong getting user id from subscription:", subId);
-          return new Response("db error", { status: 500 });
-        }
+        const userId = invoice.lines.data[0].metadata.supabase_user_id;
 
         // Update user usage
         const { error: usageError } = await admin
@@ -213,12 +215,15 @@ Deno.serve(async (req) => {
             resume_generations_limit: 200,
             cover_letters_limit: 200,
             extract_text_limit: 200,
-            applications_answers_limit: 200,
+            application_answers_limit: 200,
           })
-          .eq("user_id", subscriptionRow.user_id);
+          .eq("user_id", userId);
 
         if (usageError) {
-          console.error("Something went wrong updating user usage:", usageError);
+          console.error(
+            "Something went wrong updating user usage:",
+            usageError,
+          );
           return new Response("db error", { status: 500 });
         }
         break;

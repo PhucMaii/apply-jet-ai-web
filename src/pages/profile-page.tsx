@@ -1242,21 +1242,6 @@ export function ProfilePage() {
 											className="mt-0.5 size-3.5 shrink-0 text-info"
 											aria-hidden
 										/>
-										<p>
-											Webhook events (
-											<code className="rounded bg-muted px-1">
-												checkout.session.completed
-											</code>
-											,{" "}
-											<code className="rounded bg-muted px-1">
-												customer.subscription.updated
-											</code>
-											) update this screen. Deploy the{" "}
-											<code className="rounded bg-muted px-1">
-												stripe-webhook
-											</code>{" "}
-											function and add its URL in the Stripe Dashboard.
-										</p>
 									</div>
 								</CardContent>
 							</Card>
