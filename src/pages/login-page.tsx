@@ -1,8 +1,10 @@
-import { useState } from "react"
+import { useState, type FormEvent } from "react"
 import { Link, Navigate, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
-import { Chrome } from "lucide-react"
+import { Chrome, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useAuth } from "@/context/auth-context"
 import { supabase } from "@/lib/supabase"
 import { APP_NAME, ROUTES } from "@/lib/constants"
@@ -15,7 +17,10 @@ export function LoginPage() {
 		(location.state as { from?: string } | null)?.from ?? ROUTES.applications
 
 	const [error, setError] = useState<string | null>(null)
+	const [notice, setNotice] = useState<string | null>(null)
 	const [pending, setPending] = useState(false)
+	const [email, setEmail] = useState("")
+	const [password, setPassword] = useState("")
 
 	if (!isConfigured) {
 		return (
@@ -32,8 +37,9 @@ export function LoginPage() {
 		return <Navigate to={from} replace />
 	}
 
-	async function handleOAuth(provider: "google" | "github") {
+	async function handleOAuth(provider: "google") {
 		setError(null)
+		setNotice(null)
 		setPending(true)
 		try {
 			const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -46,6 +52,35 @@ export function LoginPage() {
 			}
 		} catch (err) {
 			console.error("Something went wrong, OAuth failed:", err)
+			setError(err instanceof Error ? err.message : "Unexpected error.")
+		} finally {
+			setPending(false)
+		}
+	}
+
+	async function handleEmailPasswordLogin(
+		event: FormEvent<HTMLFormElement>,
+	) {
+		event.preventDefault()
+		setError(null)
+		setNotice(null)
+		setPending(true)
+
+		try {
+			const { error: signInError } = await supabase.auth.signInWithPassword({
+				email: email.trim(),
+				password,
+			})
+
+			if (signInError) {
+				console.error("Something went wrong, sign in failed:", signInError)
+				setError(signInError.message)
+				return
+			}
+
+			setNotice("Signed in successfully. Redirecting...")
+		} catch (err) {
+			console.error("Something went wrong, sign in failed:", err)
 			setError(err instanceof Error ? err.message : "Unexpected error.")
 		} finally {
 			setPending(false)
@@ -71,7 +106,48 @@ export function LoginPage() {
 						account.
 					</p>
 
-					<div className="mt-6 grid gap-2 sm:grid-cols-2">
+					<form className="mt-6 space-y-4" onSubmit={handleEmailPasswordLogin}>
+						<div className="space-y-2">
+							<Label htmlFor="email">Email</Label>
+							<Input
+								id="email"
+								name="email"
+								type="email"
+								autoComplete="email"
+								placeholder="you@example.com"
+								value={email}
+								onChange={(event) => setEmail(event.target.value)}
+								required
+							/>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="password">Password</Label>
+							<Input
+								id="password"
+								name="password"
+								type="password"
+								autoComplete="current-password"
+								placeholder="Enter your password"
+								value={password}
+								onChange={(event) => setPassword(event.target.value)}
+								required
+							/>
+						</div>
+						<Button className="w-full gap-2" type="submit" disabled={pending}>
+							{pending ? <Loader2 className="size-4 animate-spin" /> : null}
+							Sign in with email
+						</Button>
+					</form>
+
+					<div className="my-6 flex items-center gap-3">
+						<div className="h-px flex-1 bg-border/70" />
+						<span className="text-xs uppercase tracking-wide text-muted-foreground">
+							or continue with
+						</span>
+						<div className="h-px flex-1 bg-border/70" />
+					</div>
+
+					<div className="grid gap-2">
 						<Button
 							type="button"
 							variant="secondary"
@@ -80,21 +156,18 @@ export function LoginPage() {
 							onClick={() => void handleOAuth("google")}
 						>
 							<Chrome className="size-4" aria-hidden />
-							Google
-						</Button>
-						<Button
-							type="button"
-							variant="secondary"
-							className="gap-2"
-							disabled={pending}
-							onClick={() => void handleOAuth("github")}
-						>
-							GitHub
+							Continue with Google
 						</Button>
 					</div>
+
 					{error ? (
-						<p className="text-sm text-destructive" role="alert">
+						<p className="mt-4 text-sm text-destructive" role="alert">
 							{error}
+						</p>
+					) : null}
+					{notice ? (
+						<p className="mt-4 text-sm text-green-600" role="status">
+							{notice}
 						</p>
 					) : null}
 

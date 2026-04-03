@@ -28,7 +28,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     // const appOrigin = Deno.env.get("APP_ORIGIN");
-    const appOrigin = "http://localhost:5173";
+    const appOrigin = "http://applyjetai.vercel.app";
 
     if (!stripeKey || !supabaseUrl || !serviceRole) {
       console.error("Something went wrong, portal missing env");
