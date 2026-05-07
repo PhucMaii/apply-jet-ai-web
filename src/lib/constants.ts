@@ -21,8 +21,7 @@ export const EDGE_FUNCTIONS = {
 } as const
 
 export const LINKS = {
-	extensionDownload:
-		import.meta.env.VITE_EXTENSION_DOWNLOAD_URL ?? "#chrome-web-store",
+	extensionDownload: "https://chromewebstore.google.com/detail/applyjet-ai/epeoejbbnmghpbafefmjdjdeilngnnbg",
 	contactMail: "mailto:maithienphuc0102@gmail.com",
 } as const
 

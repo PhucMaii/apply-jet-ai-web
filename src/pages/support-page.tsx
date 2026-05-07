@@ -163,7 +163,21 @@ export function SupportPage() {
 								<CardContent className="flex flex-wrap gap-2 pt-0">
 									{"href" in item && item.external ? (
 										<Button size="sm" variant="secondary" asChild>
-											<a href={item.href}>{item.ctaLabel}</a>
+											<a
+												href={item.href}
+												target={
+													item.href === LINKS.extensionDownload
+														? "_blank"
+														: undefined
+												}
+												rel={
+													item.href === LINKS.extensionDownload
+														? "noopener noreferrer"
+														: undefined
+												}
+											>
+												{item.ctaLabel}
+											</a>
 										</Button>
 									) : null}
 									{"to" in item && !item.external ? (

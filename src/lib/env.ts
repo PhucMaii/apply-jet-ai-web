@@ -8,8 +8,7 @@ export const env = {
 	supabaseUrl: url,
 	supabaseAnonKey: anon,
 	isSupabaseConfigured: Boolean(url && anon),
-	extensionDownloadUrl:
-		import.meta.env.VITE_EXTENSION_DOWNLOAD_URL ?? "#extension",
+	extensionDownloadUrl: "https://chromewebstore.google.com/detail/applyjet-ai/epeoejbbnmghpbafefmjdjdeilngnnbg",
 	edgeFunctionExampleName:
 		import.meta.env.VITE_SUPABASE_EDGE_FUNCTION_NAME ?? "hello",
 	stripeProPriceId,

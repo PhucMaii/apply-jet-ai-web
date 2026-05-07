@@ -25,7 +25,11 @@ export function FinalCta() {
 					</p>
 					<div className="mt-8 flex flex-wrap justify-center gap-3">
 						<Button size="lg" className="gap-2 shadow-glow" asChild>
-							<a href={LINKS.extensionDownload}>
+							<a
+								href={LINKS.extensionDownload}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
 								<Download className="size-4" aria-hidden />
 								Download extension
 							</a>

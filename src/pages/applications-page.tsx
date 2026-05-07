@@ -201,7 +201,13 @@ export function ApplicationsPage() {
 							<Link to={ROUTES.home}>Marketing site</Link>
 						</Button>
 						<Button variant="secondary" size="sm" asChild>
-							<a href={LINKS.extensionDownload}>Extension</a>
+							<a
+								href={LINKS.extensionDownload}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								Extension
+							</a>
 						</Button>
 						<Button
 							variant="ghost"

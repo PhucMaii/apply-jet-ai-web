@@ -48,6 +48,12 @@ function FooterLink({ item }: { item: FooterItem }) {
 	return (
 		<a
 			href={item.href}
+			target={item.href === LINKS.extensionDownload ? "_blank" : undefined}
+			rel={
+				item.href === LINKS.extensionDownload
+					? "noopener noreferrer"
+					: undefined
+			}
 			className="text-sm text-muted-foreground transition-colors hover:text-foreground"
 		>
 			{item.label}

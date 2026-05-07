@@ -66,7 +66,13 @@ export function SiteHeader() {
 						<Link to={ROUTES.support}>Support</Link>
 					</Button>
 					<Button variant="ghost" size="sm" asChild>
-						<a href={LINKS.extensionDownload}>Get extension</a>
+						<a
+							href={LINKS.extensionDownload}
+							target="_blank"
+							rel="noopener noreferrer"
+						>
+							Get extension
+						</a>
 					</Button>
 					{user ? (
 						<>

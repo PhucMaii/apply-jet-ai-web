@@ -113,7 +113,13 @@ export function PricingSection() {
 									<Link to={plan.href}>{plan.cta}</Link>
 								</Button>
 								<Button size="lg" variant="ghost" className="flex-1" asChild>
-									<a href={LINKS.extensionDownload}>Get extension</a>
+									<a
+										href={LINKS.extensionDownload}
+										target="_blank"
+										rel="noopener noreferrer"
+									>
+										Get extension
+									</a>
 								</Button>
 							</div>
 						</motion.div>
