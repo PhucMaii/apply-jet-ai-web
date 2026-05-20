@@ -9,9 +9,12 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
+import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
+import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { UserAdditionalInfoRow, UserLinkRow } from "@/types/database"
+import { cn } from "@/lib/utils"
 
 interface LinksAdditionalEditorProps {
 	links: UserLinkRow[]
@@ -44,10 +47,10 @@ export function LinksAdditionalEditor({
 	}
 
 	return (
-		<Card className="border-border/80 bg-card/40 backdrop-blur-sm">
+		<Card variant="solid" className={DASHBOARD_THEME.card}>
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2 font-display">
-					<Link2 className="size-4 text-info" aria-hidden />
+					<Link2 className={PROFILE_SURFACE.sectionIcon} aria-hidden />
 					Links &amp; additional info
 				</CardTitle>
 				<CardDescription>
@@ -58,7 +61,10 @@ export function LinksAdditionalEditor({
 				{links.map((row, index) => (
 					<div
 						key={`${row.id}-${index}`}
-						className="grid gap-4 rounded-lg border border-border/60 bg-muted/15 p-4 sm:grid-cols-[1fr_180px_auto]"
+						className={cn(
+							"grid gap-4 sm:grid-cols-[1fr_180px_auto]",
+							PROFILE_SURFACE.itemPanel,
+						)}
 					>
 						<Input
 							placeholder="https://linkedin.com/in/your-profile"

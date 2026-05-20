@@ -7,6 +7,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
+import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
+import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import { Label } from "@/components/ui/label"
 import type { UserDisclosureRow } from "@/types/database"
 import { cn } from "@/lib/utils"
@@ -65,8 +67,7 @@ function DisclosureSelectField({
 				value={value}
 				onChange={(e) => onChange(e.target.value)}
 				className={cn(
-					"flex h-11 w-full cursor-pointer rounded-md border border-input",
-					"bg-muted/40 px-3 py-2 text-sm text-foreground shadow-inner",
+					PROFILE_SURFACE.select,
 					"transition-colors",
 					"focus-visible:outline-none focus-visible:ring-2",
 					"focus-visible:ring-ring focus-visible:ring-offset-2",
@@ -99,10 +100,10 @@ export function DisclosureEditor({
 	const idDisability = `${baseId}-disability`
 
 	return (
-		<Card className="border-border/80 bg-card/40 backdrop-blur-sm">
+		<Card variant="solid" className={DASHBOARD_THEME.card}>
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2 font-display">
-					<ShieldCheck className="size-4 text-info" aria-hidden />
+					<ShieldCheck className={PROFILE_SURFACE.sectionIcon} aria-hidden />
 					Disclosure
 				</CardTitle>
 			</CardHeader>

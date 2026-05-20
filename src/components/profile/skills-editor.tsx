@@ -8,6 +8,8 @@ import {
 	CardDescription,
 	CardTitle,
 } from "@/components/ui/card"
+import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
+import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import { Input } from "@/components/ui/input"
 import type { UserSkillRow } from "@/types/database"
 import { cn } from "@/lib/utils"
@@ -56,10 +58,10 @@ export function SkillsEditor({
 	}
 
 	return (
-		<Card className="border-border/80 bg-card/40 backdrop-blur-sm">
+		<Card variant="solid" className={DASHBOARD_THEME.card}>
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2 font-display">
-					<Wrench className="size-4 text-info" aria-hidden />
+					<Wrench className={PROFILE_SURFACE.sectionIcon} aria-hidden />
 					Skills
 				</CardTitle>
 				<CardDescription>
@@ -69,7 +71,7 @@ export function SkillsEditor({
 			<CardContent className="space-y-4">
 				<div
 					className={cn(
-						"rounded-xl border border-border/60 bg-muted/20 p-3",
+						"rounded-xl border border-neutral-200 bg-neutral-50 p-3",
 						"min-h-20",
 					)}
 				>
@@ -80,13 +82,13 @@ export function SkillsEditor({
 									key={`${row.id}-${index}`}
 									className={cn(
 										"inline-flex items-center gap-1.5 rounded-lg",
-										"border border-border/70 bg-background/40 px-2.5 py-1.5",
+										PROFILE_SURFACE.skillChip,
 									)}
 								>
-									<span className="text-sm text-foreground">{row.name}</span>
+									<span className="text-sm text-neutral-900">{row.name}</span>
 									{row.is_from_org_resume ? (
 										<span
-											className="rounded border border-success/35 bg-success/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-success"
+											className={PROFILE_SURFACE.skillBadge}
 											title="Imported from org resume"
 										>
 											Org
@@ -95,8 +97,8 @@ export function SkillsEditor({
 									<button
 										type="button"
 										className={cn(
-											"rounded p-0.5 text-muted-foreground transition",
-											"hover:bg-destructive/10 hover:text-destructive",
+											"rounded p-0.5 text-neutral-500 transition",
+											"hover:bg-red-50 hover:text-red-600",
 										)}
 										onClick={() => handleRemove(index)}
 										aria-label={`Remove ${row.name}`}
@@ -107,7 +109,7 @@ export function SkillsEditor({
 							))}
 						</div>
 					) : (
-						<p className="text-sm text-muted-foreground">
+						<p className="text-sm text-neutral-500">
 							No skills added yet.
 						</p>
 					)}

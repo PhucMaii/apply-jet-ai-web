@@ -7,6 +7,8 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
+import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
+import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -34,7 +36,7 @@ function EducationRowEditor({
 	onSave: (educationId: string, patch: Partial<UserEducationRow>) => void
 }) {
 	return (
-		<div className="space-y-4 rounded-lg border border-border/60 bg-muted/15 p-4">
+		<div className={cn("space-y-4", PROFILE_SURFACE.itemPanel)}>
 			<div className="grid gap-4 sm:grid-cols-2">
 				<div className="space-y-2">
 					<Label>School</Label>
@@ -163,10 +165,10 @@ export function EducationEditor({
 	}
 
 	return (
-		<Card className="border-border/80 bg-card/40 backdrop-blur-sm">
+		<Card variant="solid" className={DASHBOARD_THEME.card}>
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2 font-display">
-					<GraduationCap className="size-4 text-info" aria-hidden />
+					<GraduationCap className={PROFILE_SURFACE.sectionIcon} aria-hidden />
 					Education
 				</CardTitle>
 			</CardHeader>

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { PROFILE_FORM_IDS } from "@/components/profile/profile-form-ids"
+import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type { UserProfileRow } from "@/types/database"
 
 interface ProfileContactEditorProps {
@@ -24,20 +25,27 @@ export function ProfileContactEditor({
 	saving,
 	onSubmit,
 }: ProfileContactEditorProps) {
+	const fieldInputClass = PROFILE_SURFACE.fieldInput
+	const fieldLabelClass = PROFILE_SURFACE.fieldLabel
+	const fieldTextareaClass = PROFILE_SURFACE.fieldTextarea
+
 	return (
-		<form onSubmit={onSubmit} className="space-y-6">
-			<div className="rounded-lg border border-border/60 bg-muted/20 px-4 py-3 text-sm">
-				<p className="font-medium text-foreground">
+		<form onSubmit={onSubmit} className="space-y-6 bg-white">
+			<div className={PROFILE_SURFACE.infoBox}>
+				<p className={PROFILE_SURFACE.infoBoxTitle}>
 					Account email (sign-in)
 				</p>
-				<p className="text-muted-foreground">{userEmail ?? "—"}</p>
+				<p className={PROFILE_SURFACE.infoBoxText}>{userEmail ?? "—"}</p>
 			</div>
 
 			<div className="grid gap-4 sm:grid-cols-2">
 				<div className="space-y-2">
-					<Label htmlFor={formIds.firstName}>First name</Label>
+					<Label htmlFor={formIds.firstName} className={fieldLabelClass}>
+						First name
+					</Label>
 					<Input
 						id={formIds.firstName}
+						className={fieldInputClass}
 						value={profile.first_name ?? ""}
 						onChange={(e) =>
 							setProfile((p) =>
@@ -53,9 +61,12 @@ export function ProfileContactEditor({
 					/>
 				</div>
 				<div className="space-y-2">
-					<Label htmlFor={formIds.lastName}>Last name</Label>
+					<Label htmlFor={formIds.lastName} className={fieldLabelClass}>
+						Last name
+					</Label>
 					<Input
 						id={formIds.lastName}
+						className={fieldInputClass}
 						value={profile.last_name ?? ""}
 						onChange={(e) =>
 							setProfile((p) =>
@@ -73,10 +84,13 @@ export function ProfileContactEditor({
 			</div>
 
 			<div className="space-y-2">
-				<Label htmlFor={formIds.email}>Email (autofill)</Label>
+				<Label htmlFor={formIds.email} className={fieldLabelClass}>
+					Email (autofill)
+				</Label>
 				<Input
 					id={formIds.email}
 					type="email"
+					className={fieldInputClass}
 					value={profile.email ?? ""}
 					onChange={(e) =>
 						setProfile((p) =>
@@ -88,10 +102,13 @@ export function ProfileContactEditor({
 			</div>
 
 			<div className="space-y-2">
-				<Label htmlFor={formIds.phone}>Phone</Label>
+				<Label htmlFor={formIds.phone} className={fieldLabelClass}>
+					Phone
+				</Label>
 				<Input
 					id={formIds.phone}
 					type="tel"
+					className={fieldInputClass}
 					value={profile.phone ?? ""}
 					onChange={(e) =>
 						setProfile((p) =>
@@ -103,9 +120,12 @@ export function ProfileContactEditor({
 			</div>
 
 			<div className="space-y-2">
-				<Label htmlFor={formIds.address1}>Address line 1</Label>
+				<Label htmlFor={formIds.address1} className={fieldLabelClass}>
+					Address line 1
+				</Label>
 				<Input
 					id={formIds.address1}
+					className={fieldInputClass}
 					value={profile.address_line1 ?? ""}
 					onChange={(e) =>
 						setProfile((p) =>
@@ -119,9 +139,12 @@ export function ProfileContactEditor({
 			</div>
 
 			<div className="space-y-2">
-				<Label htmlFor={formIds.address2}>Address line 2</Label>
+				<Label htmlFor={formIds.address2} className={fieldLabelClass}>
+					Address line 2
+				</Label>
 				<Input
 					id={formIds.address2}
+					className={fieldInputClass}
 					value={profile.address_line2 ?? ""}
 					onChange={(e) =>
 						setProfile((p) =>
@@ -134,9 +157,12 @@ export function ProfileContactEditor({
 
 			<div className="grid gap-4 sm:grid-cols-2">
 				<div className="space-y-2">
-					<Label htmlFor={formIds.city}>City</Label>
+					<Label htmlFor={formIds.city} className={fieldLabelClass}>
+						City
+					</Label>
 					<Input
 						id={formIds.city}
+						className={fieldInputClass}
 						value={profile.city ?? ""}
 						onChange={(e) =>
 							setProfile((p) =>
@@ -147,9 +173,12 @@ export function ProfileContactEditor({
 					/>
 				</div>
 				<div className="space-y-2">
-					<Label htmlFor={formIds.province}>Province / state</Label>
+					<Label htmlFor={formIds.province} className={fieldLabelClass}>
+						Province / state
+					</Label>
 					<Input
 						id={formIds.province}
+						className={fieldInputClass}
 						value={profile.province ?? ""}
 						onChange={(e) =>
 							setProfile((p) =>
@@ -163,9 +192,12 @@ export function ProfileContactEditor({
 
 			<div className="grid gap-4 sm:grid-cols-2">
 				<div className="space-y-2">
-					<Label htmlFor={formIds.country}>Country</Label>
+					<Label htmlFor={formIds.country} className={fieldLabelClass}>
+						Country
+					</Label>
 					<Input
 						id={formIds.country}
+						className={fieldInputClass}
 						value={profile.country ?? ""}
 						onChange={(e) =>
 							setProfile((p) =>
@@ -176,9 +208,12 @@ export function ProfileContactEditor({
 					/>
 				</div>
 				<div className="space-y-2">
-					<Label htmlFor={formIds.postal}>Postal code</Label>
+					<Label htmlFor={formIds.postal} className={fieldLabelClass}>
+						Postal code
+					</Label>
 					<Input
 						id={formIds.postal}
+						className={fieldInputClass}
 						value={profile.postal_code ?? ""}
 						onChange={(e) =>
 							setProfile((p) =>
@@ -191,10 +226,13 @@ export function ProfileContactEditor({
 			</div>
 
 			<div className="space-y-2">
-				<Label htmlFor={formIds.salary}>Expected salary (annual)</Label>
+				<Label htmlFor={formIds.salary} className={fieldLabelClass}>
+					Expected salary (annual)
+				</Label>
 				<Input
 					id={formIds.salary}
 					type="number"
+					className={fieldInputClass}
 					min={0}
 					step={1000}
 					placeholder="85000"
@@ -219,10 +257,13 @@ export function ProfileContactEditor({
 			</div>
 
 			<div className="space-y-2">
-				<Label htmlFor={formIds.summary}>Professional summary</Label>
+				<Label htmlFor={formIds.summary} className={fieldLabelClass}>
+					Professional summary
+				</Label>
 				<Textarea
 					id={formIds.summary}
 					rows={5}
+					className={fieldTextareaClass}
 					placeholder="Short summary for forms and cover letters…"
 					value={profile.summary ?? ""}
 					onChange={(e) =>
