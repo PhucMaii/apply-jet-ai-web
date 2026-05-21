@@ -24,7 +24,7 @@ export function FinalCta() {
 						what ATS and humans actually read.
 					</p>
 					<div className="mt-8 flex flex-wrap justify-center gap-3">
-						<Button size="lg" className="gap-2 shadow-glow" asChild>
+						<Button size="lg" surface="dark" className="gap-2 shadow-glow" asChild>
 							<a
 								href={LINKS.extensionDownload}
 								target="_blank"
@@ -34,7 +34,7 @@ export function FinalCta() {
 								Download extension
 							</a>
 						</Button>
-						<Button size="lg" variant="secondary" asChild>
+						<Button size="lg" variant="secondary" surface="dark" asChild>
 							<Link to={ROUTES.signup}>Get started</Link>
 						</Button>
 					</div>

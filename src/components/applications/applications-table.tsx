@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
 import {
 	ChevronDown,
 	Download,
@@ -7,6 +8,7 @@ import {
 	Loader2,
 	Mail,
 } from "lucide-react"
+import { applicationDetailPath } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
 import {
 	APPLICATION_STATUSES,
@@ -47,6 +49,7 @@ export function ApplicationsTable({
 	onDownloadResume,
 	onDownloadCover,
 }: ApplicationsTableProps) {
+	const navigate = useNavigate()
 	const [expandedId, setExpandedId] = useState<string | null>(null)
 
 	function toggleExpanded(id: string) {
@@ -91,6 +94,7 @@ export function ApplicationsTable({
 									coverId={coverId}
 									resumeLoading={resumeLoading}
 									coverLoading={coverLoading}
+									onOpen={() => navigate(applicationDetailPath(app.id))}
 									onToggleExpanded={() => toggleExpanded(app.id)}
 									onStatusChange={(next) => onStatusChange(app.id, next)}
 									onDownloadResume={() => {
@@ -121,6 +125,7 @@ interface ApplicationTableRowGroupProps {
 	coverId: string | null
 	resumeLoading: boolean
 	coverLoading: boolean
+	onOpen: () => void
 	onToggleExpanded: () => void
 	onStatusChange: (status: ApplicationStatus) => void
 	onDownloadResume: () => void
@@ -136,6 +141,7 @@ function ApplicationTableRowGroup({
 	hasCover,
 	resumeLoading,
 	coverLoading,
+	onOpen,
 	onToggleExpanded,
 	onStatusChange,
 	onDownloadResume,
@@ -152,13 +158,33 @@ function ApplicationTableRowGroup({
 				className={cn(
 					APPLICATIONS_THEME.row,
 					isExpanded && APPLICATIONS_THEME.rowExpanded,
+					"cursor-pointer",
 				)}
+				onClick={onOpen}
+				onKeyDown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						e.preventDefault()
+						onOpen()
+					}
+				}}
+				tabIndex={0}
+				role="link"
+				aria-label={`Open ${app.job_title} at ${app.company_name}`}
 			>
 				<td className={cn(APPLICATIONS_THEME.td, "font-medium")}>
-					{app.job_title}
+					<Link
+						to={applicationDetailPath(app.id)}
+						className={cn(APPLICATIONS_THEME.link, "hover:underline")}
+						onClick={(e) => e.stopPropagation()}
+					>
+						{app.job_title}
+					</Link>
 				</td>
 				<td className={APPLICATIONS_THEME.td}>{app.company_name}</td>
-				<td className={APPLICATIONS_THEME.td}>
+				<td
+					className={APPLICATIONS_THEME.td}
+					onClick={(e) => e.stopPropagation()}
+				>
 					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
 						<ApplicationsStatusBadge status={status} />
 						<select
@@ -170,6 +196,7 @@ function ApplicationTableRowGroup({
 								const v = e.target.value
 								if (isApplicationStatus(v)) onStatusChange(v)
 							}}
+							onClick={(e) => e.stopPropagation()}
 						>
 							{APPLICATION_STATUSES.map((s) => (
 								<option key={s} value={s}>
@@ -188,13 +215,17 @@ function ApplicationTableRowGroup({
 				<td className={cn(APPLICATIONS_THEME.td, APPLICATIONS_THEME.muted)}>
 					{addedLabel}
 				</td>
-				<td className={APPLICATIONS_THEME.td}>
+				<td
+					className={APPLICATIONS_THEME.td}
+					onClick={(e) => e.stopPropagation()}
+				>
 					{app.job_url ? (
 						<a
 							href={app.job_url}
 							target="_blank"
 							rel="noopener noreferrer"
 							className={APPLICATIONS_THEME.link}
+							onClick={(e) => e.stopPropagation()}
 						>
 							View
 							<ExternalLink className="size-3.5" aria-hidden />
@@ -203,7 +234,10 @@ function ApplicationTableRowGroup({
 						<span className={APPLICATIONS_THEME.muted}>—</span>
 					)}
 				</td>
-				<td className={APPLICATIONS_THEME.td}>
+				<td
+					className={APPLICATIONS_THEME.td}
+					onClick={(e) => e.stopPropagation()}
+				>
 					<div className="flex items-center gap-1.5">
 						<DocumentDownloadButton
 							label="Download resume"
@@ -221,24 +255,38 @@ function ApplicationTableRowGroup({
 						/>
 					</div>
 				</td>
-				<td className={APPLICATIONS_THEME.td}>
-					<Button
-						type="button"
-						variant="ghost"
-						size="sm"
-						className="h-8 gap-1 px-2 text-neutral-600 hover:bg-neutral-100 hover:text-primary"
-						aria-expanded={isExpanded}
-						onClick={onToggleExpanded}
-					>
-						{isExpanded ? "Hide" : "View"}
-						<ChevronDown
-							className={cn(
-								"size-4 transition-transform",
-								isExpanded && "rotate-180",
-							)}
-							aria-hidden
-						/>
-					</Button>
+				<td
+					className={APPLICATIONS_THEME.td}
+					onClick={(e) => e.stopPropagation()}
+				>
+					<div className="flex items-center gap-1">
+						<Button
+							type="button"
+							variant="ghost"
+							size="sm"
+							className="h-8 gap-1 px-2"
+							aria-expanded={isExpanded}
+							onClick={onToggleExpanded}
+						>
+							{isExpanded ? "Hide" : "Preview"}
+							<ChevronDown
+								className={cn(
+									"size-4 transition-transform",
+									isExpanded && "rotate-180",
+								)}
+								aria-hidden
+							/>
+						</Button>
+						<Button
+							type="button"
+							variant="outline"
+							size="sm"
+							className="h-8"
+							asChild
+						>
+							<Link to={applicationDetailPath(app.id)}>Open</Link>
+						</Button>
+					</div>
 				</td>
 			</tr>
 			{isExpanded ? (

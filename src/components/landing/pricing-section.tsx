@@ -106,13 +106,14 @@ export function PricingSection() {
 							<div className="mt-8 flex flex-col gap-2 sm:flex-row">
 								<Button
 									size="lg"
+									surface="dark"
 									className="flex-1"
 									variant={plan.highlight ? "default" : "secondary"}
 									asChild
 								>
 									<Link to={plan.href}>{plan.cta}</Link>
 								</Button>
-								<Button size="lg" variant="ghost" className="flex-1" asChild>
+								<Button size="lg" variant="ghost" surface="dark" className="flex-1" asChild>
 									<a
 										href={LINKS.extensionDownload}
 										target="_blank"

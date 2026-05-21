@@ -32,13 +32,13 @@ export function AuthCtaSection() {
 							</p>
 						</div>
 						<div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-							<Button size="lg" className="gap-2 shadow-glow" asChild>
+							<Button size="lg" surface="dark" className="gap-2 shadow-glow" asChild>
 								<Link to={ROUTES.signup}>
 									Create account
 									<ArrowRight className="size-4" aria-hidden />
 								</Link>
 							</Button>
-							<Button size="lg" variant="secondary" asChild>
+							<Button size="lg" variant="secondary" surface="dark" asChild>
 								<Link to={ROUTES.login}>I already have an account</Link>
 							</Button>
 						</div>

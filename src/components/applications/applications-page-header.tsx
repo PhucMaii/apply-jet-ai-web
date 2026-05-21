@@ -36,13 +36,13 @@ export function ApplicationsPageHeader({
 					</p>
 				</div>
 				<nav className="flex flex-wrap gap-2" aria-label="Account navigation">
-					<Button variant="outline" size="sm" className="border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50" asChild>
+					<Button variant="outline" size="sm" asChild>
 						<Link to={ROUTES.profile}>Profile</Link>
 					</Button>
-					<Button variant="outline" size="sm" className="border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50" asChild>
+					<Button variant="outline" size="sm" asChild>
 						<Link to={ROUTES.home}>Marketing site</Link>
 					</Button>
-					<Button variant="outline" size="sm" className="border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50" asChild>
+					<Button variant="outline" size="sm" asChild>
 						<a
 							href={LINKS.extensionDownload}
 							target="_blank"
@@ -54,7 +54,7 @@ export function ApplicationsPageHeader({
 					<Button
 						variant="ghost"
 						size="sm"
-						className="gap-1.5 text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+						className="gap-1.5"
 						onClick={() => void onSignOut()}
 					>
 						<LogOut className="size-4" aria-hidden />

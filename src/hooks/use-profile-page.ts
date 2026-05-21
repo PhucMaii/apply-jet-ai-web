@@ -55,6 +55,7 @@ export function useProfilePage() {
 	const [additionalInfo, setAdditionalInfo] =
 		useState<UserAdditionalInfoRow | null>(null)
 	const [skills, setSkills] = useState<UserSkillRow[]>([])
+	const [resumeText, setResumeText] = useState<string | null>(null)
 
 	const checkoutStatus = searchParams.get("checkout")
 
@@ -161,6 +162,18 @@ export function useProfilePage() {
 				formattedAdditionalInfo as UserAdditionalInfoRow | null,
 			)
 			setSkills((skillRows as UserSkillRow[] | null) ?? [])
+
+			const { data: resume, error: resumeErr } = await supabase
+				.from("resumes")
+				.select("*")
+				.eq("user_id", user.id)
+				.maybeSingle()
+			if (resumeErr) {
+				console.error("Something went wrong loading resume text:", resumeErr)
+				setResumeText(null)
+			} else {
+				setResumeText(resume?.parsed_text ?? null)
+			}
 		} catch (err) {
 			console.error("Something went wrong loading profile page:", err)
 			setNotice(null)
@@ -378,6 +391,7 @@ export function useProfilePage() {
 		notice,
 		error,
 		profile,
+		resumeText,
 		setProfile,
 		subscription,
 		workExperiences,

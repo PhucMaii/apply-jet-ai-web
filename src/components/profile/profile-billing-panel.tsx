@@ -214,7 +214,6 @@ export function ProfileBillingPanel({
 					<Button
 						type="button"
 						variant="outline"
-						className={DASHBOARD_THEME.navButton}
 						disabled={billingBusy || !subscription?.stripe_customer_id}
 						onClick={onOpenPortal}
 					>

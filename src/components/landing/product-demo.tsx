@@ -114,6 +114,7 @@ export function ProductDemo() {
 						<Button
 							type="button"
 							variant={autoPlay ? "default" : "secondary"}
+							surface="dark"
 							size="sm"
 							onClick={() => setAutoPlay((v) => !v)}
 						>
@@ -122,6 +123,7 @@ export function ProductDemo() {
 						<Button
 							type="button"
 							variant="secondary"
+							surface="dark"
 							size="sm"
 							className="gap-1.5"
 							onClick={runDemo}
@@ -132,6 +134,7 @@ export function ProductDemo() {
 						<Button
 							type="button"
 							variant="ghost"
+							surface="dark"
 							size="sm"
 							className="gap-1.5"
 							onClick={() => {

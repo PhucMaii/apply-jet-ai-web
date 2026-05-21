@@ -55,34 +55,19 @@ export function ProfilePageHeader({
 						className="flex flex-wrap gap-2 sm:justify-end"
 						aria-label="Account navigation"
 					>
-						<Button
-							variant="outline"
-							size="sm"
-							className={cn("gap-2", DASHBOARD_THEME.navButton)}
-							asChild
-						>
+						<Button variant="outline" size="sm" className="gap-2" asChild>
 							<Link to={ROUTES.applications}>
 								<LayoutList className="size-4 shrink-0 opacity-80" aria-hidden />
 								Applications
 							</Link>
 						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							className={cn("gap-2", DASHBOARD_THEME.navButton)}
-							asChild
-						>
+						<Button variant="outline" size="sm" className="gap-2" asChild>
 							<Link to={ROUTES.home}>
 								<Globe className="size-4 shrink-0 opacity-80" aria-hidden />
 								Marketing
 							</Link>
 						</Button>
-						<Button
-							variant="outline"
-							size="sm"
-							className={cn("gap-2", DASHBOARD_THEME.navButton)}
-							asChild
-						>
+						<Button variant="outline" size="sm" className="gap-2" asChild>
 							<a
 								href={LINKS.extensionDownload}
 								target="_blank"
@@ -95,7 +80,7 @@ export function ProfilePageHeader({
 						<Button
 							variant="ghost"
 							size="sm"
-							className={cn("gap-2", DASHBOARD_THEME.navButtonGhost)}
+							className="gap-2"
 							onClick={() => void onSignOut()}
 						>
 							<LogOut className="size-4" aria-hidden />

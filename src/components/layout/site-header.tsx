@@ -62,10 +62,10 @@ export function SiteHeader() {
 				) : null}
 
 				<div className="flex items-center gap-2">
-					<Button variant="ghost" size="sm" className="hidden sm:inline-flex" asChild>
+					<Button variant="ghost" surface="dark" size="sm" className="hidden sm:inline-flex" asChild>
 						<Link to={ROUTES.support}>Support</Link>
 					</Button>
-					<Button variant="ghost" size="sm" asChild>
+					<Button variant="ghost" surface="dark" size="sm" asChild>
 						<a
 							href={LINKS.extensionDownload}
 							target="_blank"
@@ -76,19 +76,19 @@ export function SiteHeader() {
 					</Button>
 					{user ? (
 						<>
-							<Button variant="ghost" size="sm" asChild>
+							<Button variant="ghost" surface="dark" size="sm" asChild>
 								<Link to={ROUTES.profile}>Profile</Link>
 							</Button>
-							<Button size="sm" asChild>
+							<Button surface="dark" size="sm" asChild>
 								<Link to={ROUTES.applications}>Applications</Link>
 							</Button>
 						</>
 					) : (
 						<>
-							<Button variant="secondary" size="sm" asChild>
+							<Button variant="secondary" surface="dark" size="sm" asChild>
 								<Link to={ROUTES.login}>Log in</Link>
 							</Button>
-							<Button size="sm" className="hidden sm:inline-flex" asChild>
+							<Button surface="dark" size="sm" className="hidden sm:inline-flex" asChild>
 								<Link to={ROUTES.signup}>Get started</Link>
 							</Button>
 						</>

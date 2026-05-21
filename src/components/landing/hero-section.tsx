@@ -70,7 +70,7 @@ export function HeroSection() {
 						animate="show"
 						className="mt-8 flex flex-wrap items-center gap-3"
 					>
-						<Button size="lg" className="gap-2 shadow-glow" asChild>
+						<Button size="lg" surface="dark" className="gap-2 shadow-glow" asChild>
 							<a
 								href={LINKS.extensionDownload}
 								target="_blank"
@@ -80,7 +80,7 @@ export function HeroSection() {
 								Download extension
 							</a>
 						</Button>
-						<Button size="lg" variant="secondary" className="gap-2" asChild>
+						<Button size="lg" variant="secondary" surface="dark" className="gap-2" asChild>
 							<Link to={ROUTES.signup}>
 								Get started
 								<ArrowRight className="size-4" aria-hidden />

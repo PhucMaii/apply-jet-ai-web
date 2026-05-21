@@ -8,11 +8,16 @@ export const ROUTES = {
 	login: "/login",
 	signup: "/signup",
 	applications: "/applications",
+	applicationDetail: "/applications/:applicationId",
 	profile: "/profile",
 	privacy: "/privacy",
 	terms: "/terms",
 	support: "/support",
 } as const
+
+export function applicationDetailPath(applicationId: string) {
+	return `/applications/${applicationId}`
+}
 
 /** Supabase Edge Function names for Stripe billing */
 export const EDGE_FUNCTIONS = {

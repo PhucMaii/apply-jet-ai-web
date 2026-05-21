@@ -5,6 +5,7 @@ const SIGNED_URL_EXPIRY_SEC = 60;
 export const useGeneratedResume = () => {
   const getResumeDownloadUrl = async (
     generatedResumeId: string,
+    filename: string,
   ): Promise<string> => {
     // Get the generated resume path from the database
     const { data: generatedResumeData, error: generatedResumeError } = await supabase
@@ -21,9 +22,16 @@ export const useGeneratedResume = () => {
     if (/^https?:\/\//i.test(trimmed)) {
       return trimmed;
     }
+    // const downloadName =
+    //   trimmed.split("/").filter(Boolean).pop() ?? "resume.pdf";
+    const downloadName = filename;
     const { data, error } = await supabase.storage
       .from(RESUMES_BUCKET)
-      .createSignedUrl(trimmed, SIGNED_URL_EXPIRY_SEC);
+      .createSignedUrl(trimmed, SIGNED_URL_EXPIRY_SEC, {
+        download: downloadName,
+      });
+
+    console.log("data", data);
     if (error) {
       throw new Error(error.message || "Failed to get download URL");
     }

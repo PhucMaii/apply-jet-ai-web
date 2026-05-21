@@ -5,6 +5,7 @@ import { HomePage } from "@/pages/home-page"
 import { LoginPage } from "@/pages/login-page"
 import { SignupPage } from "@/pages/signup-page"
 import { ApplicationsPage } from "@/pages/applications-page"
+import { ApplicationDetailPage } from "@/pages/application-detail-page"
 import { ProfilePage } from "@/pages/profile-page"
 import { PrivacyPage } from "@/pages/privacy-page"
 import { TermsPage } from "@/pages/terms-page"
@@ -24,6 +25,14 @@ export function AppRoutes() {
 				element={
 					<ProtectedRoute>
 						<ApplicationsPage />
+					</ProtectedRoute>
+				}
+			/>
+			<Route
+				path={ROUTES.applicationDetail}
+				element={
+					<ProtectedRoute>
+						<ApplicationDetailPage />
 					</ProtectedRoute>
 				}
 			/>

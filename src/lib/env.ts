@@ -14,4 +14,8 @@ export const env = {
 	stripeProPriceId,
 	isStripePriceConfigured: Boolean(stripeProPriceId),
 	xsecretkey: import.meta.env.VITE_X_SECRET_KEY ?? "",
+	edgeGenerateResume:
+		import.meta.env.VITE_EDGE_GENERATE_RESUME ?? "generate-resume",
+	edgeGenerateCoverLetter:
+		import.meta.env.VITE_EDGE_GENERATE_COVER_LETTER ?? "generate-coverletter",
 } as const
