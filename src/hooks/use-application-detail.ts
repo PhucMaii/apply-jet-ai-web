@@ -27,10 +27,12 @@ export function useApplicationDetail(applicationId: string | undefined) {
 	const [error, setError] = useState<string | null>(null)
 	const [notice, setNotice] = useState<string | null>(null)
 
-	const loadApplication = useCallback(async () => {
+	const loadApplication = useCallback(async (options?: { silent?: boolean }) => {
 		if (!user || !applicationId) return
 		setError(null)
-		setLoading(true)
+		if (!options?.silent) {
+			setLoading(true)
+		}
 		try {
 			const { data: appRow, error: appErr } = await supabase
 				.from("applications")
@@ -88,6 +90,45 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		}
 	}, [applicationId, user])
 
+	const [refreshingDocuments, setRefreshingDocuments] = useState(false)
+
+	const refreshDocuments = useCallback(async () => {
+		if (!user || !applicationId) return
+		setRefreshingDocuments(true)
+		try {
+			const [{ data: resumeRow }, { data: coverRow }] = await Promise.all([
+				supabase
+					.from("generated_resumes")
+					.select("*")
+					.eq("application_id", applicationId)
+					.maybeSingle(),
+				supabase
+					.from("generated_cover_letters")
+					.select("*")
+					.eq("application_id", applicationId)
+					.maybeSingle(),
+			])
+
+			setRecord((prev) => {
+				if (!prev) return prev
+				return {
+					...prev,
+					generatedResume:
+						(resumeRow as GeneratedDocumentRow | null) ?? null,
+					generatedCoverLetter:
+						(coverRow as GeneratedDocumentRow | null) ?? null,
+				}
+			})
+		} catch (err) {
+			console.error("Something went wrong refreshing documents:", err)
+			setError(
+				err instanceof Error ? err.message : "Failed to refresh documents.",
+			)
+		} finally {
+			setRefreshingDocuments(false)
+		}
+	}, [applicationId, user])
+
 	useEffect(() => {
 		void loadApplication()
 	}, [loadApplication])
@@ -117,7 +158,7 @@ export function useApplicationDetail(applicationId: string | undefined) {
 			}
 
 			setNotice("Application details saved.")
-			await loadApplication()
+			await loadApplication({ silent: true })
 		} catch (err) {
 			console.error("Something went wrong saving application:", err)
 			setError(err instanceof Error ? err.message : "Save failed.")
@@ -173,6 +214,8 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		notice,
 		setNotice,
 		loadApplication,
+		refreshDocuments,
+		refreshingDocuments,
 		saveDetails,
 		updateStatus,
 		resolveStatus,

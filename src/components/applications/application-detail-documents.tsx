@@ -35,10 +35,10 @@ import { useProfilePage } from "@/hooks/use-profile-page"
 import toast from "react-hot-toast"
 
 interface ApplicationDetailDocumentsProps {
-	applicationId: string
 	form: ApplicationDetailForm
 	generatedResume: GeneratedDocumentRow | null
 	generatedCoverLetter: GeneratedDocumentRow | null
+	refreshingDocuments?: boolean
 	onDocumentsUpdated: () => Promise<void>
 }
 
@@ -46,6 +46,7 @@ export function ApplicationDetailDocuments({
 	form,
 	generatedResume,
 	generatedCoverLetter,
+	refreshingDocuments = false,
 	onDocumentsUpdated,
 }: ApplicationDetailDocumentsProps) {
 	const { getResumeDownloadUrl } = useGeneratedResume()
@@ -61,7 +62,6 @@ export function ApplicationDetailDocuments({
 	const [downloadingResume, setDownloadingResume] = useState(false)
 	const [downloadingCover, setDownloadingCover] = useState(false)
 	const [docError, setDocError] = useState<string | null>(null)
-	const [docNotice, setDocNotice] = useState<string | null>(null)
 
 	useEffect(() => {
 		setCoverCompany(form.companyName)
@@ -71,7 +71,6 @@ export function ApplicationDetailDocuments({
 	async function handleGenerateResume() {
 		if (!user) return
 		setDocError(null)
-		setDocNotice(null)
 		setGeneratingResume(true)
 		try {
 			const result = await invokeGenerateResume({
@@ -89,7 +88,6 @@ export function ApplicationDetailDocuments({
 				setDocError(String(result.data.error))
 				return
 			}
-			setDocNotice("Resume generation started. Refreshing…")
 			toast.success("Resume generated successfully")
 			await onDocumentsUpdated()
 		} catch (err) {
@@ -105,7 +103,6 @@ export function ApplicationDetailDocuments({
 	async function handleGenerateCoverLetter() {
 		if (!user) return
 		setDocError(null)
-		setDocNotice(null)
 		setGeneratingCover(true)
 		try {
 			await invokeGenerateCoverLetter({
@@ -118,7 +115,6 @@ export function ApplicationDetailDocuments({
 				hiringManager: hiringManager.trim() ?? undefined,
 				tone: tone,
 			})
-			setDocNotice("Cover letter generation started. Refreshing…")
 			toast.success("Cover letter generated successfully")
 			await onDocumentsUpdated()
 		} catch (err) {
@@ -198,7 +194,24 @@ export function ApplicationDetailDocuments({
 	}
 
 	return (
-		<section className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6">
+		<section
+			className={cn(
+				"relative rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm transition-opacity duration-200 sm:p-6",
+				refreshingDocuments && "opacity-90",
+			)}
+			aria-busy={refreshingDocuments}
+		>
+			{refreshingDocuments ? (
+				<div
+					className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center"
+					aria-hidden
+				>
+					<span className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/95 px-3 py-1.5 text-xs font-medium text-neutral-600 shadow-sm">
+						<Loader2 className="size-3.5 animate-spin text-primary" />
+						Updating documents…
+					</span>
+				</div>
+			) : null}
 			{docError ? (
 				<p
 					className={cn("mb-4", APPLICATIONS_THEME.error)}
@@ -207,15 +220,6 @@ export function ApplicationDetailDocuments({
 					{docError}
 				</p>
 			) : null}
-			{docNotice ? (
-				<p
-					className={cn("mb-4", DASHBOARD_THEME.noticeSuccess)}
-					role="status"
-				>
-					{docNotice}
-				</p>
-			) : null}
-
 			<Tabs defaultValue="resume" className="w-full">
 				<TabsList className={DASHBOARD_THEME.mainTabsList}>
 					<TabsTrigger

@@ -17,7 +17,8 @@ export function ApplicationDetailPage() {
 		updatingStatus,
 		error,
 		notice,
-		loadApplication,
+		refreshDocuments,
+		refreshingDocuments,
 		saveDetails,
 		updateStatus,
 		resolveStatus,
@@ -116,11 +117,11 @@ export function ApplicationDetailPage() {
 						</div>
 
 						<ApplicationDetailDocuments
-							applicationId={record.id}
 							form={form}
 							generatedResume={record.generatedResume}
 							generatedCoverLetter={record.generatedCoverLetter}
-							onDocumentsUpdated={loadApplication}
+							refreshingDocuments={refreshingDocuments}
+							onDocumentsUpdated={refreshDocuments}
 						/>
 					</div>
 				)}
