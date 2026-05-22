@@ -14,11 +14,21 @@ export interface GeneratedDocumentRow {
 export interface ApplicationDetailRecord extends ApplicationRow {
 	generatedResume: GeneratedDocumentRow | null
 	generatedCoverLetter: GeneratedDocumentRow | null
+	recruiterEmails: RecruiterEmail[]
 }
 
 export interface ApplicationDetailForm {
+	id: string
 	jobTitle: string
 	companyName: string
 	jobUrl: string
 	jobDescription: string
+}
+
+export interface RecruiterEmail {
+	id: string
+	email: string
+	type: string | null
+	source: string | null
+	source_url: string | null
 }

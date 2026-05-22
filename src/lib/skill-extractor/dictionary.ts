@@ -2,6 +2,9 @@
  * Curated skills dictionary with canonical names and aliases.
  * Easy to expand: add entries to SKILL_DICTIONARY or merge custom maps.
  */
+
+import type { SkillDictionaryEntry } from "./type";
+
 /** Canonical name -> entry. Built from flat list for easier maintenance. */
 const ENTRIES = [
   // Frontend
@@ -791,9 +794,9 @@ const ENTRIES = [
   }
 ];
 /** Map: lowercase alias -> { canonical, category }. */
-let aliasMap = null;
+let aliasMap: any = null;
 /** Map: lowercase canonical -> category. */
-let canonicalCategoryMap = null;
+let canonicalCategoryMap: any = null;
 function buildMaps() {
   if (aliasMap !== null)
       return;
@@ -819,7 +822,7 @@ function buildMaps() {
 /**
 * Look up a phrase in the dictionary. Returns canonical + category if found.
 */
-export function lookupSkill(phrase) {
+export function lookupSkill(phrase: string) {
   buildMaps();
   const key = phrase.toLowerCase().trim();
   return aliasMap.get(key) ?? null;
@@ -827,7 +830,7 @@ export function lookupSkill(phrase) {
 /**
 * Get category for a canonical skill name.
 */
-export function getCategoryForCanonical(canonical) {
+export function getCategoryForCanonical(canonical: string) {
   buildMaps();
   return canonicalCategoryMap.get(canonical.toLowerCase());
 }
@@ -840,8 +843,8 @@ export function getSkillDictionary() {
 /**
 * Add or merge custom entries. Call before first extraction.
 */
-export function extendDictionary(entries) {
+export function extendDictionary(entries: SkillDictionaryEntry[]) {
   ENTRIES.push(...entries);
-  aliasMap = null;
-  canonicalCategoryMap = null;
+  aliasMap = new Map();
+  canonicalCategoryMap = new Map();
 }

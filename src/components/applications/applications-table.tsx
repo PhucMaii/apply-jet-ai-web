@@ -19,6 +19,7 @@ import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import type { ApplicationWithDocuments } from "@/types/database"
 import { cn } from "@/lib/utils"
 import { ApplicationsStatusBadge } from "./applications-status-badge"
+import type { GeneratedDocumentRow } from "@/types/application-detail"
 
 const TABLE_COLUMN = {
 	job: "Job title",
@@ -36,8 +37,8 @@ interface ApplicationsTableProps {
 	downloading: string | null
 	resolveStatus: (raw: string) => ApplicationStatus
 	onStatusChange: (id: string, status: ApplicationStatus) => void
-	onDownloadResume: (applicationId: string, resumeId: string) => void
-	onDownloadCover: (applicationId: string, coverId: string) => void
+	onDownloadResume: (application: ApplicationWithDocuments, generatedResume: GeneratedDocumentRow, companyName: string) => void
+	onDownloadCover: (application: ApplicationWithDocuments, generatedCoverLetter: GeneratedDocumentRow, companyName: string) => void
 }
 
 export function ApplicationsTable({
@@ -99,10 +100,10 @@ export function ApplicationsTable({
 									onStatusChange={(next) => onStatusChange(app.id, next)}
 									onDownloadResume={() => {
 										if (resumeId)
-											onDownloadResume(app.id, resumeId)
+											onDownloadResume(app, app.generated_resume as GeneratedDocumentRow, app.company_name)
 									}}
 									onDownloadCover={() => {
-										if (coverId) onDownloadCover(app.id, coverId)
+										if (coverId) onDownloadCover(app, app.generated_cover_letter as GeneratedDocumentRow, app.company_name)
 									}}
 								/>
 							)

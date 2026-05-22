@@ -8,6 +8,7 @@ import { ProfilePageHeader } from "@/components/profile/profile-page-header"
 import { useAuth } from "@/context/auth-context"
 import { useProfilePage } from "@/hooks/use-profile-page"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
+import { cn } from "@/lib/utils"
 
 export function ProfilePage() {
 	const { signOut } = useAuth()
@@ -69,7 +70,12 @@ export function ProfilePage() {
 					<ProfileLoadingState />
 				) : (
 					<Tabs value={tab} onValueChange={setTab} className="w-full">
-						<TabsList className={DASHBOARD_THEME.mainTabsList}>
+						<TabsList
+							className={cn(
+								DASHBOARD_THEME.mainTabsList,
+								DASHBOARD_THEME.mainTabsListTwo,
+							)}
+						>
 							<TabsTrigger
 								value="profile"
 								className={DASHBOARD_THEME.mainTabsTrigger}

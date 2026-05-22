@@ -2,7 +2,10 @@
 import { env } from "@/lib/env";
 import { preprocessJobDescription } from "./skill-extractor/preprocess";
 import { detectSections } from "./skill-extractor/sections";
-import type { CoverLetter, ExtractedSkillsResult } from "./skill-extractor/type";
+import type {
+  CoverLetter,
+  ExtractedSkillsResult,
+} from "./skill-extractor/type";
 import { matchCandidate } from "./skill-extractor/matching";
 import { extractCandidates } from "./skill-extractor/candidates";
 import type { SkillCategory } from "./skill-extractor/type";
@@ -28,6 +31,14 @@ export interface GenerateCoverLetterPayload {
   hiringManager?: string;
   tone?: "Professional" | "Friendly" | "Direct";
   wordCount?: number;
+}
+export interface FindHRContactsPayload {
+  userId: string;
+  companyName: string;
+  applicationId: string;
+  jobTitle: string;
+  jobUrl: string;
+  jobDescription: string;
 }
 export interface CoverLetterPayload {
   cover_letter: CoverLetter;
@@ -182,10 +193,37 @@ export async function invokeGenerateCoverLetter(
   };
 }
 
-export function filenameFromFileUrl(
-  fileUrl: string,
-  fallback: string,
-): string {
+export async function invokeFindHRContacts(payload: FindHRContactsPayload): Promise<{ ok: boolean; msg: string }> {
+  const secretKey = env.xsecretkey;
+
+  const body = {
+    userId: payload.userId,
+    companyName: payload.companyName,
+    applicationId: payload.applicationId,
+    jobTitle: payload.jobTitle,
+    jobUrl: payload.jobUrl,
+    jobDescription: payload.jobDescription,
+  };
+  const { error } = await supabase.functions.invoke("search-recruiter-email", {
+    headers: { "X-Secret-Key": secretKey },
+    method: "POST",
+    body: body,
+  });
+
+  if (error) {
+    return {
+      ok: false,
+      msg: error.message ?? "Failed to find HR contacts",
+    };
+  }
+
+  return {
+    ok: true,
+    msg: "HR contacts found successfully",
+  };
+}
+
+export function filenameFromFileUrl(fileUrl: string, fallback: string): string {
   const trimmed = fileUrl.trim();
   let pathname = trimmed;
   if (/^https?:\/\//i.test(trimmed)) {

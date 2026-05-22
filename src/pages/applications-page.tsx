@@ -56,11 +56,11 @@ export function ApplicationsPage() {
 						downloading={downloading}
 						resolveStatus={resolveStatus}
 						onStatusChange={(id, status) => void updateStatus(id, status)}
-						onDownloadResume={(id, resumeId) =>
-							void downloadResume(id, resumeId)
+						onDownloadResume={(application, generatedResume, companyName) =>
+							void downloadResume(application, generatedResume, companyName)
 						}
-						onDownloadCover={(id, coverId) =>
-							void downloadCoverLetter(id, coverId)
+						onDownloadCover={(application, generatedCoverLetter, companyName) =>
+							void downloadCoverLetter(application, generatedCoverLetter, companyName)
 						}
 					/>
 				)}

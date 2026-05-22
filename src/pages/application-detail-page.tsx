@@ -10,15 +10,17 @@ import { cn } from "@/lib/utils"
 export function ApplicationDetailPage() {
 	const { applicationId } = useParams<{ applicationId: string }>()
 	const {
+		application,
+		isLoadingApplication,
+
 		record,
 		form,
-		loading,
+		refetchApplication,
+		isRefetchingApplication,
 		savingDetails,
 		updatingStatus,
 		error,
 		notice,
-		refreshDocuments,
-		refreshingDocuments,
 		saveDetails,
 		updateStatus,
 		resolveStatus,
@@ -88,7 +90,7 @@ export function ApplicationDetailPage() {
 					</p>
 				) : null}
 
-				{loading || !record || !form ? (
+				{isLoadingApplication || !record || !form ? (
 					<div
 						className="flex flex-col items-center justify-center gap-3 py-24"
 						aria-busy="true"
@@ -117,11 +119,18 @@ export function ApplicationDetailPage() {
 						</div>
 
 						<ApplicationDetailDocuments
-							form={form}
+							form={application ?? {
+								id: applicationId ?? "",
+								jobTitle: "",
+								companyName: "",
+								jobUrl: "",
+								jobDescription: "",
+							}}
 							generatedResume={record.generatedResume}
 							generatedCoverLetter={record.generatedCoverLetter}
-							refreshingDocuments={refreshingDocuments}
-							onDocumentsUpdated={refreshDocuments}
+							recruiterEmails={record.recruiterEmails}
+							refreshingDocuments={isRefetchingApplication}
+							refetchApplication={() => void refetchApplication()}
 						/>
 					</div>
 				)}

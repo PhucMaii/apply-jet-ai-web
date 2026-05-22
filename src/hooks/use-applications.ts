@@ -1,147 +1,181 @@
-import { useCallback, useEffect, useState } from "react"
-import { useAuth } from "@/context/auth-context"
-import { supabase } from "@/lib/supabase"
+import { useCallback, useEffect, useState } from "react";
+import { useAuth } from "@/context/auth-context";
+import { supabase } from "@/lib/supabase";
 import {
-	type ApplicationStatus,
-	isApplicationStatus,
-} from "@/lib/application-status"
-import type { ApplicationWithDocuments } from "@/types/database"
-import { useGeneratedResume } from "../../hooks/useGeneratedResume"
-import { useGeneratedCoverLetter } from "../../hooks/useGeneratedCoverLetter"
+  type ApplicationStatus,
+  isApplicationStatus,
+} from "@/lib/application-status";
+import type { ApplicationWithDocuments } from "@/types/database";
+import { useGeneratedResume } from "../../hooks/useGeneratedResume";
+import { useGeneratedCoverLetter } from "../../hooks/useGeneratedCoverLetter";
+import {
+  downloadFromUrl,
+  downloadTextContent,
+} from "@/lib/application-generation";
+import type { GeneratedDocumentRow } from "@/types/application-detail";
 
 export function useApplications() {
-	const { user } = useAuth()
-	const { getResumeDownloadUrl } = useGeneratedResume()
-	const { getCoverLetterDownloadUrl } = useGeneratedCoverLetter()
+  const { user } = useAuth();
+  const { getResumeDownloadUrl } = useGeneratedResume();
+  const { getCoverLetterDownloadUrl } = useGeneratedCoverLetter();
 
-	const [rows, setRows] = useState<ApplicationWithDocuments[]>([])
-	const [loadError, setLoadError] = useState<string | null>(null)
-	const [loading, setLoading] = useState(true)
-	const [updatingId, setUpdatingId] = useState<string | null>(null)
-	const [downloading, setDownloading] = useState<string | null>(null)
+  const [rows, setRows] = useState<ApplicationWithDocuments[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState<string | null>(null);
 
-	const loadApplications = useCallback(async () => {
-		if (!user) return
-		setLoadError(null)
-		setLoading(true)
-		try {
-			const { data, error } = await supabase
-				.from("applications")
-				.select("*")
-				.eq("user_id", user.id)
-				.order("created_at", { ascending: false })
+  const loadApplications = useCallback(async () => {
+    if (!user) return;
+    setLoadError(null);
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("applications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
 
-			if (error) {
-				console.error("Something went wrong loading applications:", error)
-				setLoadError(error.message)
-				setRows([])
-				return
-			}
+      if (error) {
+        console.error("Something went wrong loading applications:", error);
+        setLoadError(error.message);
+        setRows([]);
+        return;
+      }
 
-			setRows(data as unknown as ApplicationWithDocuments[])
-		} catch (err) {
-			console.error("Something went wrong loading applications:", err)
-			setLoadError(err instanceof Error ? err.message : "Load failed.")
-			setRows([])
-		} finally {
-			setLoading(false)
-		}
-	}, [user])
+      const generatedResumes = await supabase
+        .from("generated_resumes")
+        .select("*")
+        .in(
+          "application_id",
+          data.map((d) => d.id),
+        )
+        .then((res) => res.data);
 
-	useEffect(() => {
-		void loadApplications()
-	}, [loadApplications])
+      const generatedCoverLetters = await supabase
+        .from("generated_cover_letters")
+        .select("*")
+        .in(
+          "application_id",
+          data.map((d) => d.id),
+        )
+        .then((res) => res.data);
 
-	async function updateStatus(
-		applicationId: string,
-		next: ApplicationStatus,
-	) {
-		if (!user) return
-		setUpdatingId(applicationId)
-		setLoadError(null)
-		try {
-			const { error } = await supabase
-				.from("applications")
-				.update({
-					status: next,
-					updated_at: new Date().toISOString(),
-				})
-				.eq("id", applicationId)
-				.eq("user_id", user.id)
+      setRows(
+        data.map((d) => ({
+          ...d,
+          generated_resume: generatedResumes?.find(
+            (r) => r.application_id === d.id,
+          ),
+          generated_cover_letter: generatedCoverLetters?.find(
+            (c) => c.application_id === d.id,
+          ),
+        })) as unknown as ApplicationWithDocuments[],
+      );
+    } catch (err) {
+      console.error("Something went wrong loading applications:", err);
+      setLoadError(err instanceof Error ? err.message : "Load failed.");
+      setRows([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
-			if (error) {
-				console.error("Something went wrong updating status:", error)
-				setLoadError(error.message)
-				return
-			}
+  useEffect(() => {
+    void loadApplications();
+  }, [loadApplications]);
 
-			setRows((prev) =>
-				prev.map((r) =>
-					r.id === applicationId ? { ...r, status: next } : r,
-				),
-			)
-		} catch (err) {
-			console.error("Something went wrong updating status:", err)
-			setLoadError(err instanceof Error ? err.message : "Update failed.")
-		} finally {
-			setUpdatingId(null)
-		}
-	}
+  async function updateStatus(applicationId: string, next: ApplicationStatus) {
+    if (!user) return;
+    setUpdatingId(applicationId);
+    setLoadError(null);
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .update({
+          status: next,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", applicationId)
+        .eq("user_id", user.id);
 
-	async function downloadResume(
-		applicationId: string,
-		generatedResumeId: string,
-	) {
-		setLoadError(null)
-		setDownloading(`resume-${applicationId}`)
-		try {
-			const url = await getResumeDownloadUrl(generatedResumeId)
-			window.open(url, "_blank", "noopener,noreferrer")
-		} catch (err) {
-			console.error("Something went wrong downloading generated resume:", err)
-			setLoadError(
-				err instanceof Error ? err.message : "Failed to download resume.",
-			)
-		} finally {
-			setDownloading(null)
-		}
-	}
+      if (error) {
+        console.error("Something went wrong updating status:", error);
+        setLoadError(error.message);
+        return;
+      }
 
-	async function downloadCoverLetter(
-		applicationId: string,
-		generatedCoverLetterId: string,
-	) {
-		setLoadError(null)
-		setDownloading(`cover-${applicationId}`)
-		try {
-			const url = await getCoverLetterDownloadUrl(generatedCoverLetterId)
-			window.open(url, "_blank", "noopener,noreferrer")
-		} catch (err) {
-			console.error("Something went wrong downloading cover letter:", err)
-			setLoadError(
-				err instanceof Error
-					? err.message
-					: "Failed to download cover letter.",
-			)
-		} finally {
-			setDownloading(null)
-		}
-	}
+      setRows((prev) =>
+        prev.map((r) => (r.id === applicationId ? { ...r, status: next } : r)),
+      );
+    } catch (err) {
+      console.error("Something went wrong updating status:", err);
+      setLoadError(err instanceof Error ? err.message : "Update failed.");
+    } finally {
+      setUpdatingId(null);
+    }
+  }
 
-	function resolveStatus(raw: string): ApplicationStatus {
-		return isApplicationStatus(raw) ? raw : "Generated"
-	}
+  async function downloadResume(
+    application: ApplicationWithDocuments,
+    generatedResume: GeneratedDocumentRow,
+    companyName: string,
+  ) {
+    setLoadError(null);
+    setDownloading(`resume-${application.id}`);
+    try {
+      if (generatedResume.file_url) {
+        const filename = `${companyName}-resume.pdf`;
+        const url = await getResumeDownloadUrl(generatedResume.id, filename);
+        await downloadFromUrl(url, filename);
+        return;
+      }
+      downloadTextContent(generatedResume.content, `${companyName}-resume.txt`);
+    } catch (err) {
+      console.error("Something went wrong downloading generated resume:", err);
+      setLoadError(
+        err instanceof Error ? err.message : "Failed to download resume.",
+      );
+    } finally {
+      setDownloading(null);
+    }
+  }
 
-	return {
-		rows,
-		loadError,
-		loading,
-		updatingId,
-		downloading,
-		loadApplications,
-		updateStatus,
-		downloadResume,
-		downloadCoverLetter,
-		resolveStatus,
-	}
+  async function downloadCoverLetter(
+    application: ApplicationWithDocuments,
+    generatedCoverLetter: GeneratedDocumentRow,
+    companyName: string,
+  ) {
+    setLoadError(null);
+    setDownloading(`cover-${application.id}`);
+    try {
+		const filename = `${companyName}-cover-letter.pdf`
+		const url = await getCoverLetterDownloadUrl(generatedCoverLetter.id, filename)
+		await downloadFromUrl(url, filename)
+    } catch (err) {
+      console.error("Something went wrong downloading cover letter:", err);
+      setLoadError(
+        err instanceof Error ? err.message : "Failed to download cover letter.",
+      );
+    } finally {
+      setDownloading(null);
+    }
+  }
+
+  function resolveStatus(raw: string): ApplicationStatus {
+    return isApplicationStatus(raw) ? raw : "Generated";
+  }
+
+  return {
+    rows,
+    loadError,
+    loading,
+    updatingId,
+    downloading,
+    loadApplications,
+    updateStatus,
+    downloadResume,
+    downloadCoverLetter,
+    resolveStatus,
+  };
 }

@@ -5,7 +5,9 @@ import {
 	Loader2,
 	Mail,
 	Sparkles,
+	UserSearch,
 } from "lucide-react"
+import { RecruiterEmailsList } from "@/components/applications/recruiter-emails-list"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -13,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
 	downloadFromUrl,
 	downloadTextContent,
+	invokeFindHRContacts,
 	invokeGenerateCoverLetter,
 	invokeGenerateResume,
 } from "@/lib/application-generation"
@@ -27,27 +30,31 @@ import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type {
 	ApplicationDetailForm,
 	GeneratedDocumentRow,
+	RecruiterEmail,
 } from "@/types/application-detail"
 import { cn } from "@/lib/utils"
 import { useGeneratedResume } from "../../../hooks/useGeneratedResume"
 import { useGeneratedCoverLetter } from "../../../hooks/useGeneratedCoverLetter"
 import { useProfilePage } from "@/hooks/use-profile-page"
 import toast from "react-hot-toast"
+import { SUBTITLE_RECRUITER_EMAILS } from "./constant"
 
 interface ApplicationDetailDocumentsProps {
 	form: ApplicationDetailForm
 	generatedResume: GeneratedDocumentRow | null
 	generatedCoverLetter: GeneratedDocumentRow | null
+	recruiterEmails: RecruiterEmail[]
 	refreshingDocuments?: boolean
-	onDocumentsUpdated: () => Promise<void>
+	refetchApplication: () => void
 }
 
 export function ApplicationDetailDocuments({
 	form,
 	generatedResume,
 	generatedCoverLetter,
+	recruiterEmails,
 	refreshingDocuments = false,
-	onDocumentsUpdated,
+	refetchApplication,
 }: ApplicationDetailDocumentsProps) {
 	const { getResumeDownloadUrl } = useGeneratedResume()
 	const { getCoverLetterDownloadUrl } = useGeneratedCoverLetter()
@@ -89,7 +96,7 @@ export function ApplicationDetailDocuments({
 				return
 			}
 			toast.success("Resume generated successfully")
-			await onDocumentsUpdated()
+			await refetchApplication()
 		} catch (err) {
 			console.error("Something went wrong generating resume:", err)
 			setDocError(
@@ -116,7 +123,7 @@ export function ApplicationDetailDocuments({
 				tone: tone,
 			})
 			toast.success("Cover letter generated successfully")
-			await onDocumentsUpdated()
+			await refetchApplication()
 		} catch (err) {
 			console.error("Something went wrong generating cover letter:", err)
 			setDocError(
@@ -193,6 +200,34 @@ export function ApplicationDetailDocuments({
 		}
 	}
 
+	const findHRContacts = async () => {
+		if (!user || !form) return
+		setDocError(null)
+		try {
+			const result = await invokeFindHRContacts({
+				userId: user.id,
+				companyName: form.companyName.trim(),
+				applicationId: form.id.trim(),
+				jobTitle: form.jobTitle.trim(),
+				jobUrl: form.jobUrl,
+				jobDescription: form.jobDescription.trim(),
+			})
+			if (!result.ok) {
+				setDocError(result.msg)
+				toast.error(result.msg)
+				return
+			}
+
+			await refetchApplication()
+			toast.success(result.msg)
+		} catch (err) {
+			console.error("Something went wrong finding HR contacts:", err)
+			setDocError(
+				err instanceof Error ? err.message : "HR contacts finding failed.",
+			)
+			toast.error(err instanceof Error ? err.message : "HR contacts finding failed.")
+		}
+	}
 	return (
 		<section
 			className={cn(
@@ -221,7 +256,12 @@ export function ApplicationDetailDocuments({
 				</p>
 			) : null}
 			<Tabs defaultValue="resume" className="w-full">
-				<TabsList className={DASHBOARD_THEME.mainTabsList}>
+				<TabsList
+					className={cn(
+						DASHBOARD_THEME.mainTabsList,
+						DASHBOARD_THEME.mainTabsListThree,
+					)}
+				>
 					<TabsTrigger
 						value="resume"
 						className={DASHBOARD_THEME.mainTabsTrigger}
@@ -234,7 +274,15 @@ export function ApplicationDetailDocuments({
 						className={DASHBOARD_THEME.mainTabsTrigger}
 					>
 						<Mail className="size-4 shrink-0 opacity-80" aria-hidden />
-						Cover letter
+						<span className="hidden min-[420px]:inline">Cover letter</span>
+						<span className="min-[420px]:hidden">Cover</span>
+					</TabsTrigger>
+					<TabsTrigger
+						value="hr-email"
+						className={DASHBOARD_THEME.mainTabsTrigger}
+					>
+						<UserSearch className="size-4 shrink-0 opacity-80" aria-hidden />
+						HR contacts
 					</TabsTrigger>
 				</TabsList>
 
@@ -388,6 +436,33 @@ export function ApplicationDetailDocuments({
 					) : (
 						<EmptyDocumentHint label="No cover letter generated yet for this application." />
 					)}
+				</TabsContent>
+
+				<TabsContent value="hr-email" className="mt-6 space-y-6 outline-none">
+					<div className="rounded-xl border border-neutral-100 bg-neutral-50/80 p-4">
+						<div className="flex gap-2 items-center">
+							{SUBTITLE_RECRUITER_EMAILS[recruiterEmails.length === 0 ? "false" : "true"].icon as React.ReactNode}
+							<p className="text-sm font-semibold text-neutral-900">
+								{SUBTITLE_RECRUITER_EMAILS[recruiterEmails.length === 0 ? "false" : "true"].title}
+							</p>
+
+						</div>
+						<p className="text-sm leading-relaxed text-neutral-600">
+							{SUBTITLE_RECRUITER_EMAILS[recruiterEmails.length === 0 ? "false" : "true"].description}
+						</p>
+					</div>
+
+					{recruiterEmails.length === 0 ? <Button
+						type="button"
+						size="lg"
+						className="w-full gap-2 sm:w-auto"
+						onClick={() => void findHRContacts()}
+					>
+						<UserSearch className="size-4" aria-hidden />
+						Find HR contacts
+					</Button> : null}
+
+					<RecruiterEmailsList emails={recruiterEmails} />
 				</TabsContent>
 			</Tabs>
 		</section>

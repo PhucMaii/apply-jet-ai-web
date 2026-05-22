@@ -507,6 +507,8 @@ export type GeneratedCoverLetterRow =
 export type ApplicationWithDocuments = ApplicationRow & {
   generated_resume_id: string | null;
   generated_cover_letter_id: string | null;
+  generated_resume: GeneratedResumeRow | null;
+  generated_cover_letter: GeneratedCoverLetterRow | null;
 };
 
 export type UserProfileRow = Database["public"]["Tables"]["users"]["Row"];

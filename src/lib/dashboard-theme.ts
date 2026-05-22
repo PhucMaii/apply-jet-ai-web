@@ -37,7 +37,11 @@ export const DASHBOARD_THEME = {
 	navButtonGhost:
 		"text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900",
 	mainTabsList:
-		"grid h-12 w-full max-w-md grid-cols-2 gap-1 rounded-xl border border-neutral-200 bg-neutral-100 p-1",
+		"grid h-12 w-full gap-1 rounded-xl border border-neutral-200 bg-neutral-100 p-1",
+	mainTabsListTwo:
+		"max-w-md grid-cols-2",
+	mainTabsListThree:
+		"max-w-2xl grid-cols-3",
 	mainTabsTrigger:
 		"gap-2 rounded-lg text-sm text-neutral-600 transition-all data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm",
 	sectionTabsList:
