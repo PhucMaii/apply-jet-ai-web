@@ -9,6 +9,10 @@ import { useAuth } from "@/context/auth-context"
 import { supabase } from "@/lib/supabase"
 import { APP_NAME, ROUTES } from "@/lib/constants"
 import { SiteHeader } from "@/components/layout/site-header"
+import {
+	getOAuthRedirectUrl,
+	markOAuthSignInPending,
+} from "@/lib/auth-oauth"
 
 export function LoginPage() {
 	const { user, isLoading, isConfigured } = useAuth()
@@ -42,9 +46,10 @@ export function LoginPage() {
 		setNotice(null)
 		setPending(true)
 		try {
+			markOAuthSignInPending(from)
 			const { error: oauthError } = await supabase.auth.signInWithOAuth({
 				provider,
-				options: { redirectTo: `${window.location.origin}${ROUTES.applications}` },
+				options: { redirectTo: getOAuthRedirectUrl() },
 			})
 			if (oauthError) {
 				console.error("Something went wrong, OAuth failed:", oauthError)

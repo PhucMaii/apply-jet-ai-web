@@ -11,6 +11,10 @@ import { APP_NAME, ROUTES } from "@/lib/constants"
 import { SiteHeader } from "@/components/layout/site-header"
 import { useUser } from "../../hooks/useUser"
 import toast from "react-hot-toast"
+import {
+	getOAuthRedirectUrl,
+	markOAuthSignInPending,
+} from "@/lib/auth-oauth"
 
 export function SignupPage() {
 	const { user, isLoading, isConfigured } = useAuth()
@@ -45,11 +49,11 @@ export function SignupPage() {
 		setNotice(null)
 		setPending(true)
 		try {
-			const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+			markOAuthSignInPending(ROUTES.applications)
+			const { error: oauthError } = await supabase.auth.signInWithOAuth({
 				provider,
-				options: { redirectTo: `${window.location.origin}${ROUTES.applications}` },
+				options: { redirectTo: getOAuthRedirectUrl() },
 			})
-			console.log(data, "data")
 			if (oauthError) {
 				console.error("Something went wrong, OAuth failed:", oauthError)
 				setError(oauthError.message)

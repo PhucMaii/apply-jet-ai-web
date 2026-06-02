@@ -7,6 +7,7 @@ export const ROUTES = {
 	home: "/",
 	login: "/login",
 	signup: "/signup",
+	authCallback: "/auth/callback",
 	applications: "/applications",
 	applicationCreate: "/applications/new",
 	applicationDetail: "/applications/:applicationId",

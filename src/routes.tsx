@@ -11,6 +11,7 @@ import { ProfilePage } from "@/pages/profile-page"
 import { PrivacyPage } from "@/pages/privacy-page"
 import { TermsPage } from "@/pages/terms-page"
 import { SupportPage } from "@/pages/support-page"
+import { AuthCallbackPage } from "@/pages/auth-callback-page"
 
 export function AppRoutes() {
 	return (
@@ -18,6 +19,7 @@ export function AppRoutes() {
 			<Route path={ROUTES.home} element={<HomePage />} />
 			<Route path={ROUTES.login} element={<LoginPage />} />
 			<Route path={ROUTES.signup} element={<SignupPage />} />
+			<Route path={ROUTES.authCallback} element={<AuthCallbackPage />} />
 			<Route path={ROUTES.privacy} element={<PrivacyPage />} />
 			<Route path={ROUTES.terms} element={<TermsPage />} />
 			<Route path={ROUTES.support} element={<SupportPage />} />
