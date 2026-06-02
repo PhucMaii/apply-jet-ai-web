@@ -1,7 +1,8 @@
-import { CreditCard, UserRound } from "lucide-react"
+import { CreditCard, Gauge, UserRound } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProfileAutofillWorkspace } from "@/components/profile/profile-autofill-workspace"
 import { ProfileBillingPanel } from "@/components/profile/profile-billing-panel"
+import { ProfileUsagePanel } from "@/components/profile/profile-usage-panel"
 import { ProfileLoadingState } from "@/components/profile/profile-loading-state"
 import { ProfilePageAlerts } from "@/components/profile/profile-page-alerts"
 import { PageHeader } from "@/components/page-header"
@@ -67,7 +68,7 @@ export function ProfilePage() {
 						<TabsList
 							className={cn(
 								DASHBOARD_THEME.mainTabsList,
-								DASHBOARD_THEME.mainTabsListTwo,
+								DASHBOARD_THEME.mainTabsListThree,
 							)}
 						>
 							<TabsTrigger
@@ -76,6 +77,13 @@ export function ProfilePage() {
 							>
 								<UserRound className="size-4 shrink-0 opacity-80" aria-hidden />
 								Autofill profile
+							</TabsTrigger>
+							<TabsTrigger
+								value="usage"
+								className={DASHBOARD_THEME.mainTabsTrigger}
+							>
+								<Gauge className="size-4 shrink-0 opacity-80" aria-hidden />
+								Usage
 							</TabsTrigger>
 							<TabsTrigger
 								value="billing"
@@ -106,6 +114,15 @@ export function ProfilePage() {
 								onAddSkill={addSkill}
 								onDeleteSkill={deleteSkill}
 								onRefetchProfile={refetchProfile}
+							/>
+						</TabsContent>
+
+						<TabsContent value="usage" className="mt-6 outline-none">
+							<ProfileUsagePanel
+								subscription={subscription}
+								billingBusy={billingBusy}
+								onSubscribe={() => void subscribeToPro()}
+								onOpenBilling={() => setTab("billing")}
 							/>
 						</TabsContent>
 

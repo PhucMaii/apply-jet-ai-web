@@ -20,6 +20,7 @@ export interface GenerateResumePayload {
   targetRole: string;
   userId: string;
   jobUrl: string | null;
+  applicationId: string;
 }
 export interface GenerateCoverLetterPayload {
   jdText: string;
@@ -144,6 +145,7 @@ export async function invokeGenerateResume(payload: GenerateResumePayload) {
       userId: payload.userId,
       jobUrl: payload.jobUrl ?? "",
       jdSkills: jdSkills,
+      applicationId: payload.applicationId,
     },
   });
 

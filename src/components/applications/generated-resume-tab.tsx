@@ -37,6 +37,7 @@ export default function GeneratedResumeTab({
                 targetRole: form.jobTitle,
                 userId: user.id,
                 jobUrl: form.jobUrl,
+                applicationId: form.id,
             })
             if (!result.ok) {
                 toast.error(result.message ?? "Something went wrong generating resume")

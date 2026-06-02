@@ -34,20 +34,31 @@ export function ProfileContactEditor({
 		register,
 		handleSubmit,
 		control,
+		reset,
 		formState: { isDirty },
 	} = useForm<UserProfileRow>({
 		defaultValues: profile,
 	})
 
-	// After reset, mark as hydrated on next tick
+	const profileSnapshot = useMemo(
+		() => stableFormSnapshot(profile),
+		[profile],
+	)
+
+	// Sync form when profile refetches (e.g. resume prefill) without clobbering edits.
 	useEffect(() => {
-		if (!isHydratedRef.current) {
-			const id = setTimeout(() => {
-				isHydratedRef.current = true
-			}, 0)
-			return () => clearTimeout(id)
-		}
-	}, [profile, isDirty])
+		if (isDirty) return
+
+		reset(profile)
+		lastSavedSnapshotRef.current = profileSnapshot
+		isHydratedRef.current = false
+
+		const id = window.setTimeout(() => {
+			isHydratedRef.current = true
+		}, 0)
+
+		return () => window.clearTimeout(id)
+	}, [profile, profileSnapshot, reset, isDirty])
 
 	const watchedValues = useWatch({ control })
 	const lastSavedSnapshotRef = useRef<string>("")

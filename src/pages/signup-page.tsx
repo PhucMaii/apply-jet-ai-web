@@ -45,10 +45,11 @@ export function SignupPage() {
 		setNotice(null)
 		setPending(true)
 		try {
-			const { error: oauthError } = await supabase.auth.signInWithOAuth({
+			const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
 				provider,
 				options: { redirectTo: `${window.location.origin}${ROUTES.applications}` },
 			})
+			console.log(data, "data")
 			if (oauthError) {
 				console.error("Something went wrong, OAuth failed:", oauthError)
 				setError(oauthError.message)
