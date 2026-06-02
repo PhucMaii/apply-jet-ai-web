@@ -44,7 +44,10 @@ const buttonVariants = cva(
 				],
 				secondary: "",
 				ghost: "",
-				outline: "",
+				outline: [
+					"border border-neutral-300 bg-white text-neutral-800 shadow-sm",
+					"hover:border-primary/45 hover:bg-primary/5 hover:text-neutral-900",
+				],
 			},
 			surface: {
 				light: "focus-visible:ring-offset-white",

@@ -1,4 +1,4 @@
-import { type Dispatch, type KeyboardEvent, type SetStateAction, useMemo, useState } from "react"
+import { type KeyboardEvent, useMemo, useState } from "react"
 import { Plus, Trash2, Wrench } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -13,18 +13,18 @@ import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import { Input } from "@/components/ui/input"
 import type { UserSkillRow } from "@/types/database"
 import { cn } from "@/lib/utils"
+import type { AsyncResultMsg } from "@/types/types"
+import { toast } from "react-hot-toast"
 
 interface SkillsEditorProps {
 	items: UserSkillRow[]
-	setItems: Dispatch<SetStateAction<UserSkillRow[]>>
-	onCreateSkill: (name: string) => void
-	onDeleteSkill: (skillId: string) => void
+	onAddSkill: (name: string) => Promise<AsyncResultMsg>
+	onDeleteSkill: (skillId: string) => Promise<AsyncResultMsg>
 }
 
 export function SkillsEditor({
 	items,
-	setItems,
-	onCreateSkill,
+	onAddSkill,
 	onDeleteSkill,
 }: SkillsEditorProps) {
 	const [draftSkill, setDraftSkill] = useState("")
@@ -35,19 +35,28 @@ export function SkillsEditor({
 		[items],
 	)
 
-	const handleRemove = (index: number) => {
-		setItems((prev) => prev.filter((_, entryIndex) => entryIndex !== index))
-		onDeleteSkill(items[index].id)
+	const handleRemove = async (index: number) => {
+		const result = await onDeleteSkill(items[index].id)
+		if (result.success) {
+			toast.success(result.message)
+		} else {
+			toast.error(result.message)
+		}
 	}
 
-	const handleCreateSkill = () => {
+	const handleCreateSkill = async () => {
 		const nextSkill = draftSkill.trim()
 		if (!nextSkill) return
 		if (normalizedNames.has(nextSkill.toLowerCase())) {
 			setDraftSkill("")
 			return
 		}
-		onCreateSkill(nextSkill)
+		const result = await onAddSkill(nextSkill)
+		if (result.success) {
+			toast.success(result.message)
+		} else {
+			toast.error(result.message)
+		}
 		setDraftSkill("")
 	}
 
@@ -86,14 +95,6 @@ export function SkillsEditor({
 									)}
 								>
 									<span className="text-sm text-neutral-900">{row.name}</span>
-									{row.is_from_org_resume ? (
-										<span
-											className={PROFILE_SURFACE.skillBadge}
-											title="Imported from org resume"
-										>
-											Org
-										</span>
-									) : null}
 									<button
 										type="button"
 										className={cn(

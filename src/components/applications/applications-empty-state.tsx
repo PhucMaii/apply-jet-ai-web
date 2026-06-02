@@ -1,5 +1,8 @@
-import { FileText } from "lucide-react"
+import { Link } from "react-router-dom"
+import { FileText, Plus } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
+import { ROUTES } from "@/lib/constants"
 
 export function ApplicationsEmptyState() {
 	return (
@@ -11,9 +14,15 @@ export function ApplicationsEmptyState() {
 				No applications yet
 			</h2>
 			<p className={`mt-2 text-sm ${APPLICATIONS_THEME.muted}`}>
-				Applications you save from the extension will appear here in a
-				table for quick review and downloads.
+				Create your first application manually, or save roles from the
+				Chrome extension—they will all appear here.
 			</p>
+			<Button className="mt-6 gap-2" asChild>
+				<Link to={ROUTES.applicationCreate}>
+					<Plus className="size-4" aria-hidden />
+					New application
+				</Link>
+			</Button>
 		</div>
 	)
 }

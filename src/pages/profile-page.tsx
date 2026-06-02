@@ -17,38 +17,29 @@ export function ProfilePage() {
 		tab,
 		setTab,
 		loading,
-		saving,
 		billingBusy,
 		notice,
 		error,
-		profile,
-		setProfile,
 		subscription,
-		workExperiences,
-		setWorkExperiences,
-		educations,
-		setEducations,
-		disclosure,
-		setDisclosure,
-		links,
-		setLinks,
-		additionalInfo,
-		setAdditionalInfo,
-		skills,
-		setSkills,
-		loadData,
+		userProfile,
+		
+		refetchProfile,
 		saveProfile,
 		saveExperience,
-		saveEducation,
 		addWorkExperience,
+		removeExperience,
 		addEducation,
-		saveLinksAndAdditionalInfo,
+		saveEducation,
+		removeEducation,
+		onSaveAdditionalInfo,
+		onSaveDisclosure,
 		deleteLink,
-		addLink,
+		onAddLink,
 		addSkill,
 		deleteSkill,
 		subscribeToPro,
 		openBillingPortal,
+		onSaveLink,
 	} = useProfilePage()
 
 	const accountInitials = (
@@ -66,7 +57,7 @@ export function ProfilePage() {
 			<main className={DASHBOARD_THEME.main}>
 				<ProfilePageAlerts error={error} notice={notice} />
 
-				{loading || !profile ? (
+				{loading || !userProfile ? (
 					<ProfileLoadingState />
 				) : (
 					<Tabs value={tab} onValueChange={setTab} className="w-full">
@@ -96,34 +87,22 @@ export function ProfilePage() {
 							<ProfileAutofillWorkspace
 								userId={user?.id ?? null}
 								userEmail={user?.email}
-								profile={profile}
-								setProfile={setProfile}
-								saving={saving}
-								onSaveProfile={(e) => void saveProfile(e)}
-								workExperiences={workExperiences}
-								setWorkExperiences={setWorkExperiences}
+								userProfile={userProfile}
+								onSaveProfile={saveProfile}
 								onAddWorkExperience={addWorkExperience}
 								onSaveExperience={saveExperience}
-								educations={educations}
-								setEducations={setEducations}
+								onRemoveWorkExperience={removeExperience}
 								onAddEducation={addEducation}
 								onSaveEducation={saveEducation}
-								links={links}
-								setLinks={setLinks}
-								additionalInfo={additionalInfo}
-								setAdditionalInfo={setAdditionalInfo}
-								onAddLink={addLink}
+								onRemoveEducation={removeEducation}
+								onAddLink={onAddLink}
 								onDeleteLink={deleteLink}
-								onSaveLinksAndAdditional={() =>
-									saveLinksAndAdditionalInfo()
-								}
-								disclosure={disclosure}
-								setDisclosure={setDisclosure}
-								skills={skills}
-								setSkills={setSkills}
-								onCreateSkill={addSkill}
+								onSaveAdditionalInfo={onSaveAdditionalInfo}
+								onSaveLink={onSaveLink}
+								onSaveDisclosure={onSaveDisclosure}
+								onAddSkill={addSkill}
 								onDeleteSkill={deleteSkill}
-								onRefetchProfile={() => loadData()}
+								onRefetchProfile={refetchProfile}
 							/>
 						</TabsContent>
 

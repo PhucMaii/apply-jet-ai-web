@@ -8,6 +8,7 @@ export const ROUTES = {
 	login: "/login",
 	signup: "/signup",
 	applications: "/applications",
+	applicationCreate: "/applications/new",
 	applicationDetail: "/applications/:applicationId",
 	profile: "/profile",
 	privacy: "/privacy",

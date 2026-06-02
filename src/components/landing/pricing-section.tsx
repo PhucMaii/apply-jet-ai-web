@@ -2,7 +2,7 @@ import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ROUTES, LINKS } from "@/lib/constants"
+import { ROUTES } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
 const plans = [
@@ -113,7 +113,7 @@ export function PricingSection() {
 								>
 									<Link to={plan.href}>{plan.cta}</Link>
 								</Button>
-								<Button size="lg" variant="ghost" surface="dark" className="flex-1" asChild>
+								{/* <Button size="lg" variant="ghost" surface="dark" className="flex-1" asChild>
 									<a
 										href={LINKS.extensionDownload}
 										target="_blank"
@@ -121,7 +121,7 @@ export function PricingSection() {
 									>
 										Get extension
 									</a>
-								</Button>
+								</Button> */}
 							</div>
 						</motion.div>
 					))}

@@ -30,7 +30,7 @@ function formatDate(iso: string): string {
 
 interface ResumeSectionProps {
 	userId: string | null
-	refetchProfile: () => Promise<void>
+	refetchProfile: () => void
 }
 
 export function ResumeSection({ userId, refetchProfile }: ResumeSectionProps) {

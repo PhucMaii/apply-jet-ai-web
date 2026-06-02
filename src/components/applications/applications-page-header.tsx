@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { LogOut } from "lucide-react"
+import { LogOut, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import { APP_NAME, BRAND_LOGO_SRC, LINKS, ROUTES } from "@/lib/constants"
@@ -36,6 +36,12 @@ export function ApplicationsPageHeader({
 					</p>
 				</div>
 				<nav className="flex flex-wrap gap-2" aria-label="Account navigation">
+					<Button size="sm" className="gap-1.5" asChild>
+						<Link to={ROUTES.applicationCreate}>
+							<Plus className="size-4" aria-hidden />
+							New application
+						</Link>
+					</Button>
 					<Button variant="outline" size="sm" asChild>
 						<Link to={ROUTES.profile}>Profile</Link>
 					</Button>

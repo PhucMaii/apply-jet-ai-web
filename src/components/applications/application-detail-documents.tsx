@@ -68,6 +68,7 @@ export function ApplicationDetailDocuments({
 	const [generatingCover, setGeneratingCover] = useState(false)
 	const [downloadingResume, setDownloadingResume] = useState(false)
 	const [downloadingCover, setDownloadingCover] = useState(false)
+	const [findingHRContacts, setFindingHRContacts] = useState(false)
 	const [docError, setDocError] = useState<string | null>(null)
 
 	useEffect(() => {
@@ -200,9 +201,10 @@ export function ApplicationDetailDocuments({
 		}
 	}
 
-	const findHRContacts = async () => {
+	async function handleFindHRContacts() {
 		if (!user || !form) return
 		setDocError(null)
+		setFindingHRContacts(true)
 		try {
 			const result = await invokeFindHRContacts({
 				userId: user.id,
@@ -225,7 +227,13 @@ export function ApplicationDetailDocuments({
 			setDocError(
 				err instanceof Error ? err.message : "HR contacts finding failed.",
 			)
-			toast.error(err instanceof Error ? err.message : "HR contacts finding failed.")
+			toast.error(
+				err instanceof Error
+					? err.message
+					: "HR contacts finding failed.",
+			)
+		} finally {
+			setFindingHRContacts(false)
 		}
 	}
 	return (
@@ -452,15 +460,22 @@ export function ApplicationDetailDocuments({
 						</p>
 					</div>
 
-					{recruiterEmails.length === 0 ? <Button
-						type="button"
-						size="lg"
-						className="w-full gap-2 sm:w-auto"
-						onClick={() => void findHRContacts()}
-					>
-						<UserSearch className="size-4" aria-hidden />
-						Find HR contacts
-					</Button> : null}
+					{recruiterEmails.length === 0 ? (
+						<Button
+							type="button"
+							size="lg"
+							className="w-full gap-2 sm:w-auto"
+							disabled={findingHRContacts}
+							onClick={() => void handleFindHRContacts()}
+						>
+							{findingHRContacts ? (
+								<Loader2 className="size-4 animate-spin" aria-hidden />
+							) : (
+								<UserSearch className="size-4" aria-hidden />
+							)}
+							Find HR contacts
+						</Button>
+					) : null}
 
 					<RecruiterEmailsList emails={recruiterEmails} />
 				</TabsContent>

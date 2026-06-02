@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
-import { APP_NAME, BRAND_LOGO_SRC, ROUTES, LINKS } from "@/lib/constants"
+import { APP_NAME, BRAND_LOGO_SRC, ROUTES } from "@/lib/constants"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -65,7 +65,7 @@ export function SiteHeader() {
 					<Button variant="ghost" surface="dark" size="sm" className="hidden sm:inline-flex" asChild>
 						<Link to={ROUTES.support}>Support</Link>
 					</Button>
-					<Button variant="ghost" surface="dark" size="sm" asChild>
+					{/* <Button variant="ghost" surface="dark" size="sm" asChild>
 						<a
 							href={LINKS.extensionDownload}
 							target="_blank"
@@ -73,7 +73,7 @@ export function SiteHeader() {
 						>
 							Get extension
 						</a>
-					</Button>
+					</Button> */}
 					{user ? (
 						<>
 							<Button variant="ghost" surface="dark" size="sm" asChild>

@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom"
 import {
 	BookOpen,
-	Chrome,
 	CreditCard,
 	LifeBuoy,
 	Mail,
@@ -31,16 +30,16 @@ const SUPPORT_CARDS = [
 		href: LINKS.contactMail,
 		external: true,
 	},
-	{
-		key: "extension",
-		title: "Chrome extension",
-		description:
-			"Install or update the extension, and make sure you are signed into the same account as on the web app.",
-		icon: Chrome,
-		ctaLabel: "Get extension",
-		href: LINKS.extensionDownload,
-		external: true,
-	},
+	// {
+	// 	key: "extension",
+	// 	title: "Chrome extension",
+	// 	description:
+	// 		"Install or update the extension, and make sure you are signed into the same account as on the web app.",
+	// 	icon: Chrome,
+	// 	ctaLabel: "Get extension",
+	// 	href: LINKS.extensionDownload,
+	// 	external: true,
+	// },
 	{
 		key: "account",
 		title: "Profile & applications",
@@ -161,7 +160,7 @@ export function SupportPage() {
 									</div>
 								</CardHeader>
 								<CardContent className="flex flex-wrap gap-2 pt-0">
-									{"href" in item && item.external ? (
+									{/* {"href" in item && item.external ? (
 										<Button size="sm" variant="secondary" asChild>
 											<a
 												href={item.href}
@@ -179,7 +178,7 @@ export function SupportPage() {
 												{item.ctaLabel}
 											</a>
 										</Button>
-									) : null}
+									) : null} */}
 									{"to" in item && !item.external ? (
 										<>
 											<Button size="sm" variant="secondary" asChild>

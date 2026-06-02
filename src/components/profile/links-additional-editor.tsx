@@ -1,6 +1,5 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Dispatch, SetStateAction } from "react"
-import { Link2, Plus, Save, Trash2 } from "lucide-react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { Link2, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
 	Card,
@@ -14,155 +13,157 @@ import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { UserAdditionalInfoRow, UserLinkRow } from "@/types/database"
-import { cn } from "@/lib/utils"
+import { stableFormSnapshot } from "@/lib/utils"
+import LinkAdditionalRow from "./link-additional-row"
+import type { AsyncResultMsg } from "@/types/types"
+import AddLinkModal from "./add-link-modal"
+import { useForm, useWatch } from "react-hook-form"
+import { toast } from "react-hot-toast"
+import { debounce } from "lodash"
 
 interface LinksAdditionalEditorProps {
 	links: UserLinkRow[]
-	setLinks: Dispatch<SetStateAction<UserLinkRow[]>>
 	additionalInfo: UserAdditionalInfoRow | null
-	setAdditionalInfo: Dispatch<
-		SetStateAction<UserAdditionalInfoRow | null>
-	>
-	onAddLink: () => void
+	onAddLink: (newLink: UserLinkRow) => Promise<AsyncResultMsg>
 	onDeleteLink: (linkId: string) => void
-	onSave: () => void
+	onSaveLink: (link: UserLinkRow) => Promise<AsyncResultMsg>
+	onSaveAdditionalInfo: (additionalInfo: UserAdditionalInfoRow) => Promise<AsyncResultMsg>
 }
 
 export function LinksAdditionalEditor({
 	links,
-	setLinks,
 	additionalInfo,
-	setAdditionalInfo,
 	onAddLink,
 	onDeleteLink,
-	onSave,
+	onSaveLink,
+	onSaveAdditionalInfo,
 }: LinksAdditionalEditorProps) {
-	const handleDeleteLink = (index: number) => {
-		setLinks((prev) => prev.filter((_, entryIndex) => entryIndex !== index))
-		onDeleteLink(links[index].id)
-	}
+	const [isOpenAddLinkModal, setIsOpenAddLinkModal] = useState(false)
 
-	const handleSave = () => {
-		onSave()
-	}
+	const isHydratedRef = useRef(false)
+
+	const { control, register, handleSubmit, formState: { isDirty } } = useForm<UserAdditionalInfoRow>({
+		defaultValues: additionalInfo ?? { languages: "", certifications: "" },
+		mode: "onTouched",
+	})
+
+	useEffect(() => {
+		if (!isHydratedRef.current) {
+			const id = setTimeout(() => {
+				isHydratedRef.current = true
+			}, 0)
+			return () => clearTimeout(id)
+		}
+	}, [isDirty])
+
+	const watchedValues = useWatch({ control })
+	const lastSavedSnapshotRef = useRef<string>("")
+	const isSavingRef = useRef(false)
+
+	const runSave = useCallback(async () => {
+		if (isSavingRef.current) {
+			return
+		}
+		isSavingRef.current = true
+
+
+		try {
+			await handleSubmit(async (data) => {
+				const snapshot = stableFormSnapshot(data)
+				await onSaveAdditionalInfo(data)
+				toast.success("Additional info saved")
+				lastSavedSnapshotRef.current = snapshot
+			})()
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to save additional info")
+		} finally {
+			isSavingRef.current = false
+		}
+	}, [handleSubmit, onSaveAdditionalInfo])
+
+	const debouncedSave = useMemo(() => {
+		return debounce(() => {
+			void runSave()
+		}, 1000)
+	}, [runSave])
+
+	useEffect(() => {
+		return () => {
+			debouncedSave.flush()
+			debouncedSave.cancel()
+		}
+	}, [debouncedSave])
+
+	useEffect(() => {
+		if (!isDirty || !isHydratedRef.current) {
+			lastSavedSnapshotRef.current = ""
+			return
+		}
+
+		const snapshot = stableFormSnapshot(watchedValues)
+		if (snapshot === lastSavedSnapshotRef.current) {
+			return
+		}
+		debouncedSave()
+	}, [debouncedSave, watchedValues, isDirty])
 
 	return (
 		<Card variant="solid" className={DASHBOARD_THEME.card}>
-			<CardHeader>
-				<CardTitle className="flex items-center gap-2 font-display">
-					<Link2 className={PROFILE_SURFACE.sectionIcon} aria-hidden />
-					Links &amp; additional info
-				</CardTitle>
-				<CardDescription>
-					Links and your languages/certifications live in one section.
-				</CardDescription>
-			</CardHeader>
-			<CardContent className="space-y-4">
-				{links.map((row, index) => (
-					<div
-						key={`${row.id}-${index}`}
-						className={cn(
-							"grid gap-4 sm:grid-cols-[1fr_180px_auto]",
-							PROFILE_SURFACE.itemPanel,
-						)}
-					>
-						<Input
-							placeholder="https://linkedin.com/in/your-profile"
-							value={row.url}
-							onChange={(e) =>
-								setLinks((prev) =>
-									prev.map((entry, entryIndex) =>
-										entryIndex === index
-											? { ...entry, url: e.target.value }
-											: entry,
-									),
-								)
-							}
-						/>
-						<Input
-							placeholder="linkedin / portfolio / github"
-							value={row.link_type ?? ""}
-							onChange={(e) =>
-								setLinks((prev) =>
-									prev.map((entry, entryIndex) =>
-										entryIndex === index
-											? { ...entry, link_type: e.target.value }
-											: entry,
-									),
-								)
-							}
-						/>
-						<Button
-							type="button"
-							variant="ghost"
-							size="icon"
-							className="text-destructive hover:text-destructive"
-							onClick={() => handleDeleteLink(index)}
-						>
-							<Trash2 className="size-4" aria-hidden />
-							<span className="sr-only">Remove link</span>
-						</Button>
-					</div>
-				))}
+			<CardHeader className="flex flex-row items-center justify-between">
+				<div>
+					<CardTitle className="flex items-center gap-2 font-display">
+						<Link2 className={PROFILE_SURFACE.sectionIcon} aria-hidden />
+						Links &amp; additional info
+					</CardTitle>
+					<CardDescription>
+						Links and your languages/certifications live in one section.
+					</CardDescription>
+				</div>
 
 				<Button
 					type="button"
 					variant="secondary"
 					className="gap-2"
-					onClick={onAddLink}
+					onClick={() => setIsOpenAddLinkModal(true)}
 				>
 					<Plus className="size-4" aria-hidden />
 					Add link
 				</Button>
+			</CardHeader>
+			<CardContent className="space-y-4">
+				{links.map((row, index) => (
+					<LinkAdditionalRow
+						key={`${row.id}-${index}`}
+						row={row}
+						index={index}
+						onDeleteLink={onDeleteLink}
+						onSave={onSaveLink}
+					/>
+				))}
 
 				<div className="grid gap-4 sm:grid-cols-2">
 					<div className="space-y-2">
 						<Label>Languages (comma separated)</Label>
 						<Input
 							placeholder="English, Spanish"
-							value={additionalInfo?.languages ?? ""}
-							onChange={(e) =>
-								setAdditionalInfo((prev) =>
-									prev
-										? {
-											...prev,
-											languages: e.target.value,
-										} as unknown
-										: prev as any,
-								)
-							}
+							{...register("languages")}
 						/>
 					</div>
 					<div className="space-y-2">
 						<Label>Certifications (comma separated)</Label>
 						<Input
 							placeholder="AWS SAA, PSM I"
-							value={additionalInfo?.certifications ?? ""}
-							onChange={(e) =>
-								setAdditionalInfo((prev) =>
-									prev
-										? {
-											...prev,
-											certifications: e.target.value,
-										} as unknown
-										: prev as any,
-								)
-							}
+							{...register("certifications")}
 						/>
 					</div>
 				</div>
-
-				<div className="flex gap-2 items-center justify-end">
-					<Button
-						type="button"
-						variant="secondary"
-						className="gap-2"
-						onClick={handleSave}
-					>
-						<Save className="size-4" aria-hidden />
-						Save</Button>
-				</div>
 			</CardContent>
+
+			<AddLinkModal
+				isOpen={isOpenAddLinkModal}
+				onClose={() => setIsOpenAddLinkModal(false)}
+				onAdd={onAddLink}
+			/>
 		</Card>
 	)
 }

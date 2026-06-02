@@ -31,75 +31,66 @@ import type {
 	UserWorkExperienceRow,
 } from "@/types/database"
 import { cn } from "@/lib/utils"
+import type { AsyncResultMsg } from "@/types/types"
+
+interface UserProfile {
+	profile: UserProfileRow
+	workExperiences: UserWorkExperienceRow[]
+	educations: UserEducationRow[]
+	links: UserLinkRow[]
+	additionalInfo: UserAdditionalInfoRow | null
+	disclosure: UserDisclosureRow | null
+	skills: UserSkillRow[]
+}
 
 interface ProfileAutofillWorkspaceProps {
 	userId: string | null
 	userEmail: string | undefined
-	profile: UserProfileRow
-	setProfile: React.Dispatch<React.SetStateAction<UserProfileRow | null>>
-	saving: boolean
-	onSaveProfile: (e: React.FormEvent) => void
-	workExperiences: UserWorkExperienceRow[]
-	setWorkExperiences: React.Dispatch<React.SetStateAction<UserWorkExperienceRow[]>>
-	onAddWorkExperience: () => void
+	userProfile: UserProfile
+
+	onSaveProfile: (updatedProfile: UserProfileRow) => Promise<AsyncResultMsg>
+	onAddWorkExperience: (newExperience: UserWorkExperienceRow) => Promise<AsyncResultMsg>
+	onRemoveWorkExperience: (experienceId: string) => Promise<AsyncResultMsg>
 	onSaveExperience: (
 		id: string,
 		patch: Partial<UserWorkExperienceRow>,
-	) => Promise<void>
-	educations: UserEducationRow[]
-	setEducations: React.Dispatch<React.SetStateAction<UserEducationRow[]>>
-	onAddEducation: () => void
+	) => Promise<AsyncResultMsg>
+	onAddEducation: (newEducation: UserEducationRow) => Promise<AsyncResultMsg>
 	onSaveEducation: (
 		id: string,
 		patch: Partial<UserEducationRow>,
-	) => Promise<void>
-	links: UserLinkRow[]
-	setLinks: React.Dispatch<React.SetStateAction<UserLinkRow[]>>
-	additionalInfo: UserAdditionalInfoRow | null
-	setAdditionalInfo: React.Dispatch<
-		React.SetStateAction<UserAdditionalInfoRow | null>
-	>
-	onAddLink: () => void
-	onDeleteLink: (linkId: string) => Promise<void>
-	onSaveLinksAndAdditional: () => Promise<void>
-	disclosure: UserDisclosureRow | null
-	setDisclosure: React.Dispatch<React.SetStateAction<UserDisclosureRow | null>>
-	skills: UserSkillRow[]
-	setSkills: React.Dispatch<React.SetStateAction<UserSkillRow[]>>
-	onCreateSkill: (name: string) => Promise<void>
-	onDeleteSkill: (skillId: string) => Promise<void>
-	onRefetchProfile: () => Promise<void>
+	) => Promise<AsyncResultMsg>
+	onRemoveEducation: (educationId: string) => Promise<AsyncResultMsg>
+	onDeleteLink: (linkId: string) => Promise<AsyncResultMsg>
+	onSaveAdditionalInfo: (additionalInfo: UserAdditionalInfoRow) => Promise<AsyncResultMsg>
+	onAddSkill: (name: string) => Promise<AsyncResultMsg>
+	onDeleteSkill: (skillId: string) => Promise<AsyncResultMsg>
+	onRefetchProfile: () => void
+	onSaveLink: (link: UserLinkRow) => Promise<AsyncResultMsg>
+	onAddLink: (newLink: UserLinkRow) => Promise<AsyncResultMsg>
+	onSaveDisclosure: (disclosure: UserDisclosureRow) => Promise<AsyncResultMsg>
 }
 
 export function ProfileAutofillWorkspace({
 	userId,
 	userEmail,
-	profile,
-	setProfile,
-	saving,
+	userProfile,
+
 	onSaveProfile,
-	workExperiences,
-	setWorkExperiences,
 	onAddWorkExperience,
+	onRemoveWorkExperience,
 	onSaveExperience,
-	educations,
-	setEducations,
 	onAddEducation,
 	onSaveEducation,
-	links,
-	setLinks,
-	additionalInfo,
-	setAdditionalInfo,
-	onAddLink,
+	onRemoveEducation,
 	onDeleteLink,
-	onSaveLinksAndAdditional,
-	disclosure,
-	setDisclosure,
-	skills,
-	setSkills,
-	onCreateSkill,
+	onSaveAdditionalInfo,
+	onAddSkill,
 	onDeleteSkill,
 	onRefetchProfile,
+	onSaveLink,
+	onAddLink,
+	onSaveDisclosure,
 }: ProfileAutofillWorkspaceProps) {
 	const [profileSection, setProfileSection] = useState<ProfileSection>(
 		PROFILE_SECTION.contact,
@@ -170,10 +161,8 @@ export function ProfileAutofillWorkspace({
 						<CardContent className="bg-white">
 							<ProfileContactEditor
 								userEmail={userEmail}
-								profile={profile}
-								setProfile={setProfile}
-								saving={saving}
-								onSubmit={onSaveProfile}
+								profile={userProfile.profile}
+								onSave={onSaveProfile}
 							/>
 						</CardContent>
 					</Card>
@@ -184,10 +173,10 @@ export function ProfileAutofillWorkspace({
 					className="mt-6 space-y-4 focus-visible:outline-none"
 				>
 					<WorkExperienceEditor
-						items={workExperiences}
-						setItems={setWorkExperiences}
+						items={userProfile.workExperiences}
 						onAdd={onAddWorkExperience}
 						onSave={onSaveExperience}
+						onRemove={onRemoveWorkExperience}
 					/>
 				</TabsContent>
 
@@ -196,10 +185,10 @@ export function ProfileAutofillWorkspace({
 					className="mt-6 space-y-4 focus-visible:outline-none"
 				>
 					<EducationEditor
-						items={educations}
-						setItems={setEducations}
+						items={userProfile.educations}
 						onAdd={onAddEducation}
 						onSave={onSaveEducation}
+						onRemove={onRemoveEducation}
 					/>
 				</TabsContent>
 
@@ -208,13 +197,12 @@ export function ProfileAutofillWorkspace({
 					className="mt-6 space-y-4 focus-visible:outline-none"
 				>
 					<LinksAdditionalEditor
-						links={links}
-						setLinks={setLinks}
-						additionalInfo={additionalInfo}
-						setAdditionalInfo={setAdditionalInfo}
+						links={userProfile.links}
+						additionalInfo={userProfile.additionalInfo}
 						onAddLink={onAddLink}
 						onDeleteLink={onDeleteLink}
-						onSave={onSaveLinksAndAdditional}
+						onSaveLink={onSaveLink}
+						onSaveAdditionalInfo={onSaveAdditionalInfo}
 					/>
 				</TabsContent>
 
@@ -223,8 +211,8 @@ export function ProfileAutofillWorkspace({
 					className="mt-6 space-y-4 focus-visible:outline-none"
 				>
 					<DisclosureEditor
-						disclosure={disclosure}
-						setDisclosure={setDisclosure}
+						disclosure={userProfile.disclosure}
+						onSave={onSaveDisclosure}
 					/>
 				</TabsContent>
 
@@ -233,9 +221,8 @@ export function ProfileAutofillWorkspace({
 					className="mt-6 space-y-4 focus-visible:outline-none"
 				>
 					<SkillsEditor
-						items={skills}
-						setItems={setSkills}
-						onCreateSkill={onCreateSkill}
+						items={userProfile.skills}
+						onAddSkill={onAddSkill}
 						onDeleteSkill={onDeleteSkill}
 					/>
 				</TabsContent>

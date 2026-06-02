@@ -1,423 +1,587 @@
-import { useCallback, useEffect, useState } from "react"
-import { useSearchParams } from "react-router-dom"
-import toast from "react-hot-toast"
-import { useAuth } from "@/context/auth-context"
+import { useCallback, useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useAuth } from "@/context/auth-context";
+import { emptyDisclosure, emptyProfileRow } from "@/lib/profile-defaults";
+import { type ProfileNotice } from "@/lib/profile-notice";
 import {
-	emptyDisclosure,
-	emptyEducation,
-	emptyLink,
-	emptyProfileRow,
-	emptySkill,
-	emptyWorkExperience,
-} from "@/lib/profile-defaults"
-import { NOTICE_VARIANT, type ProfileNotice } from "@/lib/profile-notice"
-import {
-	openStripeCustomerPortal,
-	startProSubscriptionCheckout,
-} from "@/lib/stripe-client"
-import { supabase } from "@/lib/supabase"
+  openStripeCustomerPortal,
+  startProSubscriptionCheckout,
+} from "@/lib/stripe-client";
+import { supabase } from "@/lib/supabase";
 import type {
-	SubscriptionRow,
-	UserAdditionalInfoRow,
-	UserDisclosureRow,
-	UserEducationRow,
-	UserLinkRow,
-	UserProfileRow,
-	UserSkillRow,
-	UserWorkExperienceRow,
-} from "@/types/database"
+  SubscriptionRow,
+  UserAdditionalInfoRow,
+  UserDisclosureRow,
+  UserEducationRow,
+  UserLinkRow,
+  UserProfileRow,
+  UserSkillRow,
+  UserWorkExperienceRow,
+} from "@/types/database";
+import { useQuery } from "@tanstack/react-query";
+import type { AsyncResultMsg } from "@/types/types";
 
 function stringToTagList(s: string): string[] {
-	return s
-		.split(",")
-		.map((x) => x.trim())
-		.filter(Boolean)
+  return s
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
 }
 
 export function useProfilePage() {
-	const { user } = useAuth()
-	const [searchParams, setSearchParams] = useSearchParams()
-	const [tab, setTab] = useState("profile")
-	const [loading, setLoading] = useState(true)
-	const [saving, setSaving] = useState(false)
-	const [billingBusy, setBillingBusy] = useState(false)
-	const [notice, setNotice] = useState<ProfileNotice | null>(null)
-	const [error, setError] = useState<string | null>(null)
+  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [tab, setTab] = useState("profile");
+  const [billingBusy, setBillingBusy] = useState(false);
+  const [notice, setNotice] = useState<ProfileNotice | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-	const [profile, setProfile] = useState<UserProfileRow | null>(null)
-	const [subscription, setSubscription] = useState<SubscriptionRow | null>(null)
-	const [workExperiences, setWorkExperiences] = useState<UserWorkExperienceRow[]>(
-		[],
-	)
-	const [educations, setEducations] = useState<UserEducationRow[]>([])
-	const [disclosure, setDisclosure] = useState<UserDisclosureRow | null>(null)
-	const [links, setLinks] = useState<UserLinkRow[]>([])
-	const [additionalInfo, setAdditionalInfo] =
-		useState<UserAdditionalInfoRow | null>(null)
-	const [skills, setSkills] = useState<UserSkillRow[]>([])
-	const [resumeText, setResumeText] = useState<string | null>(null)
+  const checkoutStatus = searchParams.get("checkout");
 
-	const checkoutStatus = searchParams.get("checkout")
+  const loadData = useCallback(async () => {
+    if (!user) return;
+    setError(null);
+    const result: any = {
+      profile: null,
+      subscription: null,
+      workExperiences: [],
+      educations: [],
+      disclosure: null,
+      links: [],
+      additionalInfo: null,
+      skills: [],
+      resumeText: null,
+    };
+    try {
+      const [
+        { data: userRow, error: userErr },
+        { data: subRow, error: subErr },
+        { data: workRows, error: workErr },
+        { data: eduRows, error: eduErr },
+        { data: disclosureRow, error: disclosureErr },
+        { data: linkRows, error: linkErr },
+        { data: additionalRow, error: additionalErr },
+        { data: skillRows, error: skillErr },
+      ] = await Promise.all([
+        supabase.from("users").select("*").eq("id", user.id).maybeSingle(),
+        supabase
+          .from("user_subscriptions")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("user_work_experiences")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("end_date", { ascending: false }),
+        supabase
+          .from("user_educations")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("end_date", { ascending: false }),
+        supabase
+          .from("user_disclosures")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("user_links")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true }),
+        supabase
+          .from("user_additional_info")
+          .select("*")
+          .eq("user_id", user.id)
+          .maybeSingle(),
+        supabase
+          .from("user_skills")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true }),
+      ]);
 
-	const loadData = useCallback(async () => {
-		if (!user) return
-		setError(null)
-		setLoading(true)
-		try {
-			const [
-				{ data: userRow, error: userErr },
-				{ data: subRow, error: subErr },
-				{ data: workRows, error: workErr },
-				{ data: eduRows, error: eduErr },
-				{ data: disclosureRow, error: disclosureErr },
-				{ data: linkRows, error: linkErr },
-				{ data: additionalRow, error: additionalErr },
-				{ data: skillRows, error: skillErr },
-			] = await Promise.all([
-				supabase.from("users").select("*").eq("id", user.id).maybeSingle(),
-				supabase
-					.from("user_subscriptions")
-					.select("*")
-					.eq("user_id", user.id)
-					.maybeSingle(),
-				supabase
-					.from("user_work_experiences")
-					.select("*")
-					.eq("user_id", user.id)
-					.order("end_date", { ascending: false }),
-				supabase
-					.from("user_educations")
-					.select("*")
-					.eq("user_id", user.id)
-					.order("end_date", { ascending: false }),
-				supabase
-					.from("user_disclosures")
-					.select("*")
-					.eq("user_id", user.id)
-					.maybeSingle(),
-				supabase
-					.from("user_links")
-					.select("*")
-					.eq("user_id", user.id)
-					.order("created_at", { ascending: true }),
-				supabase
-					.from("user_additional_info")
-					.select("*")
-					.eq("user_id", user.id)
-					.maybeSingle(),
-				supabase
-					.from("user_skills")
-					.select("*")
-					.eq("user_id", user.id)
-					.order("created_at", { ascending: true }),
-			])
+      const firstError =
+        userErr ??
+        subErr ??
+        workErr ??
+        eduErr ??
+        disclosureErr ??
+        linkErr ??
+        additionalErr ??
+        skillErr;
 
-			const firstError =
-				userErr ??
-				subErr ??
-				workErr ??
-				eduErr ??
-				disclosureErr ??
-				linkErr ??
-				additionalErr ??
-				skillErr
+      if (firstError) {
+        console.error("Something went wrong loading profile page:", firstError);
+        setNotice(null);
+        setError(firstError.message);
+        return;
+      }
 
-			if (firstError) {
-				console.error("Something went wrong loading profile page:", firstError)
-				setNotice(null)
-				setError(firstError.message)
-				return
-			}
+      if (userRow) {
+        const r = userRow as UserProfileRow;
+        const salaryRaw = r.expected_salary;
+        result.profile = {
+          ...r,
+          expected_salary:
+            salaryRaw === null || salaryRaw === undefined
+              ? null
+              : typeof salaryRaw === "number"
+                ? salaryRaw
+                : Number(salaryRaw),
+        };
+      } else {
+        result.profile = emptyProfileRow(user.id, user.email ?? "");
+      }
 
-			if (userRow) {
-				const r = userRow as UserProfileRow
-				const salaryRaw = r.expected_salary
-				setProfile({
-					...r,
-					expected_salary:
-						salaryRaw === null || salaryRaw === undefined
-							? null
-							: typeof salaryRaw === "number"
-								? salaryRaw
-								: Number(salaryRaw),
-				})
-			} else {
-				setProfile(emptyProfileRow(user.id, user.email ?? ""))
-			}
+      result.subscription = subRow as SubscriptionRow | null;
+      result.workExperiences =
+        (workRows as UserWorkExperienceRow[] | null) ?? [];
+      result.educations = (eduRows as UserEducationRow[] | null) ?? [];
+      result.disclosure =
+        (disclosureRow as UserDisclosureRow | null) ?? emptyDisclosure(user.id);
+      result.links = (linkRows as UserLinkRow[] | null) ?? [];
 
-			setSubscription(subRow as SubscriptionRow | null)
-			setWorkExperiences((workRows as UserWorkExperienceRow[] | null) ?? [])
-			setEducations((eduRows as UserEducationRow[] | null) ?? [])
-			setDisclosure(
-				(disclosureRow as UserDisclosureRow | null) ?? emptyDisclosure(user.id),
-			)
-			setLinks((linkRows as UserLinkRow[] | null) ?? [])
+      const formattedAdditionalInfo = {
+        ...additionalRow,
+        languages: additionalRow?.languages?.join(",") ?? "",
+        certifications: additionalRow?.certifications?.join(",") ?? "",
+      };
+      result.additionalInfo =
+        formattedAdditionalInfo as UserAdditionalInfoRow | null;
+      result.skills = (skillRows as UserSkillRow[] | null) ?? [];
 
-			const formattedAdditionalInfo = {
-				...additionalRow,
-				languages: additionalRow?.languages?.join(",") ?? "",
-				certifications: additionalRow?.certifications?.join(",") ?? "",
-			}
-			setAdditionalInfo(
-				formattedAdditionalInfo as UserAdditionalInfoRow | null,
-			)
-			setSkills((skillRows as UserSkillRow[] | null) ?? [])
+      const { data: resume, error: resumeErr } = await supabase
+        .from("resumes")
+        .select("*")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (resumeErr) {
+        console.error("Something went wrong loading resume text:", resumeErr);
+        result.resumeText = null;
+      } else {
+        result.resumeText = resume?.parsed_text ?? null;
+      }
 
-			const { data: resume, error: resumeErr } = await supabase
-				.from("resumes")
-				.select("*")
-				.eq("user_id", user.id)
-				.maybeSingle()
-			if (resumeErr) {
-				console.error("Something went wrong loading resume text:", resumeErr)
-				setResumeText(null)
-			} else {
-				setResumeText(resume?.parsed_text ?? null)
-			}
-		} catch (err) {
-			console.error("Something went wrong loading profile page:", err)
-			setNotice(null)
-			setError(err instanceof Error ? err.message : "Load failed.")
-		} finally {
-			setLoading(false)
-		}
-	}, [user])
+      return result;
+    } catch (err) {
+      console.error("Something went wrong loading profile page:", err);
+      setNotice(null);
+      setError(err instanceof Error ? err.message : "Load failed.");
+    }
+  }, [user]);
 
-	useEffect(() => {
-		void loadData()
-	}, [loadData])
+  const {
+    data: userProfile,
+    refetch: refetchProfile,
+    isLoading: isLoadingProfile,
+  } = useQuery<any>({
+    queryKey: ["user-profile"],
+    queryFn: async () => {
+      return await loadData();
+    },
+    enabled: !!user,
+  });
 
-	useEffect(() => {
-		if (checkoutStatus === "success") {
-			setNotice({
-				variant: NOTICE_VARIANT.success,
-				text:
-					"Checkout completed. Your plan will update in a few seconds once " +
-					"Stripe confirms the subscription.",
-			})
-			setTab("billing")
-			setSearchParams({}, { replace: true })
-			void loadData()
-		} else if (checkoutStatus === "cancel") {
-			setNotice({
-				variant: NOTICE_VARIANT.info,
-				text: "Checkout canceled—no changes were made.",
-			})
-			setTab("billing")
-			setSearchParams({}, { replace: true })
-		}
-	}, [checkoutStatus, loadData, setSearchParams])
+  useEffect(() => {
+    if (checkoutStatus === "success") {
+      setSearchParams({}, { replace: true });
+      void refetchProfile();
+    } else if (checkoutStatus === "cancel") {
+      setSearchParams({}, { replace: true });
+      void refetchProfile();
+    }
+  }, [checkoutStatus, refetchProfile, setSearchParams]);
 
-	async function saveProfile(e: React.FormEvent) {
-		e.preventDefault()
-		if (!user || !profile) return
-		setSaving(true)
-		setError(null)
-		setNotice(null)
-		try {
-			const fullName = [profile.first_name, profile.last_name]
-				.filter(Boolean)
-				.join(" ")
-				.trim()
+  async function saveProfile(
+    updatedProfile: UserProfileRow,
+  ): Promise<AsyncResultMsg> {
+    if (!user || !updatedProfile)
+      return { success: false, message: "User or updatedProfile is null" };
+    try {
+      const fullName = [updatedProfile.first_name, updatedProfile.last_name]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
 
-			const payload = {
-				id: user.id,
-				email: profile.email?.trim() || null,
-				full_name: fullName || null,
-				first_name: profile.first_name?.trim() || null,
-				last_name: profile.last_name?.trim() || null,
-				phone: profile.phone?.trim() || null,
-				address_line1: profile.address_line1?.trim() || null,
-				address_line2: profile.address_line2?.trim() || null,
-				city: profile.city?.trim() || null,
-				province: profile.province?.trim() || null,
-				country: profile.country?.trim() || null,
-				postal_code: profile.postal_code?.trim() || null,
-				expected_salary:
-					profile.expected_salary === null ||
-					profile.expected_salary === undefined ||
-					String(profile.expected_salary) === ""
-						? null
-						: Number(profile.expected_salary),
-				summary: profile.summary?.trim() || null,
-			}
+      const payload = {
+        id: user.id,
+        email: updatedProfile.email?.trim() || null,
+        full_name: fullName || null,
+        first_name: updatedProfile.first_name?.trim() || null,
+        last_name: updatedProfile.last_name?.trim() || null,
+        phone: updatedProfile.phone?.trim() || null,
+        address_line1: updatedProfile.address_line1?.trim() || null,
+        address_line2: updatedProfile.address_line2?.trim() || null,
+        city: updatedProfile.city?.trim() || null,
+        province: updatedProfile.province?.trim() || null,
+        country: updatedProfile.country?.trim() || null,
+        postal_code: updatedProfile.postal_code?.trim() || null,
+        expected_salary:
+          updatedProfile.expected_salary === null ||
+          updatedProfile.expected_salary === undefined ||
+          String(updatedProfile.expected_salary) === ""
+            ? null
+            : Number(updatedProfile.expected_salary),
+        summary: updatedProfile.summary?.trim() || null,
+      };
 
-			const { error: upErr } = await supabase.from("users").upsert(payload, {
-				onConflict: "id",
-			})
+      const { error: upErr } = await supabase.from("users").upsert(payload, {
+        onConflict: "id",
+      });
 
-			if (upErr) {
-				console.error("Something went wrong saving profile:", upErr)
-				setError(upErr.message)
-				return
-			}
+      if (upErr) {
+        console.error("Something went wrong saving profile:", upErr);
+        return { success: false, message: upErr.message };
+      }
 
-			await loadData()
-			setNotice({
-				variant: NOTICE_VARIANT.success,
-				text: "Profile saved. Autofill will use these details.",
-			})
-		} catch (err) {
-			console.error("Something went wrong saving profile:", err)
-			setError(err instanceof Error ? err.message : "Save failed.")
-		} finally {
-			setSaving(false)
-		}
-	}
+      void refetchProfile();
+      return { success: true, message: "Profile Saved Successfully" };
+    } catch (err) {
+      console.error("Something went wrong saving profile:", err);
+      return { success: false, message: "Profile Save Failed" };
+    }
+  }
 
-	const saveExperience = useCallback(
-		async (experienceId: string, patch: Partial<UserWorkExperienceRow>) => {
-			const { error: upErr } = await supabase
-				.from("user_work_experiences")
-				.update(patch)
-				.eq("id", experienceId)
-			if (upErr) throw new Error(upErr.message)
-			toast.success("Experience saved")
-		},
-		[],
-	)
+  const addWorkExperience = useCallback(
+    async (experience: UserWorkExperienceRow): Promise<AsyncResultMsg> => {
+      if (!user)
+        return { success: false, message: "User is not authenticated" };
 
-	const saveEducation = useCallback(
-		async (educationId: string, patch: Partial<UserEducationRow>) => {
-			const { error: upErr } = await supabase
-				.from("user_educations")
-				.update(patch)
-				.eq("id", educationId)
-			if (upErr) throw new Error(upErr.message)
-			toast.success("Education saved")
-		},
-		[],
-	)
+      const payload = {
+        user_id: user.id,
+        location: experience.location,
+        start_date: experience.start_date ?? null,
+        end_date: experience.end_date ?? null,
+        currently_working: experience.currently_working ?? false,
+        description: experience.description ?? null,
+        company: experience.company ?? null,
+        title: experience.title ?? null,
+        employment_type: experience.employment_type ?? null,
+      };
 
-	const addWorkExperience = useCallback(() => {
-		if (!user) return
-		setWorkExperiences((prev) => [...prev, emptyWorkExperience(user.id)])
-	}, [user])
+      const { error: insErr } = await supabase
+        .from("user_work_experiences")
+        .insert(payload);
 
-	const addEducation = useCallback(() => {
-		if (!user) return
-		setEducations((prev) => [...prev, emptyEducation(user.id)])
-	}, [user])
+      if (insErr) {
+        console.error("Something went wrong adding experience:", insErr);
+        return { success: false, message: insErr.message };
+      }
 
-	const saveLinksAndAdditionalInfo = useCallback(async () => {
-		if (!user) return
-		const { error: upErr } = await supabase.from("user_links").upsert(
-			links.map((link) => ({
-				url: link.url,
-				link_type: link.link_type,
-				user_id: user.id,
-			})),
-			{ onConflict: "user_id,link_type" },
-		)
-		if (upErr) throw new Error(upErr.message)
+      void refetchProfile();
 
-		const { error: addErr } = await supabase.from("user_additional_info").upsert(
-			{
-				user_id: user.id,
-				languages: stringToTagList(additionalInfo?.languages ?? ""),
-				certifications: stringToTagList(additionalInfo?.certifications ?? ""),
-			},
-			{ onConflict: "user_id" },
-		)
-		if (addErr) throw new Error(addErr.message)
+      return { success: true, message: "Experience added successfully" };
+    },
+    [user, refetchProfile],
+  );
 
-		toast.success("Links and additional info saved")
-	}, [links, additionalInfo, user])
+  const saveExperience = useCallback(
+    async (experienceId: string, patch: Partial<UserWorkExperienceRow>) => {
+      const { error: upErr } = await supabase
+        .from("user_work_experiences")
+        .update(patch)
+        .eq("id", experienceId);
 
-	const deleteLink = useCallback(async (linkId: string) => {
-		const { error: delErr } = await supabase
-			.from("user_links")
-			.delete()
-			.eq("id", linkId)
-		if (delErr) throw new Error(delErr.message)
-		toast.success("Link deleted")
-	}, [])
+      if (upErr) {
+        console.error("Something went wrong saving experience:", upErr);
+        return { success: false, message: upErr.message };
+      }
 
-	const addLink = useCallback(() => {
-		if (!user) return
-		setLinks((prev) => [...prev, emptyLink(user.id)])
-	}, [user])
+      void refetchProfile();
 
-	const addSkill = useCallback(
-		async (name: string) => {
-			if (!user) return
-			const { error: insErr } = await supabase.from("user_skills").insert({
-				user_id: user.id,
-				name,
-				is_from_org_resume: false,
-			})
-			if (insErr) throw new Error(insErr.message)
+      return { success: true, message: "Experience saved successfully" };
+    },
+    [refetchProfile],
+  );
 
-			toast.success("Skill added")
-			setSkills((prev) => [...prev, { ...emptySkill(user.id), name }])
-		},
-		[user],
-	)
+  const removeExperience = useCallback(
+    async (experienceId: string) => {
+      const { error: delErr } = await supabase
+        .from("user_work_experiences")
+        .delete()
+        .eq("id", experienceId);
 
-	const deleteSkill = useCallback(async (skillId: string) => {
-		const { error: delErr } = await supabase
-			.from("user_skills")
-			.delete()
-			.eq("id", skillId)
-		if (delErr) throw new Error(delErr.message)
-		toast.success("Skill deleted")
-	}, [])
+      if (delErr) {
+        console.error("Something went wrong deleting experience:", delErr);
+        return { success: false, message: delErr.message };
+      }
 
-	async function subscribeToPro() {
-		setBillingBusy(true)
-		setError(null)
-		setNotice(null)
-		const result = await startProSubscriptionCheckout()
-		setBillingBusy(false)
-		if (!result.ok) setError(result.message)
-	}
+      void refetchProfile();
+      return { success: true, message: "Experience deleted successfully" };
+    },
+    [refetchProfile],
+  );
 
-	async function openBillingPortal() {
-		setBillingBusy(true)
-		setError(null)
-		setNotice(null)
-		const result = await openStripeCustomerPortal()
-		setBillingBusy(false)
-		if (!result.ok) setError(result.message)
-	}
+  const addEducation = useCallback(
+    async (newEducation: UserEducationRow) => {
+      if (!user)
+        return { success: false, message: "User is not authenticated" };
 
-	return {
-		user,
-		tab,
-		setTab,
-		loading,
-		saving,
-		billingBusy,
-		notice,
-		error,
-		profile,
-		resumeText,
-		setProfile,
-		subscription,
-		workExperiences,
-		setWorkExperiences,
-		educations,
-		setEducations,
-		disclosure,
-		setDisclosure,
-		links,
-		setLinks,
-		additionalInfo,
-		setAdditionalInfo,
-		skills,
-		setSkills,
-		loadData,
-		saveProfile,
-		saveExperience,
-		saveEducation,
-		addWorkExperience,
-		addEducation,
-		saveLinksAndAdditionalInfo,
-		deleteLink,
-		addLink,
-		addSkill,
-		deleteSkill,
-		subscribeToPro,
-		openBillingPortal,
-	}
+      const { error: insErr } = await supabase.from("user_educations").insert({
+        user_id: user.id,
+        school: newEducation.school,
+        field_of_study: newEducation.field_of_study,
+        degree: newEducation.degree,
+        start_date: newEducation.start_date,
+        end_date: newEducation.end_date,
+        gpa: newEducation.gpa,
+        description: newEducation.description,
+      });
+      if (insErr) {
+        console.error("Something went wrong adding education:", insErr);
+        return { success: false, message: insErr.message };
+      }
+
+      refetchProfile();
+      return { success: true, message: "Education added successfully" };
+    },
+    [user, refetchProfile],
+  );
+
+  const saveEducation = useCallback(
+    async (educationId: string, patch: Partial<UserEducationRow>) => {
+      const { error: upErr } = await supabase
+        .from("user_educations")
+        .update(patch)
+        .eq("id", educationId);
+      if (upErr) {
+        console.error("Something went wrong saving education:", upErr);
+        return { success: false, message: upErr.message };
+      }
+
+      refetchProfile();
+      return { success: true, message: "Education saved successfully" };
+    },
+    [refetchProfile],
+  );
+
+  const removeEducation = useCallback(
+    async (educationId: string) => {
+      const { error: delErr } = await supabase
+        .from("user_educations")
+        .delete()
+        .eq("id", educationId);
+      if (delErr) {
+        console.error("Something went wrong deleting education:", delErr);
+        return { success: false, message: delErr.message };
+      }
+
+      refetchProfile();
+      return { success: true, message: "Education deleted successfully" };
+    },
+    [refetchProfile],
+  );
+
+  const onSaveAdditionalInfo = useCallback(
+    async (additionalInfo: UserAdditionalInfoRow) => {
+      if (!user)
+        return { success: false, message: "User is not authenticated" };
+
+      const payload = {
+        user_id: user.id,
+        languages: stringToTagList(additionalInfo?.languages ?? ""),
+        certifications: stringToTagList(additionalInfo?.certifications ?? ""),
+      };
+
+      const { error: upErr } = await supabase
+        .from("user_additional_info")
+        .upsert(payload, { onConflict: "user_id" });
+      if (upErr) {
+        console.error("Something went wrong saving additional info:", upErr);
+        return { success: false, message: upErr.message };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Additional info saved successfully" };
+    },
+    [user, refetchProfile],
+  );
+
+  const onSaveLink = useCallback(
+    async (link: UserLinkRow) => {
+      if (!user)
+        return { success: false, message: "User is not authenticated" };
+
+      const { error: upErr } = await supabase
+        .from("user_links")
+        .update({
+          url: link.url,
+          link_type: link.link_type,
+        })
+        .eq("id", link.id);
+
+      if (upErr) {
+        console.error("Something went wrong saving link:", upErr);
+        return { success: false, message: upErr.message };
+      }
+
+      void refetchProfile();
+
+      return { success: true, message: "Link saved successfully" };
+    },
+    [user, refetchProfile],
+  );
+
+  const onAddLink = useCallback(
+    async (newLink: UserLinkRow) => {
+      try {
+        if (!user)
+          return { success: false, message: "User is not authenticated" };
+
+        const { error: insErr } = await supabase.from("user_links").insert({
+          url: newLink.url,
+          link_type: newLink.link_type,
+          user_id: user.id,
+        });
+
+        if (insErr) {
+          console.error("Something went wrong adding link:", insErr);
+          return { success: false, message: insErr.message };
+        }
+
+        void refetchProfile();
+        return { success: true, message: "Link added successfully" };
+      } catch (err) {
+        console.error("Something went wrong adding link:", err);
+        return { success: false, message: "Link add failed" };
+      }
+    },
+    [user, refetchProfile],
+  );
+
+  const deleteLink = useCallback(
+    async (linkId: string) => {
+      const { error: delErr } = await supabase
+        .from("user_links")
+        .delete()
+        .eq("id", linkId);
+
+      if (delErr) {
+        console.error("Something went wrong deleting link:", delErr);
+        return {
+          success: false,
+          message: delErr.message ?? "Failed to delete link",
+        };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Link deleted successfully" };
+    },
+    [refetchProfile],
+  );
+
+  const onSaveDisclosure = useCallback(
+    async (disclosure: UserDisclosureRow) => {
+      if (!user)
+        return { success: false, message: "User is not authenticated" };
+
+      const { error: upErr } = await supabase
+        .from("user_disclosures")
+        .update({
+          authorized_to_work: disclosure.authorized_to_work,
+          require_sponsorship: disclosure.require_sponsorship,
+          willing_to_relocate: disclosure.willing_to_relocate,
+          gender: disclosure.gender,
+          ethnicity: disclosure.ethnicity,
+          veteran_status: disclosure.veteran_status,
+          disability_status: disclosure.disability_status,
+        })
+        .eq("id", disclosure.id);
+
+      if (upErr) {
+        console.error("Something went wrong saving disclosure:", upErr);
+        return { success: false, message: upErr.message };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Disclosure saved successfully" };
+    },
+    [user, refetchProfile],
+  );
+
+  const addSkill = useCallback(
+    async (name: string) => {
+      if (!user)
+        return { success: false, message: "User is not authenticated" };
+      const { error: insErr } = await supabase.from("user_skills").insert({
+        user_id: user.id,
+        name,
+        is_from_org_resume: false,
+      });
+      if (insErr) {
+        console.error("Something went wrong adding skill:", insErr);
+        return { success: false, message: insErr.message };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Skill added successfully" };
+    },
+    [user, refetchProfile],
+  );
+
+  const deleteSkill = useCallback(
+    async (skillId: string) => {
+      const { error: delErr } = await supabase
+        .from("user_skills")
+        .delete()
+        .eq("id", skillId);
+      if (delErr) {
+        console.error("Something went wrong deleting skill:", delErr);
+        return { success: false, message: delErr.message };
+      }
+      void refetchProfile();
+      return { success: true, message: "Skill deleted successfully" };
+    },
+    [refetchProfile],
+  );
+
+  async function subscribeToPro() {
+    setBillingBusy(true);
+    setError(null);
+    setNotice(null);
+    const result = await startProSubscriptionCheckout();
+    setBillingBusy(false);
+    if (!result.ok) setError(result.message);
+  }
+
+  async function openBillingPortal() {
+    setBillingBusy(true);
+    setError(null);
+    setNotice(null);
+    const result = await openStripeCustomerPortal();
+    setBillingBusy(false);
+    if (!result.ok) setError(result.message);
+  }
+
+  return {
+    user,
+    tab,
+    setTab,
+    loading: isLoadingProfile,
+    billingBusy,
+    notice,
+    error,
+    resumeText: userProfile?.resumeText,
+    subscription: userProfile?.subscription,
+    userProfile,
+
+    refetchProfile,
+    saveProfile,
+    saveExperience,
+    saveEducation,
+    addWorkExperience,
+    removeExperience,
+    addEducation,
+    onSaveAdditionalInfo,
+    removeEducation,
+    deleteLink,
+    addSkill,
+    deleteSkill,
+    subscribeToPro,
+    openBillingPortal,
+    onSaveDisclosure,
+    onAddLink,
+    onSaveLink,
+  };
 }

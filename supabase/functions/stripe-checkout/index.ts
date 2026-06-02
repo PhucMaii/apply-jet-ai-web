@@ -91,8 +91,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const successUrl = `http://applyjetai.vercel.app/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`
-    const cancelUrl = `http://applyjetai.vercel.app/profile?checkout=cancel`
+    const successUrl = `http://applyjetai.com/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`
+    const cancelUrl = `http://applyjetai.com/profile?checkout=cancel`
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",

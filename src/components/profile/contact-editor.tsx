@@ -1,36 +1,106 @@
-import { type Dispatch, type FormEvent, type SetStateAction } from "react"
-import { Loader2 } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useCallback, useEffect, useMemo, useRef } from "react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { PROFILE_FORM_IDS } from "@/components/profile/profile-form-ids"
 import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type { UserProfileRow } from "@/types/database"
+import { useForm, useWatch } from "react-hook-form"
+import { toast } from "react-hot-toast"
+import type { AsyncResultMsg } from "@/types/types"
+import { stableFormSnapshot } from "@/lib/utils"
+import { debounce } from "lodash"
 
 interface ProfileContactEditorProps {
 	formIds?: typeof PROFILE_FORM_IDS
 	userEmail: string | null | undefined
 	profile: UserProfileRow
-	setProfile: Dispatch<SetStateAction<UserProfileRow | null>>
-	saving: boolean
-	onSubmit: (e: FormEvent) => void
+	onSave: (updatedProfile: UserProfileRow) => Promise<AsyncResultMsg>
 }
 
 export function ProfileContactEditor({
 	formIds = PROFILE_FORM_IDS,
 	userEmail,
 	profile,
-	setProfile,
-	saving,
-	onSubmit,
+	onSave,
 }: ProfileContactEditorProps) {
 	const fieldInputClass = PROFILE_SURFACE.fieldInput
 	const fieldLabelClass = PROFILE_SURFACE.fieldLabel
 	const fieldTextareaClass = PROFILE_SURFACE.fieldTextarea
 
+	const isHydratedRef = useRef(false)
+
+	const {
+		register,
+		handleSubmit,
+		control,
+		formState: { isDirty },
+	} = useForm<UserProfileRow>({
+		defaultValues: profile,
+	})
+
+	// After reset, mark as hydrated on next tick
+	useEffect(() => {
+		if (!isHydratedRef.current) {
+			const id = setTimeout(() => {
+				isHydratedRef.current = true
+			}, 0)
+			return () => clearTimeout(id)
+		}
+	}, [profile, isDirty])
+
+	const watchedValues = useWatch({ control })
+	const lastSavedSnapshotRef = useRef<string>("")
+	const isSavingRef = useRef(false)
+
+	const runSave = useCallback(async () => {
+		if (isSavingRef.current) {
+			return
+		}
+		isSavingRef.current = true
+
+		try {
+			await handleSubmit(async (data) => {
+				const snapshot = stableFormSnapshot(data)
+				await onSave(data)
+				toast.success("Profile saved")
+				lastSavedSnapshotRef.current = snapshot
+			})()
+		} catch (error) {
+			toast.error(error instanceof Error ? error.message : "Failed to save profile")
+		} finally {
+			isSavingRef.current = false
+		}
+	}, [handleSubmit, onSave])
+
+	const debouncedSave = useMemo(() => {
+		return debounce(() => {
+			void runSave()
+		}, 1000)
+	}, [runSave])
+
+	useEffect(() => {
+		return () => {
+			debouncedSave.flush()
+			debouncedSave.cancel()
+		}
+	}, [debouncedSave])
+
+	useEffect(() => {
+		if (!isDirty || !isHydratedRef.current) {
+			lastSavedSnapshotRef.current = ""
+			return
+		}
+
+		const snapshot = stableFormSnapshot(watchedValues)
+		if (snapshot === lastSavedSnapshotRef.current) {
+			return
+		}
+		debouncedSave()
+	}, [debouncedSave, watchedValues, isDirty])
+
 	return (
-		<form onSubmit={onSubmit} className="space-y-6 bg-white">
+		<form className="space-y-6 bg-white">
 			<div className={PROFILE_SURFACE.infoBox}>
 				<p className={PROFILE_SURFACE.infoBoxTitle}>
 					Account email (sign-in)
@@ -46,18 +116,8 @@ export function ProfileContactEditor({
 					<Input
 						id={formIds.firstName}
 						className={fieldInputClass}
-						value={profile.first_name ?? ""}
-						onChange={(e) =>
-							setProfile((p) =>
-								p
-									? {
-											...p,
-											first_name: e.target.value,
-										}
-									: p,
-							)
-						}
 						autoComplete="given-name"
+						{...register("first_name")}
 					/>
 				</div>
 				<div className="space-y-2">
@@ -67,17 +127,7 @@ export function ProfileContactEditor({
 					<Input
 						id={formIds.lastName}
 						className={fieldInputClass}
-						value={profile.last_name ?? ""}
-						onChange={(e) =>
-							setProfile((p) =>
-								p
-									? {
-											...p,
-											last_name: e.target.value,
-										}
-									: p,
-							)
-						}
+						{...register("last_name")}
 						autoComplete="family-name"
 					/>
 				</div>
@@ -91,12 +141,7 @@ export function ProfileContactEditor({
 					id={formIds.email}
 					type="email"
 					className={fieldInputClass}
-					value={profile.email ?? ""}
-					onChange={(e) =>
-						setProfile((p) =>
-							p ? { ...p, email: e.target.value } : p,
-						)
-					}
+					{...register("email")}
 					autoComplete="email"
 				/>
 			</div>
@@ -109,12 +154,7 @@ export function ProfileContactEditor({
 					id={formIds.phone}
 					type="tel"
 					className={fieldInputClass}
-					value={profile.phone ?? ""}
-					onChange={(e) =>
-						setProfile((p) =>
-							p ? { ...p, phone: e.target.value } : p,
-						)
-					}
+					{...register("phone")}
 					autoComplete="tel"
 				/>
 			</div>
@@ -126,14 +166,7 @@ export function ProfileContactEditor({
 				<Input
 					id={formIds.address1}
 					className={fieldInputClass}
-					value={profile.address_line1 ?? ""}
-					onChange={(e) =>
-						setProfile((p) =>
-							p
-								? { ...p, address_line1: e.target.value }
-								: p,
-						)
-					}
+					{...register("address_line1")}
 					autoComplete="address-line1"
 				/>
 			</div>
@@ -145,12 +178,7 @@ export function ProfileContactEditor({
 				<Input
 					id={formIds.address2}
 					className={fieldInputClass}
-					value={profile.address_line2 ?? ""}
-					onChange={(e) =>
-						setProfile((p) =>
-							p ? { ...p, address_line2: e.target.value } : p,
-						)
-					}
+					{...register("address_line2")}
 					autoComplete="address-line2"
 				/>
 			</div>
@@ -163,12 +191,7 @@ export function ProfileContactEditor({
 					<Input
 						id={formIds.city}
 						className={fieldInputClass}
-						value={profile.city ?? ""}
-						onChange={(e) =>
-							setProfile((p) =>
-								p ? { ...p, city: e.target.value } : p,
-							)
-						}
+						{...register("city")}
 						autoComplete="address-level2"
 					/>
 				</div>
@@ -179,12 +202,7 @@ export function ProfileContactEditor({
 					<Input
 						id={formIds.province}
 						className={fieldInputClass}
-						value={profile.province ?? ""}
-						onChange={(e) =>
-							setProfile((p) =>
-								p ? { ...p, province: e.target.value } : p,
-							)
-						}
+						{...register("province")}
 						autoComplete="address-level1"
 					/>
 				</div>
@@ -198,12 +216,7 @@ export function ProfileContactEditor({
 					<Input
 						id={formIds.country}
 						className={fieldInputClass}
-						value={profile.country ?? ""}
-						onChange={(e) =>
-							setProfile((p) =>
-								p ? { ...p, country: e.target.value } : p,
-							)
-						}
+						{...register("country")}
 						autoComplete="country-name"
 					/>
 				</div>
@@ -214,12 +227,7 @@ export function ProfileContactEditor({
 					<Input
 						id={formIds.postal}
 						className={fieldInputClass}
-						value={profile.postal_code ?? ""}
-						onChange={(e) =>
-							setProfile((p) =>
-								p ? { ...p, postal_code: e.target.value } : p,
-							)
-						}
+						{...register("postal_code")}
 						autoComplete="postal-code"
 					/>
 				</div>
@@ -236,23 +244,7 @@ export function ProfileContactEditor({
 					min={0}
 					step={1000}
 					placeholder="85000"
-					value={
-						profile.expected_salary === null ||
-						profile.expected_salary === undefined
-							? ""
-							: String(profile.expected_salary)
-					}
-					onChange={(e) => {
-						const v = e.target.value
-						setProfile((p) =>
-							p
-								? {
-										...p,
-										expected_salary: v === "" ? null : Number(v),
-									}
-								: p,
-						)
-					}}
+					{...register("expected_salary")}
 				/>
 			</div>
 
@@ -265,26 +257,9 @@ export function ProfileContactEditor({
 					rows={5}
 					className={fieldTextareaClass}
 					placeholder="Short summary for forms and cover letters…"
-					value={profile.summary ?? ""}
-					onChange={(e) =>
-						setProfile((p) =>
-							p ? { ...p, summary: e.target.value } : p,
-						)
-					}
+					{...register("summary")}
 				/>
 			</div>
-
-			<Button type="submit" disabled={saving} className="gap-2">
-				{saving ? (
-					<>
-						<Loader2 className="size-4 animate-spin" aria-hidden />
-						Saving…
-					</>
-				) : (
-					"Save profile"
-				)}
-			</Button>
 		</form>
 	)
 }
-
