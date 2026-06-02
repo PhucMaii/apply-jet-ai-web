@@ -4,10 +4,11 @@ import { ProfileAutofillWorkspace } from "@/components/profile/profile-autofill-
 import { ProfileBillingPanel } from "@/components/profile/profile-billing-panel"
 import { ProfileLoadingState } from "@/components/profile/profile-loading-state"
 import { ProfilePageAlerts } from "@/components/profile/profile-page-alerts"
-import { ProfilePageHeader } from "@/components/profile/profile-page-header"
+import { PageHeader } from "@/components/page-header"
 import { useAuth } from "@/context/auth-context"
 import { useProfilePage } from "@/hooks/use-profile-page"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
+import { PAGE_HEADER_COPY } from "@/lib/page-header-copy"
 import { cn } from "@/lib/utils"
 
 export function ProfilePage() {
@@ -48,7 +49,9 @@ export function ProfilePage() {
 
 	return (
 		<div className={DASHBOARD_THEME.page}>
-			<ProfilePageHeader
+			<PageHeader
+				title={PAGE_HEADER_COPY.profileTitle}
+				description={PAGE_HEADER_COPY.profileDescription}
 				userEmail={user?.email}
 				accountInitials={accountInitials}
 				onSignOut={signOut}

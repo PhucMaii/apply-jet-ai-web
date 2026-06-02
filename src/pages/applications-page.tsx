@@ -1,10 +1,11 @@
 import { Loader2 } from "lucide-react"
 import { ApplicationsEmptyState } from "@/components/applications/applications-empty-state"
-import { ApplicationsPageHeader } from "@/components/applications/applications-page-header"
 import { ApplicationsTable } from "@/components/applications/applications-table"
+import { PageHeader } from "@/components/page-header"
 import { useAuth } from "@/context/auth-context"
 import { useApplications } from "@/hooks/use-applications"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
+import { PAGE_HEADER_COPY } from "@/lib/page-header-copy"
 
 export function ApplicationsPage() {
 	const { user, signOut } = useAuth()
@@ -20,10 +21,17 @@ export function ApplicationsPage() {
 		resolveStatus,
 	} = useApplications()
 
+	const accountInitials = (
+		user?.email?.split("@")[0]?.slice(0, 2) || "?"
+	).toUpperCase()
+
 	return (
 		<div className={APPLICATIONS_THEME.page}>
-			<ApplicationsPageHeader
+			<PageHeader
+				title={PAGE_HEADER_COPY.applicationsTitle}
+				description={PAGE_HEADER_COPY.applicationsDescription}
 				userEmail={user?.email}
+				accountInitials={accountInitials}
 				onSignOut={signOut}
 			/>
 

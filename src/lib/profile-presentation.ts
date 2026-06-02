@@ -94,3 +94,31 @@ export function getPlanPresentation(plan: SubscriptionRow["plan"] | null | undef
 		valueClass: isPro ? "text-emerald-700" : "text-neutral-600",
 	}
 }
+
+export function getPlanHeaderBadgePresentation(
+	plan: SubscriptionRow["plan"] | null | undefined,
+) {
+	const isPro = plan === "pro"
+	return {
+		Icon: isPro ? Crown : CircleDashed,
+		label: isPro ? "Pro" : "Free",
+		className: isPro
+			? "border-primary/35 bg-primary/10 text-primary hover:border-primary/50 hover:bg-primary/15"
+			: "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:bg-white/10",
+		iconClassName: isPro ? "text-primary" : "opacity-70",
+	}
+}
+
+export function getPlanDashboardBadgePresentation(
+	plan: SubscriptionRow["plan"] | null | undefined,
+) {
+	const isPro = plan === "pro"
+	return {
+		Icon: isPro ? Crown : CircleDashed,
+		label: isPro ? "Pro" : "Free",
+		className: isPro
+			? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100"
+			: "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-100",
+		iconClassName: isPro ? "text-emerald-600" : "text-neutral-500",
+	}
+}

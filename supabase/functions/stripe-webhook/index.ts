@@ -47,6 +47,7 @@ Deno.serve(async (req) => {
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+    // const webhookSecret = "whsec_7ahE9UbrEomdofjKVRMZtT6J4lJWfnC1";
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -95,6 +96,9 @@ Deno.serve(async (req) => {
             ? session.subscription
             : session.subscription?.id;
 
+        console.log(session, "session");
+        console.log(subId, "subId");
+
         if (!userId || !customerId || !subId) {
           console.error("checkout.session.completed missing ids", {
             userId: !!userId,
@@ -140,6 +144,8 @@ Deno.serve(async (req) => {
       case "customer.subscription.created": {
         const sub = event.data.object as Stripe.Subscription;
         const subId = sub.id;
+        const userId = sub.metadata?.supabase_user_id;
+        const itemData = sub.items.data[0];
 
         const plan: "free" | "pro" =
           sub.status === "canceled" || sub.status === "incomplete_expired"
@@ -154,9 +160,18 @@ Deno.serve(async (req) => {
             canceled_at: sub.canceled_at
               ? new Date(sub.canceled_at * 1000).toISOString()
               : null,
+            stripe_subscription_id: subId,
+            stripe_customer_id: sub.customer as string,
+            stripe_price_id: itemData.price.id,
+            current_period_end: new Date(
+              itemData.current_period_end * 1000,
+            ).toISOString(),
+            current_period_start: new Date(
+              itemData.current_period_start * 1000,
+            ).toISOString(),
             updated_at: new Date().toISOString(),
           })
-          .eq("stripe_subscription_id", subId);
+          .eq("user_id", userId);
 
         if (error) {
           console.error("Something went wrong syncing subscription:", error);
@@ -188,6 +203,7 @@ Deno.serve(async (req) => {
               cover_letters_limit: 10,
               extract_text_limit: 10,
               applications_answers_limit: 0,
+              plan_key: "free",
             })
             .eq("user_id", subscriptionRow.user_id);
 
@@ -216,6 +232,7 @@ Deno.serve(async (req) => {
             cover_letters_limit: 200,
             extract_text_limit: 200,
             application_answers_limit: 200,
+            plan_key: "pro",
           })
           .eq("user_id", userId);
 

@@ -1,43 +1,25 @@
-import { useEffect, useState } from "react"
 import {
-	Download,
 	FileText,
 	Loader2,
 	Mail,
-	Sparkles,
 	UserSearch,
 } from "lucide-react"
-import { RecruiterEmailsList } from "@/components/applications/recruiter-emails-list"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-	downloadFromUrl,
-	downloadTextContent,
-	invokeFindHRContacts,
-	invokeGenerateCoverLetter,
-	invokeGenerateResume,
-} from "@/lib/application-generation"
-import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
-import {
-	COVER_LETTER_TONE_META,
-	COVER_LETTER_TONES,
-	type CoverLetterTone,
-} from "@/lib/cover-letter-tone"
-import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type {
 	ApplicationDetailForm,
 	GeneratedDocumentRow,
 	RecruiterEmail,
 } from "@/types/application-detail"
 import { cn } from "@/lib/utils"
-import { useGeneratedResume } from "../../../hooks/useGeneratedResume"
-import { useGeneratedCoverLetter } from "../../../hooks/useGeneratedCoverLetter"
+import GeneratedResumeTab from "./generated-resume-tab"
+import GeneratedCoverLetterTab from "./generated-cover-letter-tab"
+import FindHRTab from "./find-hr-tab"
 import { useProfilePage } from "@/hooks/use-profile-page"
-import toast from "react-hot-toast"
-import { SUBTITLE_RECRUITER_EMAILS } from "./constant"
+import { useUserSubscription } from "@/hooks/use-user-subscription"
+import ProFeatureGuard, { ProFeatureBadge } from "../pro-feature-guard"
+import useUserUsage from "@/hooks/use-user-usage"
+import { useMemo } from "react"
 
 interface ApplicationDetailDocumentsProps {
 	form: ApplicationDetailForm
@@ -56,186 +38,24 @@ export function ApplicationDetailDocuments({
 	refreshingDocuments = false,
 	refetchApplication,
 }: ApplicationDetailDocumentsProps) {
-	const { getResumeDownloadUrl } = useGeneratedResume()
-	const { getCoverLetterDownloadUrl } = useGeneratedCoverLetter()
-	const { user, resumeText } = useProfilePage()
+	const { resumeText } = useProfilePage()
+	const { plan } = useUserSubscription()
+	const { usage } = useUserUsage()
+	const isPro = plan === "pro"
 
-	const [tone, setTone] = useState<CoverLetterTone>("Professional")
-	const [coverCompany, setCoverCompany] = useState(form.companyName)
-	const [coverJobTitle, setCoverJobTitle] = useState(form.jobTitle)
-	const [hiringManager, setHiringManager] = useState("")
-	const [generatingResume, setGeneratingResume] = useState(false)
-	const [generatingCover, setGeneratingCover] = useState(false)
-	const [downloadingResume, setDownloadingResume] = useState(false)
-	const [downloadingCover, setDownloadingCover] = useState(false)
-	const [findingHRContacts, setFindingHRContacts] = useState(false)
-	const [docError, setDocError] = useState<string | null>(null)
+	const isGuardResume = useMemo(() => {
+		if (!usage) return false
+		return usage.resume_generations_used >= usage.resume_generations_limit
+	}, [usage])
+	const isGuardCoverLetter = useMemo(() => {
+		if (!usage) return false
+		return usage.cover_letters_used >= usage.cover_letters_limit
+	}, [usage])
 
-	useEffect(() => {
-		setCoverCompany(form.companyName)
-		setCoverJobTitle(form.jobTitle)
-	}, [form.companyName, form.jobTitle])
+	console.log(isGuardResume, isGuardCoverLetter, "isGuardResume, isGuardCoverLetter")
 
-	async function handleGenerateResume() {
-		if (!user) return
-		setDocError(null)
-		setGeneratingResume(true)
-		try {
-			const result = await invokeGenerateResume({
-				resumeText: resumeText ?? "",
-				jdText: form.jobDescription.trim(),
-				targetRole: form.jobTitle,
-				userId: user.id,
-				jobUrl: form.jobUrl,
-			})
-			if (!result.ok) {
-				setDocError(result.message)
-				return
-			}
-			if (result.data && "error" in result.data && result.data.error) {
-				setDocError(String(result.data.error))
-				return
-			}
-			toast.success("Resume generated successfully")
-			await refetchApplication()
-		} catch (err) {
-			console.error("Something went wrong generating resume:", err)
-			setDocError(
-				err instanceof Error ? err.message : "Resume generation failed.",
-			)
-		} finally {
-			setGeneratingResume(false)
-		}
-	}
 
-	async function handleGenerateCoverLetter() {
-		if (!user) return
-		setDocError(null)
-		setGeneratingCover(true)
-		try {
-			await invokeGenerateCoverLetter({
-				resumeText: resumeText ?? "",
-				jdText: form.jobDescription.trim(),
-				userId: user.id,
-				jobUrl: form.jobUrl,
-				companyName: coverCompany.trim(),
-				roleTitle: coverJobTitle.trim(),
-				hiringManager: hiringManager.trim() ?? undefined,
-				tone: tone,
-			})
-			toast.success("Cover letter generated successfully")
-			await refetchApplication()
-		} catch (err) {
-			console.error("Something went wrong generating cover letter:", err)
-			setDocError(
-				err instanceof Error
-					? err.message
-					: "Cover letter generation failed.",
-			)
-		} finally {
-			setGeneratingCover(false)
-		}
-	}
 
-	async function handleDownloadResume() {
-		if (!generatedResume) return
-		setDownloadingResume(true)
-		setDocError(null)
-		try {
-			if (generatedResume.file_url) {
-				const filename = `${form.companyName}-resume.pdf`
-				const url = await getResumeDownloadUrl(generatedResume.id, filename)
-				await downloadFromUrl(url, filename)
-				return
-			}
-			downloadTextContent(
-				generatedResume.content,
-				`${form.companyName}-resume.txt`,
-			)
-		} catch (err) {
-			console.error("Something went wrong downloading resume:", err)
-			if (generatedResume.content) {
-				downloadTextContent(
-					generatedResume.content,
-					`${form.companyName}-resume.txt`,
-				)
-			} else {
-				setDocError(
-					err instanceof Error ? err.message : "Download failed.",
-				)
-			}
-		} finally {
-			setDownloadingResume(false)
-		}
-	}
-
-	async function handleDownloadCover() {
-		if (!generatedCoverLetter) return
-		setDownloadingCover(true)
-		setDocError(null)
-		try {
-			if (generatedCoverLetter.file_url) {
-				const filename = `${form.companyName}-cover-letter.pdf`
-				const url = await getCoverLetterDownloadUrl(generatedCoverLetter.id, filename)
-				await downloadFromUrl(url, filename)
-				return
-			}
-			downloadTextContent(
-				generatedCoverLetter.content,
-				`${form.companyName}-cover-letter.txt`,
-			)
-		} catch (err) {
-			console.error("Something went wrong downloading cover letter:", err)
-			if (generatedCoverLetter.content) {
-				downloadTextContent(
-					generatedCoverLetter.content,
-					`${form.companyName}-cover-letter.txt`,
-				)
-			} else {
-				setDocError(
-					err instanceof Error ? err.message : "Download failed.",
-				)
-			}
-		} finally {
-			setDownloadingCover(false)
-		}
-	}
-
-	async function handleFindHRContacts() {
-		if (!user || !form) return
-		setDocError(null)
-		setFindingHRContacts(true)
-		try {
-			const result = await invokeFindHRContacts({
-				userId: user.id,
-				companyName: form.companyName.trim(),
-				applicationId: form.id.trim(),
-				jobTitle: form.jobTitle.trim(),
-				jobUrl: form.jobUrl,
-				jobDescription: form.jobDescription.trim(),
-			})
-			if (!result.ok) {
-				setDocError(result.msg)
-				toast.error(result.msg)
-				return
-			}
-
-			await refetchApplication()
-			toast.success(result.msg)
-		} catch (err) {
-			console.error("Something went wrong finding HR contacts:", err)
-			setDocError(
-				err instanceof Error ? err.message : "HR contacts finding failed.",
-			)
-			toast.error(
-				err instanceof Error
-					? err.message
-					: "HR contacts finding failed.",
-			)
-		} finally {
-			setFindingHRContacts(false)
-		}
-	}
 	return (
 		<section
 			className={cn(
@@ -255,14 +75,6 @@ export function ApplicationDetailDocuments({
 					</span>
 				</div>
 			) : null}
-			{docError ? (
-				<p
-					className={cn("mb-4", APPLICATIONS_THEME.error)}
-					role="alert"
-				>
-					{docError}
-				</p>
-			) : null}
 			<Tabs defaultValue="resume" className="w-full">
 				<TabsList
 					className={cn(
@@ -276,6 +88,7 @@ export function ApplicationDetailDocuments({
 					>
 						<FileText className="size-4 shrink-0 opacity-80" aria-hidden />
 						Resume
+						{isGuardResume ? <ProFeatureBadge /> : null}
 					</TabsTrigger>
 					<TabsTrigger
 						value="cover"
@@ -283,7 +96,7 @@ export function ApplicationDetailDocuments({
 					>
 						<Mail className="size-4 shrink-0 opacity-80" aria-hidden />
 						<span className="hidden min-[420px]:inline">Cover letter</span>
-						<span className="min-[420px]:hidden">Cover</span>
+						{isGuardCoverLetter ? <ProFeatureBadge /> : null}
 					</TabsTrigger>
 					<TabsTrigger
 						value="hr-email"
@@ -291,259 +104,46 @@ export function ApplicationDetailDocuments({
 					>
 						<UserSearch className="size-4 shrink-0 opacity-80" aria-hidden />
 						HR contacts
+						{!isPro ? <ProFeatureBadge /> : null}
 					</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="resume" className="mt-6 space-y-6 outline-none">
-					<div className="rounded-xl border border-neutral-100 bg-neutral-50/80 p-4">
-						<p className="text-sm leading-relaxed text-neutral-600">
-							Generate a tailored resume aligned to this job description.
-							Save application details first so the latest description is
-							used.
-						</p>
-					</div>
-
-					{!generatedResume ? <Button
-						type="button"
-						size="lg"
-						className="w-full gap-2 sm:w-auto"
-						disabled={generatingResume}
-						onClick={() => void handleGenerateResume()}
-					>
-						{generatingResume ? (
-							<Loader2 className="size-4 animate-spin" aria-hidden />
-						) : (
-							<Sparkles className="size-4" aria-hidden />
-						)}
-						Generate tailored resume
-					</Button> : null}
-
-					{generatedResume ? (
-						<GeneratedDocumentPreview
-							title="Generated resume"
-							content={generatedResume.content}
-							createdAt={generatedResume.created_at}
-							downloading={downloadingResume}
-							onDownload={() => void handleDownloadResume()}
+					<ProFeatureGuard isGuard={isGuardResume}>
+						<GeneratedResumeTab
+							generatedResume={generatedResume ?? null}
+							resumeText={resumeText}
+							form={form}
+							refetchApplication={refetchApplication}
 						/>
-					) : (
-						<EmptyDocumentHint label="No resume generated yet for this application." />
-					)}
+					</ProFeatureGuard>
 				</TabsContent>
 
 				<TabsContent value="cover" className="mt-6 space-y-6 outline-none">
-					<fieldset className="space-y-3">
-						<legend className="text-sm font-semibold text-neutral-900">
-							Tone
-						</legend>
-						<div className="grid gap-3 sm:grid-cols-3">
-							{COVER_LETTER_TONES.map((option) => {
-								const selected = tone === option
-								return (
-									<label
-										key={option}
-										className={cn(
-											"cursor-pointer rounded-xl border p-4 transition-colors",
-											selected
-												? "border-primary bg-primary/5 ring-1 ring-primary/25"
-												: "border-neutral-200 bg-white hover:border-primary/30",
-										)}
-									>
-										<input
-											type="radio"
-											name="cover-tone"
-											value={option}
-											checked={selected}
-											className="sr-only"
-											onChange={() => setTone(option)}
-										/>
-										<span className="block text-sm font-semibold text-neutral-900">
-											{option}
-										</span>
-										<span className="mt-1 block text-xs leading-relaxed text-neutral-500">
-											{COVER_LETTER_TONE_META[option].description}
-										</span>
-									</label>
-								)
-							})}
-						</div>
-					</fieldset>
-
-					<div className="grid gap-4 sm:grid-cols-2">
-						<div className="space-y-2">
-							<Label
-								htmlFor="cover-company"
-								className={PROFILE_SURFACE.fieldLabel}
-							>
-								Company name
-							</Label>
-							<Input
-								id="cover-company"
-								value={coverCompany}
-								onChange={(e) => setCoverCompany(e.target.value)}
-								className={PROFILE_SURFACE.fieldInput}
-							/>
-						</div>
-						<div className="space-y-2">
-							<Label
-								htmlFor="cover-job-title"
-								className={PROFILE_SURFACE.fieldLabel}
-							>
-								Job title
-							</Label>
-							<Input
-								id="cover-job-title"
-								value={coverJobTitle}
-								onChange={(e) => setCoverJobTitle(e.target.value)}
-								className={PROFILE_SURFACE.fieldInput}
-							/>
-						</div>
-						<div className="space-y-2 sm:col-span-2">
-							<Label
-								htmlFor="cover-hiring-manager"
-								className={PROFILE_SURFACE.fieldLabel}
-							>
-								Hiring manager{" "}
-								<span className="font-normal text-neutral-500">
-									(optional)
-								</span>
-							</Label>
-							<Input
-								id="cover-hiring-manager"
-								placeholder="e.g. Alex Chen"
-								value={hiringManager}
-								onChange={(e) => setHiringManager(e.target.value)}
-								className={PROFILE_SURFACE.fieldInput}
-							/>
-						</div>
-					</div>
-
-					{generatedCoverLetter ? null : <Button
-						type="button"
-						size="lg"
-						className="w-full gap-2 sm:w-auto"
-						disabled={generatingCover}
-						onClick={() => void handleGenerateCoverLetter()}
-					>
-						{generatingCover ? (
-							<Loader2 className="size-4 animate-spin" aria-hidden />
-						) : (
-							<Sparkles className="size-4" aria-hidden />
-						)}
-						Generate cover letter
-					</Button>}
-
-					{generatedCoverLetter ? (
-						<GeneratedDocumentPreview
-							title="Generated cover letter"
-							content={generatedCoverLetter.content}
-							createdAt={generatedCoverLetter.created_at}
-							downloading={downloadingCover}
-							onDownload={() => void handleDownloadCover()}
+					<ProFeatureGuard isGuard={isGuardCoverLetter}>
+						<GeneratedCoverLetterTab
+							form={form}
+							generatedCoverLetter={generatedCoverLetter ?? null}
+							refetchApplication={refetchApplication}
+							resumeText={resumeText}
 						/>
-					) : (
-						<EmptyDocumentHint label="No cover letter generated yet for this application." />
-					)}
+					</ProFeatureGuard>
 				</TabsContent>
 
 				<TabsContent value="hr-email" className="mt-6 space-y-6 outline-none">
-					<div className="rounded-xl border border-neutral-100 bg-neutral-50/80 p-4">
-						<div className="flex gap-2 items-center">
-							{SUBTITLE_RECRUITER_EMAILS[recruiterEmails.length === 0 ? "false" : "true"].icon as React.ReactNode}
-							<p className="text-sm font-semibold text-neutral-900">
-								{SUBTITLE_RECRUITER_EMAILS[recruiterEmails.length === 0 ? "false" : "true"].title}
-							</p>
-
-						</div>
-						<p className="text-sm leading-relaxed text-neutral-600">
-							{SUBTITLE_RECRUITER_EMAILS[recruiterEmails.length === 0 ? "false" : "true"].description}
-						</p>
-					</div>
-
-					{recruiterEmails.length === 0 ? (
-						<Button
-							type="button"
-							size="lg"
-							className="w-full gap-2 sm:w-auto"
-							disabled={findingHRContacts}
-							onClick={() => void handleFindHRContacts()}
-						>
-							{findingHRContacts ? (
-								<Loader2 className="size-4 animate-spin" aria-hidden />
-							) : (
-								<UserSearch className="size-4" aria-hidden />
-							)}
-							Find HR contacts
-						</Button>
-					) : null}
-
-					<RecruiterEmailsList emails={recruiterEmails} />
+					<ProFeatureGuard
+						isGuard={!isPro}
+						featureName="HR contacts"
+						description="Find recruiter and hiring manager emails for this role with a Pro plan."
+					>
+						<FindHRTab
+							recruiterEmails={recruiterEmails}
+							form={form}
+							refetchApplication={refetchApplication}
+						/>
+					</ProFeatureGuard>
 				</TabsContent>
 			</Tabs>
 		</section>
-	)
-}
-
-interface GeneratedDocumentPreviewProps {
-	title: string
-	content: string
-	createdAt: string
-	downloading: boolean
-	onDownload: () => void
-}
-
-function GeneratedDocumentPreview({
-	title,
-	content,
-	createdAt,
-	downloading,
-	onDownload,
-}: GeneratedDocumentPreviewProps) {
-	const createdLabel = new Date(createdAt).toLocaleString(undefined, {
-		dateStyle: "medium",
-		timeStyle: "short",
-	})
-
-	return (
-		<div className="rounded-xl border border-neutral-200 bg-white p-4">
-			<div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-				<div>
-					<p className="text-sm font-semibold text-neutral-900">{title}</p>
-					<p className="text-xs text-neutral-500">Created {createdLabel}</p>
-				</div>
-				<Button
-					type="button"
-					variant="outline"
-					size="sm"
-					className="gap-2"
-					disabled={downloading}
-					onClick={onDownload}
-				>
-					{downloading ? (
-						<Loader2 className="size-4 animate-spin" aria-hidden />
-					) : (
-						<Download className="size-4" aria-hidden />
-					)}
-					Download
-				</Button>
-			</div>
-			{content ? (
-				<pre className="thin-scrollbar max-h-64 overflow-y-auto whitespace-pre-wrap rounded-lg border border-neutral-100 bg-neutral-50 p-3 font-sans text-sm leading-relaxed text-neutral-700">
-					{content}
-				</pre>
-			) : (
-				<p className="text-sm text-neutral-500">
-					Document ready—use download to open the file.
-				</p>
-			)}
-		</div>
-	)
-}
-
-function EmptyDocumentHint({ label }: { label: string }) {
-	return (
-		<p className="rounded-lg border border-dashed border-neutral-200 bg-neutral-50/50 px-4 py-6 text-center text-sm text-neutral-500">
-			{label}
-		</p>
 	)
 }

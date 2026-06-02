@@ -101,6 +101,8 @@ export function ApplicationCreateForm({
 					id="create-application-job-description"
 					label={APPLICATION_CREATE_COPY.jobDescriptionLabel}
 					hint={APPLICATION_CREATE_COPY.jobDescriptionHint}
+					error={fieldErrors.jobDescription}
+					required
 				>
 					<Textarea
 						id="create-application-job-description"
@@ -113,6 +115,8 @@ export function ApplicationCreateForm({
 							onPatchForm({ jobDescription: e.target.value })
 						}
 						className={PROFILE_SURFACE.fieldTextarea}
+						aria-required
+						aria-invalid={!!fieldErrors.jobDescription}
 					/>
 				</FormField>
 			</div>

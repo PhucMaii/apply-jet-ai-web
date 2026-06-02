@@ -14,7 +14,7 @@ export const APPLICATION_CREATE_COPY = {
 	jobDescriptionPlaceholder:
 		"Paste the full job description here. The more detail you add, the better your tailored documents will be.",
 	jobDescriptionHint:
-		"Optional but recommended for resume and cover letter generation.",
+		"Used to tailor resumes, cover letters, and HR outreach for this role.",
 	submitLabel: "Create application",
 	submittingLabel: "Creating…",
 	requiredHint: "Required fields",
@@ -23,4 +23,5 @@ export const APPLICATION_CREATE_COPY = {
 export const APPLICATION_CREATE_VALIDATION = {
 	companyNameRequired: "Company name is required.",
 	jobTitleRequired: "Job title is required.",
+	jobDescriptionRequired: "Job description is required.",
 } as const

@@ -24,7 +24,8 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "method_not_allowed" }, 405);
     }
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    // const stripeKey = "sk_test_51TDUgmRdPwUNVtDIxFBPTXwtMvUnBJnJjZW13ISLPCzFw5jMQ7i62wzChPkXGQU2fLcTsyAD8N8cCdhlvydZ84qX00qDIGV47Q"
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     // const appOrigin = Deno.env.get("APP_ORIGIN");

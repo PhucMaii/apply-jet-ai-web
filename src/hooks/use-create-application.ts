@@ -45,6 +45,10 @@ export function useCreateApplication() {
 		if (!form.jobTitle.trim()) {
 			errors.jobTitle = APPLICATION_CREATE_VALIDATION.jobTitleRequired
 		}
+		if (!form.jobDescription.trim()) {
+			errors.jobDescription =
+				APPLICATION_CREATE_VALIDATION.jobDescriptionRequired
+		}
 		setFieldErrors(errors)
 		return Object.keys(errors).length === 0
 	}
