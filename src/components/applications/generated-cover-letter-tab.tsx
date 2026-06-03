@@ -49,6 +49,7 @@ function GeneratedCoverLetterTab({
                 roleTitle: coverJobTitle.trim(),
                 hiringManager: hiringManager.trim() ?? undefined,
                 tone: tone,
+                applicationId: form.id,
             })
             toast.success("Cover letter generated successfully")
             await refetchApplication()

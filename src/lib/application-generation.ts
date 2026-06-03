@@ -31,7 +31,8 @@ export interface GenerateCoverLetterPayload {
   roleTitle?: string;
   hiringManager?: string;
   tone?: "Professional" | "Friendly" | "Direct";
-  wordCount?: number;
+  wordCount?: number; 
+  applicationId?: string;
 }
 export interface FindHRContactsPayload {
   userId: string;
@@ -162,6 +163,7 @@ export async function invokeGenerateResume(payload: GenerateResumePayload) {
 export async function invokeGenerateCoverLetter(
   payload: GenerateCoverLetterPayload,
 ) {
+  console.log(payload, "payload")
   const secretKey = env.xsecretkey;
   const { data, error } = await supabase.functions.invoke(
     env.edgeGenerateCoverLetter,
@@ -177,6 +179,7 @@ export async function invokeGenerateCoverLetter(
         hiringManager: payload.hiringManager,
         tone: payload.tone,
         wordCount: payload.wordCount,
+        applicationId: payload.applicationId,
       },
     },
   );
