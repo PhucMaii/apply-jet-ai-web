@@ -15,6 +15,7 @@ import type {
   UserEducationRow,
   UserLinkRow,
   UserProfileRow,
+  UserProjectRow,
   UserSkillRow,
   UserWorkExperienceRow,
 } from "@/types/database";
@@ -46,6 +47,7 @@ export function useProfilePage() {
       subscription: null,
       workExperiences: [],
       educations: [],
+      projects: [],
       disclosure: null,
       links: [],
       additionalInfo: null,
@@ -58,6 +60,7 @@ export function useProfilePage() {
         { data: subRow, error: subErr },
         { data: workRows, error: workErr },
         { data: eduRows, error: eduErr },
+        { data: projectRows, error: projectErr },
         { data: disclosureRow, error: disclosureErr },
         { data: linkRows, error: linkErr },
         { data: additionalRow, error: additionalErr },
@@ -76,6 +79,11 @@ export function useProfilePage() {
           .order("end_date", { ascending: false }),
         supabase
           .from("user_educations")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("end_date", { ascending: false }),
+        supabase
+          .from("user_projects")
           .select("*")
           .eq("user_id", user.id)
           .order("end_date", { ascending: false }),
@@ -106,6 +114,7 @@ export function useProfilePage() {
         subErr ??
         workErr ??
         eduErr ??
+        projectErr ??
         disclosureErr ??
         linkErr ??
         additionalErr ??
@@ -138,6 +147,7 @@ export function useProfilePage() {
       result.workExperiences =
         (workRows as UserWorkExperienceRow[] | null) ?? [];
       result.educations = (eduRows as UserEducationRow[] | null) ?? [];
+      result.projects = (projectRows as UserProjectRow[] | null) ?? [];
       result.disclosure =
         (disclosureRow as UserDisclosureRow | null) ?? emptyDisclosure(user.id);
       result.links = (linkRows as UserLinkRow[] | null) ?? [];
@@ -373,6 +383,69 @@ export function useProfilePage() {
     [refetchProfile],
   );
 
+  const addProject = useCallback(
+    async (newProject: UserProjectRow): Promise<AsyncResultMsg> => {
+      if (!user)
+        return { success: false, message: "User is not authenticated" };
+
+      const { error: insErr } = await supabase.from("user_projects").insert({
+        user_id: user.id,
+        project_name: newProject.project_name,
+        start_date: newProject.start_date,
+        end_date: newProject.end_date,
+        description: newProject.description ?? null,
+      });
+
+      if (insErr) {
+        console.error("Something went wrong adding project:", insErr);
+        return { success: false, message: insErr.message };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Project added successfully" };
+    },
+    [user, refetchProfile],
+  );
+
+  const saveProject = useCallback(
+    async (
+      projectId: string,
+      patch: Partial<UserProjectRow>,
+    ): Promise<AsyncResultMsg> => {
+      const { error: upErr } = await supabase
+        .from("user_projects")
+        .update(patch)
+        .eq("id", projectId);
+
+      if (upErr) {
+        console.error("Something went wrong saving project:", upErr);
+        return { success: false, message: upErr.message };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Project saved successfully" };
+    },
+    [refetchProfile],
+  );
+
+  const removeProject = useCallback(
+    async (projectId: string): Promise<AsyncResultMsg> => {
+      const { error: delErr } = await supabase
+        .from("user_projects")
+        .delete()
+        .eq("id", projectId);
+
+      if (delErr) {
+        console.error("Something went wrong deleting project:", delErr);
+        return { success: false, message: delErr.message };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Project deleted successfully" };
+    },
+    [refetchProfile],
+  );
+
   const onSaveAdditionalInfo = useCallback(
     async (additionalInfo: UserAdditionalInfoRow) => {
       if (!user)
@@ -573,6 +646,9 @@ export function useProfilePage() {
     addWorkExperience,
     removeExperience,
     addEducation,
+    addProject,
+    saveProject,
+    removeProject,
     onSaveAdditionalInfo,
     removeEducation,
     deleteLink,

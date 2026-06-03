@@ -188,6 +188,35 @@ export interface Database {
           updated_at?: string;
         }
       >;
+      user_projects: BaseTable<
+        {
+          id: string;
+          user_id: string;
+          project_name: string;
+          start_date: string;
+          end_date: string;
+          description: string | null;
+          created_at: string;
+        },
+        {
+          id?: string;
+          user_id?: string;
+          project_name?: string;
+          start_date?: string;
+          end_date?: string;
+          description?: string | null;
+          created_at?: string;
+        },
+        {
+          id?: string;
+          user_id?: string;
+          project_name?: string;
+          start_date?: string;
+          end_date?: string;
+          description?: string | null;
+          created_at?: string;
+        }
+      >;
       user_work_experiences: BaseTable<
         {
           id: string;
@@ -524,3 +553,4 @@ export type UserLinkRow = Database["public"]["Tables"]["user_links"]["Row"];
 export type UserAdditionalInfoRow =
   Database["public"]["Tables"]["user_additional_info"]["Row"];
 export type UserSkillRow = Database["public"]["Tables"]["user_skills"]["Row"];
+export type UserProjectRow = Database["public"]["Tables"]["user_projects"]["Row"];

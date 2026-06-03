@@ -3,6 +3,7 @@ import type {
 	UserEducationRow,
 	UserLinkRow,
 	UserProfileRow,
+	UserProjectRow,
 	UserSkillRow,
 	UserWorkExperienceRow,
 } from "@/types/database"
@@ -60,6 +61,18 @@ export function emptyEducation(userId: string): UserEducationRow {
 		created_at: "",
 		school: null,
 		updated_at: "",
+	}
+}
+
+export function emptyProject(userId: string): UserProjectRow {
+	return {
+		id: "",
+		user_id: userId,
+		project_name: "",
+		start_date: "",
+		end_date: "",
+		description: null,
+		created_at: "",
 	}
 }
 

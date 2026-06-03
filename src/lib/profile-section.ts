@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react"
 import {
 	BriefcaseBusiness,
+	FolderKanban,
 	GraduationCap,
 	Link2,
 	ShieldCheck,
@@ -12,6 +13,7 @@ export const PROFILE_SECTION = {
 	contact: "contact",
 	work: "work",
 	education: "education",
+	projects: "projects",
 	links: "links",
 	disclosure: "disclosure",
 	skills: "skills",
@@ -27,6 +29,7 @@ export const PROFILE_SECTION_META: Record<
 	[PROFILE_SECTION.contact]: { label: "Contact", Icon: UserRound },
 	[PROFILE_SECTION.work]: { label: "Work", Icon: BriefcaseBusiness },
 	[PROFILE_SECTION.education]: { label: "Education", Icon: GraduationCap },
+	[PROFILE_SECTION.projects]: { label: "Projects", Icon: FolderKanban },
 	[PROFILE_SECTION.links]: { label: "Links", Icon: Link2 },
 	[PROFILE_SECTION.disclosure]: { label: "Disclosure", Icon: ShieldCheck },
 	[PROFILE_SECTION.skills]: { label: "Skills", Icon: Wrench },

@@ -34,6 +34,9 @@ export function ProfilePage() {
 		addWorkExperience,
 		removeExperience,
 		addEducation,
+		addProject,
+		saveProject,
+		removeProject,
 		onSaveAdditionalInfo,
 		removeEducation,
 		deleteLink,
@@ -105,6 +108,9 @@ export function ProfilePage() {
 								addEducation={addEducation}
 								saveEducation={saveEducation}
 								removeEducation={removeEducation}
+								addProject={addProject}
+								saveProject={saveProject}
+								removeProject={removeProject}
 								onSaveAdditionalInfo={onSaveAdditionalInfo}
 								deleteLink={deleteLink}
 								addSkill={addSkill}

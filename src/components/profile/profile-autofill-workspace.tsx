@@ -14,10 +14,19 @@ import { UserRound } from "lucide-react"
 import { ProfileContactEditor } from "./contact-editor"
 import { WorkExperienceEditor } from "./work-experience-editor"
 import { EducationEditor } from "./education-editor"
+import { ProjectsEditor } from "./projects-editor"
 import { LinksAdditionalEditor } from "./links-additional-editor"
 import { DisclosureEditor } from "./disclosure-editor"
 import { SkillsEditor } from "./skills-editor"
-import type { UserLinkRow, UserDisclosureRow, UserAdditionalInfoRow, UserEducationRow, UserProfileRow, UserWorkExperienceRow } from "@/types/database"
+import type {
+	UserLinkRow,
+	UserDisclosureRow,
+	UserAdditionalInfoRow,
+	UserEducationRow,
+	UserProfileRow,
+	UserProjectRow,
+	UserWorkExperienceRow,
+} from "@/types/database"
 import type { AsyncResultMsg } from "@/types/types"
 
 interface ProfileAutofillWorkspaceProps {
@@ -30,6 +39,9 @@ interface ProfileAutofillWorkspaceProps {
 	addEducation: (education: UserEducationRow) => Promise<AsyncResultMsg>
 	saveEducation: (educationId: string, patch: Partial<UserEducationRow>) => Promise<AsyncResultMsg>
 	removeEducation: (educationId: string) => Promise<AsyncResultMsg>
+	addProject: (project: UserProjectRow) => Promise<AsyncResultMsg>
+	saveProject: (projectId: string, patch: Partial<UserProjectRow>) => Promise<AsyncResultMsg>
+	removeProject: (projectId: string) => Promise<AsyncResultMsg>
 	onSaveAdditionalInfo: (additionalInfo: UserAdditionalInfoRow) => Promise<AsyncResultMsg>
 	deleteLink: (linkId: string) => Promise<AsyncResultMsg>
 	addSkill: (skill: string) => Promise<AsyncResultMsg>
@@ -50,6 +62,9 @@ export function ProfileAutofillWorkspace({
 	addEducation,
 	saveEducation,
 	removeEducation,
+	addProject,
+	saveProject,
+	removeProject,
 	onSaveAdditionalInfo,
 	deleteLink,
 	addSkill,
@@ -157,6 +172,18 @@ export function ProfileAutofillWorkspace({
 						onAdd={addEducation}
 						onSave={saveEducation}
 						onRemove={removeEducation}
+					/>
+				</TabsContent>
+
+				<TabsContent
+					value={PROFILE_SECTION.projects}
+					className="mt-6 space-y-4 focus-visible:outline-none"
+				>
+					<ProjectsEditor
+						items={userProfile.projects}
+						onAdd={addProject}
+						onSave={saveProject}
+						onRemove={removeProject}
 					/>
 				</TabsContent>
 
