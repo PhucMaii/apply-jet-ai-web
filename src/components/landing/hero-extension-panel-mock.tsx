@@ -73,9 +73,9 @@ export function HeroExtensionPanelMock({ className }: { className?: string }) {
 								aria-hidden
 							/>
 							<p className="text-[11px] leading-relaxed text-white/75">
-								Four matched skills are not in your baseline resume. Weave them
-								into a tailored version so parsers and humans see alignment with
-								this posting—not a generic file.
+								Skills from this job aren&apos;t in your baseline resume yet.
+								Generate a tailored version so this application reflects the
+								role—not a generic file.
 							</p>
 						</div>
 						<button

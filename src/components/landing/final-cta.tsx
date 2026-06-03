@@ -1,8 +1,11 @@
 import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
-import { Download } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { LINKS, ROUTES } from "@/lib/constants"
+import { ROUTES } from "@/lib/constants"
+import { LANDING_COPY } from "@/lib/landing-copy"
+
+const { finalCta } = LANDING_COPY
 
 export function FinalCta() {
 	return (
@@ -16,26 +19,20 @@ export function FinalCta() {
 					transition={{ duration: 0.45 }}
 				>
 					<h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-						Stop submitting into the silent filter.
+						{finalCta.title}
 					</h2>
 					<p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-						Download the extension, sync your resume, and walk each posting with
-						tailored documents and long answers—built from the JD, aimed at
-						what ATS and humans actually read.
+						{finalCta.description}
 					</p>
 					<div className="mt-8 flex flex-wrap justify-center gap-3">
 						<Button size="lg" surface="dark" className="gap-2 shadow-glow" asChild>
-							<a
-								href={LINKS.extensionDownload}
-								target="_blank"
-								rel="noopener noreferrer"
-							>
-								<Download className="size-4" aria-hidden />
-								Download extension
-							</a>
+							<Link to={ROUTES.signup}>
+								{finalCta.primaryCta}
+								<ArrowRight className="size-4" aria-hidden />
+							</Link>
 						</Button>
 						<Button size="lg" variant="secondary" surface="dark" asChild>
-							<Link to={ROUTES.signup}>Get started</Link>
+							<Link to={ROUTES.login}>{finalCta.secondaryCta}</Link>
 						</Button>
 					</div>
 				</motion.div>

@@ -2,7 +2,7 @@ import { CreditCard, Gauge, UserRound } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ProfileAutofillWorkspace } from "@/components/profile/profile-autofill-workspace"
 import { ProfileBillingPanel } from "@/components/profile/profile-billing-panel"
-import { ProfileUsagePanel } from "@/components/profile/profile-usage-panel"
+import { ProfileUsagePanel } from "@/components/profile/usage/profile-usage-panel"
 import { ProfileLoadingState } from "@/components/profile/profile-loading-state"
 import { ProfilePageAlerts } from "@/components/profile/profile-page-alerts"
 import { PageHeader } from "@/components/page-header"
@@ -24,24 +24,8 @@ export function ProfilePage() {
 		error,
 		subscription,
 		userProfile,
-		
-		refetchProfile,
-		saveProfile,
-		saveExperience,
-		addWorkExperience,
-		removeExperience,
-		addEducation,
-		saveEducation,
-		removeEducation,
-		onSaveAdditionalInfo,
-		onSaveDisclosure,
-		deleteLink,
-		onAddLink,
-		addSkill,
-		deleteSkill,
 		subscribeToPro,
 		openBillingPortal,
-		onSaveLink,
 	} = useProfilePage()
 
 	const accountInitials = (
@@ -76,7 +60,7 @@ export function ProfilePage() {
 								className={DASHBOARD_THEME.mainTabsTrigger}
 							>
 								<UserRound className="size-4 shrink-0 opacity-80" aria-hidden />
-								Autofill profile
+								Resume
 							</TabsTrigger>
 							<TabsTrigger
 								value="usage"
@@ -97,23 +81,6 @@ export function ProfilePage() {
 						<TabsContent value="profile" className="mt-6 outline-none">
 							<ProfileAutofillWorkspace
 								userId={user?.id ?? null}
-								userEmail={user?.email}
-								userProfile={userProfile}
-								onSaveProfile={saveProfile}
-								onAddWorkExperience={addWorkExperience}
-								onSaveExperience={saveExperience}
-								onRemoveWorkExperience={removeExperience}
-								onAddEducation={addEducation}
-								onSaveEducation={saveEducation}
-								onRemoveEducation={removeEducation}
-								onAddLink={onAddLink}
-								onDeleteLink={deleteLink}
-								onSaveAdditionalInfo={onSaveAdditionalInfo}
-								onSaveLink={onSaveLink}
-								onSaveDisclosure={onSaveDisclosure}
-								onAddSkill={addSkill}
-								onDeleteSkill={deleteSkill}
-								onRefetchProfile={refetchProfile}
 							/>
 						</TabsContent>
 

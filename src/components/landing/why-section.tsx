@@ -1,21 +1,10 @@
 import { motion } from "framer-motion"
 import { Check, X } from "lucide-react"
 import { APP_NAME } from "@/lib/constants"
+import { LANDING_COPY } from "@/lib/landing-copy"
 import { cn } from "@/lib/utils"
 
-const manual = [
-	"One generic resume blasted at fifty different parsers",
-	"No cover letter—or the same paragraph with a new company name",
-	"Long questions left blank or filled with safe, forgettable filler",
-	"You never know ATS filtered you out; it feels like silence",
-] as const
-
-const withProduct = [
-	"Posting-specific resume language without starting from a blank doc",
-	"Cover letters grounded in this JD and your matched proof",
-	"Long answers drafted with structure, story, and keywords from the post",
-	"Gap view before submit—so you are not guessing in the dark",
-] as const
+const { why } = LANDING_COPY
 
 export function WhySection() {
 	return (
@@ -23,11 +12,10 @@ export function WhySection() {
 			<div className="mx-auto max-w-6xl px-4 sm:px-6">
 				<div className="max-w-2xl">
 					<p className="text-sm font-semibold uppercase tracking-wider text-primary">
-						Why it wins
+						{why.eyebrow}
 					</p>
 					<h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-						The invisible wall is ATS—not your work ethic. Most people never
-						know they were filtered.
+						{why.title}
 					</h2>
 				</div>
 
@@ -40,13 +28,13 @@ export function WhySection() {
 						transition={{ duration: 0.45 }}
 					>
 						<p className="text-sm font-semibold text-muted-foreground">
-							Generic applications
+							{why.without.label}
 						</p>
 						<h3 className="mt-2 font-display text-xl font-semibold">
-							Built to lose in automated screening
+							{why.without.title}
 						</h3>
 						<ul className="mt-6 space-y-3">
-							{manual.map((line) => (
+							{why.without.items.map((line) => (
 								<li
 									key={line}
 									className="flex gap-3 text-sm text-muted-foreground"
@@ -75,10 +63,10 @@ export function WhySection() {
 							With {APP_NAME}
 						</p>
 						<h3 className="mt-2 font-display text-xl font-semibold">
-							Tailored, defensible, parser-aware
+							{why.with.title}
 						</h3>
 						<ul className="relative mt-6 space-y-3">
-							{withProduct.map((line) => (
+							{why.with.items.map((line) => (
 								<li key={line} className="flex gap-3 text-sm text-foreground/90">
 									<span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
 										<Check className="size-3.5" aria-hidden />

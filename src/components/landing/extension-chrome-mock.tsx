@@ -12,7 +12,7 @@ interface ExtensionChromeMockProps {
 export function ExtensionChromeMock({
 	className,
 	children,
-	url = "https://careers.example.com/senior-product-designer",
+	url = "applyjetai.com/applications/full-stack-developer",
 }: ExtensionChromeMockProps) {
 	return (
 		<motion.div

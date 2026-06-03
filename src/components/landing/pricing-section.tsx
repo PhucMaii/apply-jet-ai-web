@@ -3,41 +3,14 @@ import { Link } from "react-router-dom"
 import { Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ROUTES } from "@/lib/constants"
+import { LANDING_COPY } from "@/lib/landing-copy"
 import { cn } from "@/lib/utils"
 
+const { pricing } = LANDING_COPY
+
 const plans = [
-	{
-		name: "Free",
-		price: "$0",
-		desc: "See the gap and try tailored outputs on a lighter limit.",
-		features: [
-			"Limited tailored resume + cover generations per week",
-			"Limited long-answer depth each week",
-			"Match / ATS-gap view with capped runs",
-			"Basic form field assist on applications",
-			"Community-speed updates",
-		],
-		cta: "Create free account",
-		href: ROUTES.signup,
-		highlight: false,
-	},
-	{
-		name: "Pro",
-		price: "$9.99",
-		period: "/month",
-		desc: "For seekers who refuse to lose roles to the filter.",
-		features: [
-			"Unlimited tailored resume + cover letter generation",
-			"Unlimited long-answer and prompt support",
-			"Unlimited match / ATS-gap analysis",
-			"Faster iteration on rewrites, tone, and structure",
-			"Full form field assist + smart mapping (included)",
-			"Priority updates as we ship new boards",
-		],
-		cta: "Go Pro",
-		href: ROUTES.signup,
-		highlight: true,
-	},
+	{ ...pricing.plans.free, href: ROUTES.signup, highlight: false },
+	{ ...pricing.plans.pro, href: ROUTES.signup, highlight: true },
 ] as const
 
 export function PricingSection() {
@@ -46,20 +19,16 @@ export function PricingSection() {
 			<div className="mx-auto max-w-6xl px-4 sm:px-6">
 				<div className="max-w-2xl">
 					<p className="text-sm font-semibold uppercase tracking-wider text-primary">
-						Pricing
+						{pricing.eyebrow}
 					</p>
 					<h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-						Two plans. Same mission: get documents past the filter.
+						{pricing.title}
 					</h2>
-					<p className="mt-4 text-muted-foreground">
-						Free lets you feel the workflow. Pro removes caps on the tailored
-						resume, cover letter, and long-answer output that actually move
-						shortlists.
-					</p>
+					<p className="mt-4 text-muted-foreground">{pricing.description}</p>
 				</div>
 
 				<div className="mt-12 grid gap-6 lg:grid-cols-2">
-					{plans.map((plan, i) => (
+					{plans.map((plan, index) => (
 						<motion.div
 							key={plan.name}
 							className={cn(
@@ -71,11 +40,11 @@ export function PricingSection() {
 							initial={{ opacity: 0, y: 18 }}
 							whileInView={{ opacity: 1, y: 0 }}
 							viewport={{ once: true }}
-							transition={{ delay: 0.06 * i, duration: 0.45 }}
+							transition={{ delay: 0.06 * index, duration: 0.45 }}
 						>
-							{plan.highlight ? (
+							{plan.highlight && "badge" in plan ? (
 								<span className="absolute right-6 top-6 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-primary-foreground">
-									Most popular
+									{plan.badge}
 								</span>
 							) : null}
 							<div>
@@ -93,35 +62,26 @@ export function PricingSection() {
 								</div>
 							</div>
 							<ul className="mt-8 flex-1 space-y-3 text-sm text-muted-foreground">
-								{plan.features.map((f) => (
-									<li key={f} className="flex gap-2.5">
+								{plan.features.map((feature) => (
+									<li key={feature} className="flex gap-2.5">
 										<Check
 											className="mt-0.5 size-4 shrink-0 text-primary"
 											aria-hidden
 										/>
-										{f}
+										{feature}
 									</li>
 								))}
 							</ul>
-							<div className="mt-8 flex flex-col gap-2 sm:flex-row">
+							<div className="mt-8">
 								<Button
 									size="lg"
 									surface="dark"
-									className="flex-1"
+									className="w-full"
 									variant={plan.highlight ? "default" : "secondary"}
 									asChild
 								>
 									<Link to={plan.href}>{plan.cta}</Link>
 								</Button>
-								{/* <Button size="lg" variant="ghost" surface="dark" className="flex-1" asChild>
-									<a
-										href={LINKS.extensionDownload}
-										target="_blank"
-										rel="noopener noreferrer"
-									>
-										Get extension
-									</a>
-								</Button> */}
 							</div>
 						</motion.div>
 					))}

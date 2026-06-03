@@ -33,7 +33,7 @@ export const LINKS = {
 } as const
 
 export const META = {
-	title: "ApplyJet AI — Tailored applications that get past ATS",
+	title: "ApplyJet AI — Tailored job applications in your browser",
 	description:
-		"ApplyJet AI is a Chrome extension that reads each job post and helps you generate ATS-aligned resumes, cover letters, and long-form answers—so you are not stopped before a human sees you.",
+		"Create an account, upload your resume, and paste any job description. ApplyJet pre-fills your profile and generates tailored resumes, cover letters, and HR contacts.",
 } as const

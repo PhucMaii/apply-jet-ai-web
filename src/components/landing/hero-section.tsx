@@ -1,11 +1,12 @@
 import { motion } from "framer-motion"
 import { lazy, Suspense } from "react"
 import { Link } from "react-router-dom"
-import { ArrowRight, Download } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ExtensionChromeMock } from "@/components/landing/extension-chrome-mock"
 import { HeroExtensionPanelMock } from "@/components/landing/hero-extension-panel-mock"
-import { APP_NAME, LINKS, ROUTES } from "@/lib/constants"
+import { ROUTES } from "@/lib/constants"
+import { LANDING_COPY } from "@/lib/landing-copy"
 
 const HeroCanvas = lazy(async () => {
 	const mod = await import("@/components/three/hero-canvas")
@@ -23,6 +24,8 @@ const fadeUp = {
 	}),
 }
 
+const { hero } = LANDING_COPY
+
 export function HeroSection() {
 	return (
 		<section className="relative overflow-hidden pt-6 pb-20 sm:pb-24">
@@ -37,7 +40,7 @@ export function HeroSection() {
 						className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md"
 					>
 						<span className="size-1.5 rounded-full bg-accent shadow-[0_0_12px_color-mix(in_oklab,var(--color-accent)_60%,transparent)]" />
-						Chrome extension · built for the ATS wall
+						{hero.badge}
 					</motion.p>
 					<motion.h1
 						custom={1}
@@ -46,10 +49,8 @@ export function HeroSection() {
 						animate="show"
 						className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.25rem]"
 					>
-						Most applications never reach a human.{" "}
-						<span className="text-gradient">
-							Yours are tailored to get through.
-						</span>
+						{hero.title}{" "}
+						<span className="text-gradient">{hero.titleHighlight}</span>
 					</motion.h1>
 					<motion.p
 						custom={2}
@@ -58,10 +59,7 @@ export function HeroSection() {
 						animate="show"
 						className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
 					>
-						Applicant tracking systems filter out most people before a recruiter
-						opens the file. {APP_NAME} reads each posting and helps you generate
-						ATS-aligned resumes, cover letters, and long-form answers—so you are
-						not stopped by a parser nobody warned you about.
+						{hero.description}
 					</motion.p>
 					<motion.div
 						custom={3}
@@ -71,20 +69,13 @@ export function HeroSection() {
 						className="mt-8 flex flex-wrap items-center gap-3"
 					>
 						<Button size="lg" surface="dark" className="gap-2 shadow-glow" asChild>
-							<a
-								href={LINKS.extensionDownload}
-								target="_blank"
-								rel="noopener noreferrer"
-							>
-								<Download className="size-4" aria-hidden />
-								Download extension
-							</a>
-						</Button>
-						<Button size="lg" variant="secondary" surface="dark" className="gap-2" asChild>
 							<Link to={ROUTES.signup}>
-								Get started
+								{hero.primaryCta}
 								<ArrowRight className="size-4" aria-hidden />
 							</Link>
+						</Button>
+						<Button size="lg" variant="secondary" surface="dark" className="gap-2" asChild>
+							<a href={hero.secondaryHref}>{hero.secondaryCta}</a>
 						</Button>
 					</motion.div>
 					<motion.p
@@ -94,8 +85,7 @@ export function HeroSection() {
 						animate="show"
 						className="mt-4 text-xs text-muted-foreground"
 					>
-						Free to start · Pro unlocks unlimited tailoring, scoring depth, and
-						long-answer generation.
+						{hero.footnote}
 					</motion.p>
 				</div>
 
@@ -113,7 +103,10 @@ export function HeroSection() {
 						>
 							<HeroCanvas />
 						</Suspense>
-						<ExtensionChromeMock className="max-w-md lg:ml-auto lg:max-w-lg">
+						<ExtensionChromeMock
+							className="max-w-md lg:ml-auto lg:max-w-lg"
+							url="https://applyjetai.com/applications/full-stack-developer"
+						>
 							<HeroExtensionPanelMock className="w-full" />
 						</ExtensionChromeMock>
 					</div>

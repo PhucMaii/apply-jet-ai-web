@@ -1,96 +1,18 @@
 import { useState } from "react"
-import { UserRound } from "lucide-react"
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ProfileContactEditor } from "@/components/profile/contact-editor"
-import { WorkExperienceEditor } from "@/components/profile/work-experience-editor"
-import { EducationEditor } from "@/components/profile/education-editor"
-import { LinksAdditionalEditor } from "@/components/profile/links-additional-editor"
-import { DisclosureEditor } from "@/components/profile/disclosure-editor"
-import { SkillsEditor } from "@/components/profile/skills-editor"
+import { Tabs } from "@/components/ui/tabs"
 import { ResumeSection } from "@/components/profile/resume-section"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import {
 	PROFILE_SECTION,
 	type ProfileSection,
-	PROFILE_SECTION_META,
 } from "@/lib/profile-section"
-import type {
-	UserAdditionalInfoRow,
-	UserDisclosureRow,
-	UserEducationRow,
-	UserLinkRow,
-	UserProfileRow,
-	UserSkillRow,
-	UserWorkExperienceRow,
-} from "@/types/database"
-import { cn } from "@/lib/utils"
-import type { AsyncResultMsg } from "@/types/types"
-
-interface UserProfile {
-	profile: UserProfileRow
-	workExperiences: UserWorkExperienceRow[]
-	educations: UserEducationRow[]
-	links: UserLinkRow[]
-	additionalInfo: UserAdditionalInfoRow | null
-	disclosure: UserDisclosureRow | null
-	skills: UserSkillRow[]
-}
 
 interface ProfileAutofillWorkspaceProps {
 	userId: string | null
-	userEmail: string | undefined
-	userProfile: UserProfile
-
-	onSaveProfile: (updatedProfile: UserProfileRow) => Promise<AsyncResultMsg>
-	onAddWorkExperience: (newExperience: UserWorkExperienceRow) => Promise<AsyncResultMsg>
-	onRemoveWorkExperience: (experienceId: string) => Promise<AsyncResultMsg>
-	onSaveExperience: (
-		id: string,
-		patch: Partial<UserWorkExperienceRow>,
-	) => Promise<AsyncResultMsg>
-	onAddEducation: (newEducation: UserEducationRow) => Promise<AsyncResultMsg>
-	onSaveEducation: (
-		id: string,
-		patch: Partial<UserEducationRow>,
-	) => Promise<AsyncResultMsg>
-	onRemoveEducation: (educationId: string) => Promise<AsyncResultMsg>
-	onDeleteLink: (linkId: string) => Promise<AsyncResultMsg>
-	onSaveAdditionalInfo: (additionalInfo: UserAdditionalInfoRow) => Promise<AsyncResultMsg>
-	onAddSkill: (name: string) => Promise<AsyncResultMsg>
-	onDeleteSkill: (skillId: string) => Promise<AsyncResultMsg>
-	onRefetchProfile: () => void
-	onSaveLink: (link: UserLinkRow) => Promise<AsyncResultMsg>
-	onAddLink: (newLink: UserLinkRow) => Promise<AsyncResultMsg>
-	onSaveDisclosure: (disclosure: UserDisclosureRow) => Promise<AsyncResultMsg>
 }
 
 export function ProfileAutofillWorkspace({
 	userId,
-	userEmail,
-	userProfile,
-
-	onSaveProfile,
-	onAddWorkExperience,
-	onRemoveWorkExperience,
-	onSaveExperience,
-	onAddEducation,
-	onSaveEducation,
-	onRemoveEducation,
-	onDeleteLink,
-	onSaveAdditionalInfo,
-	onAddSkill,
-	onDeleteSkill,
-	onRefetchProfile,
-	onSaveLink,
-	onAddLink,
-	onSaveDisclosure,
 }: ProfileAutofillWorkspaceProps) {
 	const [profileSection, setProfileSection] = useState<ProfileSection>(
 		PROFILE_SECTION.contact,
@@ -102,7 +24,7 @@ export function ProfileAutofillWorkspace({
 			onValueChange={(value) => setProfileSection(value as ProfileSection)}
 			className="w-full"
 		>
-			<TabsList className={DASHBOARD_THEME.sectionTabsList}>
+			{/* <TabsList className={DASHBOARD_THEME.sectionTabsList}>
 				{(Object.keys(PROFILE_SECTION) as ProfileSection[]).map((key) => {
 					const meta = PROFILE_SECTION_META[key]
 					const SectionIcon = meta.Icon
@@ -120,15 +42,14 @@ export function ProfileAutofillWorkspace({
 						</TabsTrigger>
 					)
 				})}
-			</TabsList>
+			</TabsList> */}
 
 			<div className={DASHBOARD_THEME.contentPanel}>
 				<ResumeSection
 					userId={userId}
-					refetchProfile={onRefetchProfile}
 				/>
 
-				<TabsContent
+				{/* <TabsContent
 					value={PROFILE_SECTION.contact}
 					className="mt-6 space-y-4 focus-visible:outline-none"
 				>
@@ -225,7 +146,7 @@ export function ProfileAutofillWorkspace({
 						onAddSkill={onAddSkill}
 						onDeleteSkill={onDeleteSkill}
 					/>
-				</TabsContent>
+				</TabsContent> */}
 			</div>
 		</Tabs>
 	)

@@ -1,7 +1,7 @@
 import { HeroSection } from "@/components/landing/hero-section"
 import { TrustStrip } from "@/components/landing/trust-strip"
 import { HowItWorks } from "@/components/landing/how-it-works"
-import { ProductDemo } from "@/components/landing/product-demo"
+import { ExperienceBulletsSection } from "@/components/landing/experience-bullets-section"
 import { FeaturesSection } from "@/components/landing/features-section"
 import { WhySection } from "@/components/landing/why-section"
 import { PricingSection } from "@/components/landing/pricing-section"
@@ -18,7 +18,7 @@ export function HomePage() {
 				<HeroSection />
 				<TrustStrip />
 				<HowItWorks />
-				<ProductDemo />
+				<ExperienceBulletsSection />
 				<FeaturesSection />
 				<WhySection />
 				<PricingSection />

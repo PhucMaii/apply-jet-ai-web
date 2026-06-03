@@ -1,8 +1,11 @@
 import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
-import { ArrowRight, Shield } from "lucide-react"
+import { ArrowRight, Monitor } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ROUTES } from "@/lib/constants"
+import { LANDING_COPY } from "@/lib/landing-copy"
+
+const { authCta } = LANDING_COPY
 
 export function AuthCtaSection() {
 	return (
@@ -19,27 +22,25 @@ export function AuthCtaSection() {
 					<div className="relative grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
 						<div>
 							<div className="inline-flex items-center gap-2 rounded-full border border-border bg-background/60 px-3 py-1 text-xs font-medium text-muted-foreground">
-								<Shield className="size-3.5 text-primary" aria-hidden />
-								Supabase-backed accounts
+								<Monitor className="size-3.5 text-primary" aria-hidden />
+								{authCta.badge}
 							</div>
 							<h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-								One account for every tailored packet you generate.
+								{authCta.title}
 							</h2>
 							<p className="mt-4 max-w-xl text-muted-foreground">
-								Store your baseline resume, track match history, and keep
-								generated resumes, letters, and long answers tied to your
-								account—so nothing that clears ATS lives only in a lost tab.
+								{authCta.description}
 							</p>
 						</div>
 						<div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
 							<Button size="lg" surface="dark" className="gap-2 shadow-glow" asChild>
 								<Link to={ROUTES.signup}>
-									Create account
+									{authCta.primaryCta}
 									<ArrowRight className="size-4" aria-hidden />
 								</Link>
 							</Button>
 							<Button size="lg" variant="secondary" surface="dark" asChild>
-								<Link to={ROUTES.login}>I already have an account</Link>
+								<Link to={ROUTES.login}>{authCta.secondaryCta}</Link>
 							</Button>
 						</div>
 					</div>

@@ -133,6 +133,14 @@ export function extractSkillsFromJobDescription(
 }
 
 export async function invokeGenerateResume(payload: GenerateResumePayload) {
+  if (!payload.resumeText) {
+    throw new Error("Please upload your resume first");
+  }
+
+  if (!payload.jdText) {
+    throw new Error("Please enter the job description");
+  }
+
   const secretKey = env.xsecretkey;
   const jdSkills = await extractSkillsFromJobDescription(payload.jdText || "");
 
@@ -163,7 +171,14 @@ export async function invokeGenerateResume(payload: GenerateResumePayload) {
 export async function invokeGenerateCoverLetter(
   payload: GenerateCoverLetterPayload,
 ) {
-  console.log(payload, "payload")
+  if (!payload.resumeText) {
+    throw new Error("Please upload your resume first");
+  }
+
+  if (!payload.jdText) {
+    throw new Error("Please enter the job description");
+  }
+
   const secretKey = env.xsecretkey;
   const { data, error } = await supabase.functions.invoke(
     env.edgeGenerateCoverLetter,

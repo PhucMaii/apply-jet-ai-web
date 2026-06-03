@@ -20,7 +20,7 @@ interface GeneratedCoverLetterTabProps {
     refetchApplication: () => void
     resumeText: string
 }
-function GeneratedCoverLetterTab({ 
+function GeneratedCoverLetterTab({
     form,
     generatedCoverLetter,
     refetchApplication,
@@ -94,91 +94,95 @@ function GeneratedCoverLetterTab({
 
     return (
         <>
-            <fieldset className="space-y-3">
-                <legend className="text-sm font-semibold text-neutral-900">
-                    Tone
-                </legend>
-                <div className="grid gap-3 sm:grid-cols-3">
-                    {COVER_LETTER_TONES.map((option: CoverLetterTone) => {
-                        const selected = tone === option
-                        return (
-                            <label
-                                key={option}
-                                className={cn(
-                                    "cursor-pointer rounded-xl border p-4 transition-colors",
-                                    selected
-                                        ? "border-primary bg-primary/5 ring-1 ring-primary/25"
-                                        : "border-neutral-200 bg-white hover:border-primary/30",
-                                )}
-                            >
-                                <input
-                                    type="radio"
-                                    name="cover-tone"
-                                    value={option}
-                                    checked={selected}
-                                    className="sr-only"
-                                    onChange={() => setTone(option)}
-                                />
-                                <span className="block text-sm font-semibold text-neutral-900">
-                                    {option}
-                                </span>
-                                <span className="mt-1 block text-xs leading-relaxed text-neutral-500">
-                                    {COVER_LETTER_TONE_META[option].description}
-                                </span>
-                            </label>
-                        )
-                    })}
-                </div>
-            </fieldset>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                    <Label
-                        htmlFor="cover-company"
-                        className={PROFILE_SURFACE.fieldLabel}
-                    >
-                        Company name
-                    </Label>
-                    <Input
-                        id="cover-company"
-                        value={coverCompany}
-                        onChange={(e) => setCoverCompany(e.target.value)}
-                        className={PROFILE_SURFACE.fieldInput}
-                    />
-                </div>
-                <div className="space-y-2">
-                    <Label
-                        htmlFor="cover-job-title"
-                        className={PROFILE_SURFACE.fieldLabel}
-                    >
-                        Job title
-                    </Label>
-                    <Input
-                        id="cover-job-title"
-                        value={coverJobTitle}
-                        onChange={(e) => setCoverJobTitle(e.target.value)}
-                        className={PROFILE_SURFACE.fieldInput}
-                    />
-                </div>
-                <div className="space-y-2 sm:col-span-2">
-                    <Label
-                        htmlFor="cover-hiring-manager"
-                        className={PROFILE_SURFACE.fieldLabel}
-                    >
-                        Hiring manager{" "}
-                        <span className="font-normal text-neutral-500">
-                            (optional)
-                        </span>
-                    </Label>
-                    <Input
-                        id="cover-hiring-manager"
-                        placeholder="e.g. Alex Chen"
-                        value={hiringManager}
-                        onChange={(e) => setHiringManager(e.target.value)}
-                        className={PROFILE_SURFACE.fieldInput}
-                    />
-                </div>
-            </div>
+            {!generatedCoverLetter ?
+                <>
+                    <fieldset className="space-y-3">
+                        <legend className="text-sm font-semibold text-neutral-900">
+                            Tone
+                        </legend>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                            {COVER_LETTER_TONES.map((option: CoverLetterTone) => {
+                                const selected = tone === option
+                                return (
+                                    <label
+                                        key={option}
+                                        className={cn(
+                                            "cursor-pointer rounded-xl border p-4 transition-colors",
+                                            selected
+                                                ? "border-primary bg-primary/5 ring-1 ring-primary/25"
+                                                : "border-neutral-200 bg-white hover:border-primary/30",
+                                        )}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="cover-tone"
+                                            value={option}
+                                            checked={selected}
+                                            className="sr-only"
+                                            onChange={() => setTone(option)}
+                                        />
+                                        <span className="block text-sm font-semibold text-neutral-900">
+                                            {option}
+                                        </span>
+                                        <span className="mt-1 block text-xs leading-relaxed text-neutral-500">
+                                            {COVER_LETTER_TONE_META[option].description}
+                                        </span>
+                                    </label>
+                                )
+                            })}
+                        </div>
+                    </fieldset>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label
+                                htmlFor="cover-company"
+                                className={PROFILE_SURFACE.fieldLabel}
+                            >
+                                Company name
+                            </Label>
+                            <Input
+                                id="cover-company"
+                                value={coverCompany}
+                                onChange={(e) => setCoverCompany(e.target.value)}
+                                className={PROFILE_SURFACE.fieldInput}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label
+                                htmlFor="cover-job-title"
+                                className={PROFILE_SURFACE.fieldLabel}
+                            >
+                                Job title
+                            </Label>
+                            <Input
+                                id="cover-job-title"
+                                value={coverJobTitle}
+                                onChange={(e) => setCoverJobTitle(e.target.value)}
+                                className={PROFILE_SURFACE.fieldInput}
+                            />
+                        </div>
+                        <div className="space-y-2 sm:col-span-2">
+                            <Label
+                                htmlFor="cover-hiring-manager"
+                                className={PROFILE_SURFACE.fieldLabel}
+                            >
+                                Hiring manager{" "}
+                                <span className="font-normal text-neutral-500">
+                                    (optional)
+                                </span>
+                            </Label>
+                            <Input
+                                id="cover-hiring-manager"
+                                placeholder="e.g. Alex Chen"
+                                value={hiringManager}
+                                onChange={(e) => setHiringManager(e.target.value)}
+                                className={PROFILE_SURFACE.fieldInput}
+                            />
+                        </div>
+                    </div>
+                </> : null}
 
             {generatedCoverLetter ? null : <Button
                 type="button"

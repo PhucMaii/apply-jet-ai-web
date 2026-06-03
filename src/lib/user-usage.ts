@@ -77,11 +77,6 @@ function readMetricSources(usage: UserUsageRow): UsageMetricSource[] {
 			used: usage.extract_text_used ?? 0,
 			limit: usage.extract_text_limit ?? 0,
 		},
-		{
-			key: "applicationAnswers",
-			used: usage.application_answers_used ?? 0,
-			limit: usage.application_answers_limit ?? 0,
-		},
 	]
 }
 
