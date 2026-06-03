@@ -4,15 +4,61 @@ import { ResumeSection } from "@/components/profile/resume-section"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import {
 	PROFILE_SECTION,
+	PROFILE_SECTION_META,
 	type ProfileSection,
 } from "@/lib/profile-section"
+import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card"
+import { cn } from "@/lib/utils"
+import { UserRound } from "lucide-react"
+import { ProfileContactEditor } from "./contact-editor"
+import { WorkExperienceEditor } from "./work-experience-editor"
+import { EducationEditor } from "./education-editor"
+import { LinksAdditionalEditor } from "./links-additional-editor"
+import { DisclosureEditor } from "./disclosure-editor"
+import { SkillsEditor } from "./skills-editor"
+import type { UserLinkRow, UserDisclosureRow, UserAdditionalInfoRow, UserEducationRow, UserProfileRow, UserWorkExperienceRow } from "@/types/database"
+import type { AsyncResultMsg } from "@/types/types"
 
 interface ProfileAutofillWorkspaceProps {
 	userId: string | null
+	userProfile: any;
+	saveProfile: (profile: UserProfileRow) => Promise<AsyncResultMsg>
+	saveExperience: (experienceId: string, patch: Partial<UserWorkExperienceRow>) => Promise<AsyncResultMsg>
+	addWorkExperience: (experience: UserWorkExperienceRow) => Promise<AsyncResultMsg>
+	removeExperience: (experienceId: string) => Promise<AsyncResultMsg>
+	addEducation: (education: UserEducationRow) => Promise<AsyncResultMsg>
+	saveEducation: (educationId: string, patch: Partial<UserEducationRow>) => Promise<AsyncResultMsg>
+	removeEducation: (educationId: string) => Promise<AsyncResultMsg>
+	onSaveAdditionalInfo: (additionalInfo: UserAdditionalInfoRow) => Promise<AsyncResultMsg>
+	deleteLink: (linkId: string) => Promise<AsyncResultMsg>
+	addSkill: (skill: string) => Promise<AsyncResultMsg>
+	deleteSkill: (skillId: string) => Promise<AsyncResultMsg>
+	onSaveDisclosure: (disclosure: UserDisclosureRow) => Promise<AsyncResultMsg>
+	onAddLink: (link: UserLinkRow) => Promise<AsyncResultMsg>
+	onSaveLink: (link: UserLinkRow) => Promise<AsyncResultMsg>
+	refetchProfile: () => void
 }
 
 export function ProfileAutofillWorkspace({
 	userId,
+	userProfile,
+	saveProfile,
+	saveExperience,
+	addWorkExperience,
+	removeExperience,
+	addEducation,
+	saveEducation,
+	removeEducation,
+	onSaveAdditionalInfo,
+	deleteLink,
+	addSkill,
+	deleteSkill,
+	onSaveDisclosure,
+	onAddLink,
+	onSaveLink,
+	refetchProfile,
+
 }: ProfileAutofillWorkspaceProps) {
 	const [profileSection, setProfileSection] = useState<ProfileSection>(
 		PROFILE_SECTION.contact,
@@ -24,7 +70,7 @@ export function ProfileAutofillWorkspace({
 			onValueChange={(value) => setProfileSection(value as ProfileSection)}
 			className="w-full"
 		>
-			{/* <TabsList className={DASHBOARD_THEME.sectionTabsList}>
+			<TabsList className={DASHBOARD_THEME.sectionTabsList}>
 				{(Object.keys(PROFILE_SECTION) as ProfileSection[]).map((key) => {
 					const meta = PROFILE_SECTION_META[key]
 					const SectionIcon = meta.Icon
@@ -42,14 +88,15 @@ export function ProfileAutofillWorkspace({
 						</TabsTrigger>
 					)
 				})}
-			</TabsList> */}
+			</TabsList>
 
 			<div className={DASHBOARD_THEME.contentPanel}>
 				<ResumeSection
 					userId={userId}
+					refetchProfile={refetchProfile}
 				/>
 
-				{/* <TabsContent
+				<TabsContent
 					value={PROFILE_SECTION.contact}
 					className="mt-6 space-y-4 focus-visible:outline-none"
 				>
@@ -81,9 +128,9 @@ export function ProfileAutofillWorkspace({
 						</CardHeader>
 						<CardContent className="bg-white">
 							<ProfileContactEditor
-								userEmail={userEmail}
+								userEmail={userProfile.profile.email}
 								profile={userProfile.profile}
-								onSave={onSaveProfile}
+								onSave={saveProfile}
 							/>
 						</CardContent>
 					</Card>
@@ -95,9 +142,9 @@ export function ProfileAutofillWorkspace({
 				>
 					<WorkExperienceEditor
 						items={userProfile.workExperiences}
-						onAdd={onAddWorkExperience}
-						onSave={onSaveExperience}
-						onRemove={onRemoveWorkExperience}
+						onAdd={addWorkExperience}
+						onSave={saveExperience}
+						onRemove={removeExperience}
 					/>
 				</TabsContent>
 
@@ -107,9 +154,9 @@ export function ProfileAutofillWorkspace({
 				>
 					<EducationEditor
 						items={userProfile.educations}
-						onAdd={onAddEducation}
-						onSave={onSaveEducation}
-						onRemove={onRemoveEducation}
+						onAdd={addEducation}
+						onSave={saveEducation}
+						onRemove={removeEducation}
 					/>
 				</TabsContent>
 
@@ -121,7 +168,7 @@ export function ProfileAutofillWorkspace({
 						links={userProfile.links}
 						additionalInfo={userProfile.additionalInfo}
 						onAddLink={onAddLink}
-						onDeleteLink={onDeleteLink}
+						onDeleteLink={deleteLink}
 						onSaveLink={onSaveLink}
 						onSaveAdditionalInfo={onSaveAdditionalInfo}
 					/>
@@ -143,10 +190,10 @@ export function ProfileAutofillWorkspace({
 				>
 					<SkillsEditor
 						items={userProfile.skills}
-						onAddSkill={onAddSkill}
-						onDeleteSkill={onDeleteSkill}
+						onAddSkill={addSkill}
+						onDeleteSkill={deleteSkill}
 					/>
-				</TabsContent> */}
+				</TabsContent>
 			</div>
 		</Tabs>
 	)

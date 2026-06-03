@@ -1,44 +1,22 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useState } from "react"
+import { useQueryClient } from "@tanstack/react-query"
 import toast from "react-hot-toast"
 
-import type { ResumeRow } from "../src/types/database"
-import { getResume, uploadResume as uploadResumeApi } from "../src/lib/resume"
+import type { ResumeRow } from "../src/lib/resume"
+import { uploadResume as uploadResumeApi } from "../src/lib/resume"
+import {
+	useUserResume,
+	userResumeQueryKey,
+} from "../src/hooks/use-user-resume"
 
 const TOAST_UPLOAD_SUCCESS = "Resume uploaded successfully"
 const TOAST_UPLOAD_ERROR = "Resume upload failed"
-const TOAST_LOAD_ERROR = "Failed to load resume"
 
 export function useResume(userId: string | undefined) {
-	const [resume, setResume] = useState<ResumeRow | null>(null)
-	const [isLoading, setIsLoading] = useState(true)
+	const queryClient = useQueryClient()
+	const { resume, isLoading, refetch } = useUserResume(userId)
 	const [uploading, setUploading] = useState(false)
 	const [error, setError] = useState<string | null>(null)
-
-	const refetch = useCallback(async () => {
-		if (!userId) {
-			setResume(null)
-			setIsLoading(false)
-			return
-		}
-		
-		setIsLoading(true)
-		setError(null)
-		try {
-			const row = await getResume(userId)
-			setResume(row as unknown as ResumeRow)
-		} catch (e) {
-			console.error(e)
-			const msg = TOAST_LOAD_ERROR
-			setError(msg)
-			toast.error(msg)
-		} finally {
-			setIsLoading(false)
-		}
-	}, [userId])
-
-	useEffect(() => {
-		refetch()
-	}, [refetch])
 
 	const uploadResume = useCallback(
 		async (file: File) => {
@@ -49,15 +27,26 @@ export function useResume(userId: string | undefined) {
 			try {
 				const result = await uploadResumeApi(userId, file)
 				if (result.resume) {
-					setResume(result.resume as unknown as ResumeRow)
+					queryClient.setQueryData<ResumeRow | null>(
+						userResumeQueryKey(userId),
+						result.resume,
+					)
+					await Promise.all([
+						queryClient.invalidateQueries({
+							queryKey: userResumeQueryKey(userId),
+						}),
+						queryClient.invalidateQueries({
+							queryKey: ["user-profile"],
+						}),
+					])
 					toast.success(TOAST_UPLOAD_SUCCESS)
 				}
 				if (result.error) {
 					setError(result.error)
 					toast.error(result.error)
 				}
-			} catch (e) {
-				console.error(e)
+			} catch (err) {
+				console.error("Something went wrong uploading resume:", err)
 				const msg = TOAST_UPLOAD_ERROR
 				setError(msg)
 				toast.error(msg)
@@ -65,10 +54,18 @@ export function useResume(userId: string | undefined) {
 				setUploading(false)
 			}
 		},
-		[userId]
+		[queryClient, userId],
 	)
 
 	const clearError = useCallback(() => setError(null), [])
 
-	return { resume, isLoading, uploading, error, uploadResume, refetch, clearError }
+	return {
+		resume,
+		isLoading,
+		uploading,
+		error,
+		uploadResume,
+		refetch,
+		clearError,
+	}
 }

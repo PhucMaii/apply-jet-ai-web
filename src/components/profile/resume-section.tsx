@@ -8,11 +8,13 @@ import {
 	FileText,
 	RefreshCw,
 	Upload,
+	PenLine,
 } from "lucide-react"
 import { useResume } from "../../../hooks/useResume"
-import { getAllowedAccept, isAllowedFile } from "../../../src/lib/resume"
+import { getAllowedAccept, isAllowedFile, prefillResume } from "../../../src/lib/resume"
 import { RESUME_SECTION_THEME } from "@/lib/resume-section-theme"
 import { cn } from "@/lib/utils"
+import toast from "react-hot-toast"
 
 function formatDate(iso: string): string {
 	try {
@@ -28,9 +30,10 @@ function formatDate(iso: string): string {
 
 interface ResumeSectionProps {
 	userId: string | null
+	refetchProfile: () => void
 }
 
-export function ResumeSection({ userId }: ResumeSectionProps) {
+export function ResumeSection({ userId, refetchProfile }: ResumeSectionProps) {
 	const {
 		resume,
 		isLoading,
@@ -43,6 +46,7 @@ export function ResumeSection({ userId }: ResumeSectionProps) {
 	const [dragActive, setDragActive] = useState(false)
 	const [replaceMode, setReplaceMode] = useState(false)
 	const [validationError, setValidationError] = useState<string | null>(null)
+	const [autoFillLoading, setAutoFillLoading] = useState(false)
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	const handleFile = useCallback(
@@ -84,20 +88,20 @@ export function ResumeSection({ userId }: ResumeSectionProps) {
 		inputRef.current?.click()
 	}, [])
 
-	// const handleAutoFill = useCallback(async () => {
-	// 	if (!resume || !userId || autoFillLoading) return
-	// 	setAutoFillLoading(true)
-	// 	try {
-	// 		await prefillResume(userId)
-	// 		await refetchProfile()
-	// 		toast.success("Resume auto-filled successfully")
-	// 	} catch (err) {
-	// 		console.error("Something went wrong auto-filling resume:", err)
-	// 		toast.error("Failed to auto-fill resume")
-	// 	} finally {
-	// 		setAutoFillLoading(false)
-	// 	}
-	// }, [userId, resume, autoFillLoading, refetchProfile])
+	const handleAutoFill = useCallback(async () => {
+		if (!resume || !userId || autoFillLoading) return
+		setAutoFillLoading(true)
+		try {
+			await prefillResume(userId)
+			await refetchProfile()
+			toast.success("Resume auto-filled successfully")
+		} catch (err) {
+			console.error("Something went wrong auto-filling resume:", err)
+			toast.error("Failed to auto-fill resume")
+		} finally {
+			setAutoFillLoading(false)
+		}
+	}, [userId, resume, autoFillLoading, refetchProfile])
 
 	if (!userId) return null
 
@@ -264,7 +268,7 @@ export function ResumeSection({ userId }: ResumeSectionProps) {
 					</div>
 				)}
 
-				{/* <div className={RESUME_SECTION_THEME.autofillPanel}>
+				<div className={RESUME_SECTION_THEME.autofillPanel}>
 					<button
 						type="button"
 						onClick={() => void handleAutoFill()}
@@ -295,7 +299,7 @@ export function ResumeSection({ userId }: ResumeSectionProps) {
 							</span>
 						</div>
 					</button>
-				</div> */}
+				</div>
 			</div>
 		</section>
 	)

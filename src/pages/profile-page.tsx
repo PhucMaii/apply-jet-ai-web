@@ -26,6 +26,22 @@ export function ProfilePage() {
 		userProfile,
 		subscribeToPro,
 		openBillingPortal,
+
+		refetchProfile,
+		saveProfile,
+		saveExperience,
+		saveEducation,
+		addWorkExperience,
+		removeExperience,
+		addEducation,
+		onSaveAdditionalInfo,
+		removeEducation,
+		deleteLink,
+		addSkill,
+		deleteSkill,
+		onSaveDisclosure,
+		onAddLink,
+		onSaveLink,
 	} = useProfilePage()
 
 	const accountInitials = (
@@ -81,6 +97,22 @@ export function ProfilePage() {
 						<TabsContent value="profile" className="mt-6 outline-none">
 							<ProfileAutofillWorkspace
 								userId={user?.id ?? null}
+								userProfile={userProfile}
+								saveProfile={saveProfile}
+								saveExperience={saveExperience}
+								addWorkExperience={addWorkExperience}
+								removeExperience={removeExperience}
+								addEducation={addEducation}
+								saveEducation={saveEducation}
+								removeEducation={removeEducation}
+								onSaveAdditionalInfo={onSaveAdditionalInfo}
+								deleteLink={deleteLink}
+								addSkill={addSkill}
+								deleteSkill={deleteSkill}
+								onSaveDisclosure={onSaveDisclosure}
+								onAddLink={onAddLink}
+								onSaveLink={onSaveLink}
+								refetchProfile={refetchProfile}
 							/>
 						</TabsContent>
 
