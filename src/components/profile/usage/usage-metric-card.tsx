@@ -81,7 +81,7 @@ export function UsageMetricCard({ metric }: { metric: UsageMetricView }) {
             <div className="mt-4 space-y-2">
                 <div className="flex items-baseline justify-between gap-2 text-sm">
                     <span className="font-semibold text-neutral-900">
-                        {metric.used} {USAGE_COPY.used}
+                        {metric.used} used
                     </span>
                     {metric.isUnlimited ? null : (
                         <span className="text-neutral-500">

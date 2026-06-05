@@ -42,6 +42,8 @@ export function ProfileUsagePanel({
 	const exhaustedCount = getExhaustedMetricCount(metrics)
 	const warningCount = getLowRemainingMetricCount(metrics)
 
+	console.log(metrics, "metrics")
+
 	return (
 		<div className="space-y-6">
 			<Card variant="solid" className={DASHBOARD_THEME.card}>

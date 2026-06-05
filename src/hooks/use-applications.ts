@@ -24,6 +24,7 @@ export function useApplications() {
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadApplications = useCallback(async () => {
     if (!user) return;
@@ -149,9 +150,12 @@ export function useApplications() {
     setLoadError(null);
     setDownloading(`cover-${application.id}`);
     try {
-		const filename = `${companyName}-cover-letter.pdf`
-		const url = await getCoverLetterDownloadUrl(generatedCoverLetter.id, filename)
-		await downloadFromUrl(url, filename)
+      const filename = `${companyName}-cover-letter.pdf`;
+      const url = await getCoverLetterDownloadUrl(
+        generatedCoverLetter.id,
+        filename,
+      );
+      await downloadFromUrl(url, filename);
     } catch (err) {
       console.error("Something went wrong downloading cover letter:", err);
       setLoadError(
@@ -166,16 +170,53 @@ export function useApplications() {
     return isApplicationStatus(raw) ? raw : "Generated";
   }
 
+  const deleteApplication = useCallback(
+    async (applicationId: string) => {
+      if (!user)
+        return { success: false, message: "User is not authenticated" };
+      setLoadError(null);
+      setDeletingId(applicationId);
+      try {
+        const { error } = await supabase
+          .from("applications")
+          .delete()
+          .eq("id", applicationId)
+          .eq("user_id", user.id);
+
+        if (error) {
+          console.error("Something went wrong deleting application:", error);
+          setLoadError(error.message);
+          return { success: false, message: error.message };
+        }
+
+        setRows((prev) => prev.filter((r) => r.id !== applicationId));
+        return { success: true, message: "Application deleted successfully" };
+      } catch (err) {
+        console.error("Something went wrong deleting application:", err);
+        const message =
+          err instanceof Error ? err.message : "Delete failed.";
+        setLoadError(message);
+        return { success: false, message };
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [user],
+  );
+
   return {
     rows,
     loadError,
     loading,
     updatingId,
     downloading,
+    deletingId,
+
     loadApplications,
     updateStatus,
     downloadResume,
     downloadCoverLetter,
-    resolveStatus,
+    resolveStatus,  
+    deleteApplication,
   };
 }

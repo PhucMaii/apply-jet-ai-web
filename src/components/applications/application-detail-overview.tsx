@@ -19,6 +19,7 @@ import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type { ApplicationDetailForm } from "@/types/application-detail"
+import { DeleteApplicationControl } from "@/components/applications/delete-application-control"
 import { cn } from "@/lib/utils"
 
 interface ApplicationDetailOverviewProps {
@@ -30,6 +31,11 @@ interface ApplicationDetailOverviewProps {
 	onPatchForm: (patch: Partial<ApplicationDetailForm>) => void
 	onStatusChange: (status: ApplicationStatus) => void
 	onSaveDetails: () => void
+	isDeleting?: boolean
+	onDelete?: (applicationId: string) => Promise<{
+		success: boolean
+		message: string
+	}>
 }
 
 export function ApplicationDetailOverview({
@@ -41,6 +47,8 @@ export function ApplicationDetailOverview({
 	onPatchForm,
 	onStatusChange,
 	onSaveDetails,
+	isDeleting = false,
+	onDelete,
 }: ApplicationDetailOverviewProps) {
 	const [descriptionOpen, setDescriptionOpen] = useState(true)
 	const addedLabel = new Date(createdAt).toLocaleString(undefined, {
@@ -192,10 +200,21 @@ export function ApplicationDetailOverview({
 				) : null}
 			</div>
 
-			<div className="flex justify-end">
+			<div className="flex flex-col gap-4 border-t border-neutral-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
+				{onDelete ? (
+					<DeleteApplicationControl
+						applicationId={form.id}
+						jobTitle={form.jobTitle}
+						companyName={form.companyName}
+						isDeleting={isDeleting}
+						onDelete={onDelete}
+						redirectOnSuccess
+						variant="detail"
+					/>
+				) : null}
 				<Button
 					type="button"
-					className="gap-2"
+					className="gap-2 sm:ml-auto"
 					disabled={savingDetails}
 					onClick={onSaveDetails}
 				>

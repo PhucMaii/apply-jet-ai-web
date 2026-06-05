@@ -19,6 +19,8 @@ export function ApplicationsPage() {
 		downloadResume,
 		downloadCoverLetter,
 		resolveStatus,
+		deleteApplication,
+		deletingId,
 	} = useApplications()
 
 	const accountInitials = (
@@ -70,6 +72,8 @@ export function ApplicationsPage() {
 						onDownloadCover={(application, generatedCoverLetter, companyName) =>
 							void downloadCoverLetter(application, generatedCoverLetter, companyName)
 						}
+						deletingId={deletingId}
+						onDelete={deleteApplication}
 					/>
 				)}
 			</main>

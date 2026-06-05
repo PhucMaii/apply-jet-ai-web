@@ -5,6 +5,7 @@ import { ApplicationDetailOverview } from "@/components/applications/application
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import { APP_NAME, BRAND_LOGO_SRC, ROUTES } from "@/lib/constants"
 import { useApplicationDetail } from "@/hooks/use-application-detail"
+import { useApplications } from "@/hooks/use-applications"
 import { cn } from "@/lib/utils"
 
 export function ApplicationDetailPage() {
@@ -26,6 +27,8 @@ export function ApplicationDetailPage() {
 		resolveStatus,
 		patchForm,
 	} = useApplicationDetail(applicationId)
+
+	const { deleteApplication, deletingId } = useApplications()
 
 	return (
 		<div className={APPLICATIONS_THEME.page}>
@@ -115,6 +118,8 @@ export function ApplicationDetailPage() {
 								onPatchForm={patchForm}
 								onStatusChange={(next) => void updateStatus(next)}
 								onSaveDetails={() => void saveDetails()}
+								isDeleting={deletingId === record.id}
+								onDelete={deleteApplication}
 							/>
 						</div>
 

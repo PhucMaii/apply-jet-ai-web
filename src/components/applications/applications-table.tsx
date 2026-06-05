@@ -19,6 +19,7 @@ import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import type { ApplicationWithDocuments } from "@/types/database"
 import { cn } from "@/lib/utils"
 import { ApplicationsStatusBadge } from "./applications-status-badge"
+import { DeleteApplicationControl } from "./delete-application-control"
 import type { GeneratedDocumentRow } from "@/types/application-detail"
 
 const TABLE_COLUMN = {
@@ -39,6 +40,8 @@ interface ApplicationsTableProps {
 	onStatusChange: (id: string, status: ApplicationStatus) => void
 	onDownloadResume: (application: ApplicationWithDocuments, generatedResume: GeneratedDocumentRow, companyName: string) => void
 	onDownloadCover: (application: ApplicationWithDocuments, generatedCoverLetter: GeneratedDocumentRow, companyName: string) => void
+	deletingId: string | null
+	onDelete: (applicationId: string) => Promise<{ success: boolean; message: string }>
 }
 
 export function ApplicationsTable({
@@ -49,6 +52,8 @@ export function ApplicationsTable({
 	onStatusChange,
 	onDownloadResume,
 	onDownloadCover,
+	deletingId,
+	onDelete,
 }: ApplicationsTableProps) {
 	const navigate = useNavigate()
 	const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -105,6 +110,8 @@ export function ApplicationsTable({
 									onDownloadCover={() => {
 										if (coverId) onDownloadCover(app, app.generated_cover_letter as GeneratedDocumentRow, app.company_name)
 									}}
+									isDeleting={deletingId === app.id}
+									onDelete={onDelete}
 								/>
 							)
 						})}
@@ -131,6 +138,8 @@ interface ApplicationTableRowGroupProps {
 	onStatusChange: (status: ApplicationStatus) => void
 	onDownloadResume: () => void
 	onDownloadCover: () => void
+	isDeleting: boolean
+	onDelete: (applicationId: string) => Promise<{ success: boolean; message: string }>
 }
 
 function ApplicationTableRowGroup({
@@ -147,6 +156,8 @@ function ApplicationTableRowGroup({
 	onStatusChange,
 	onDownloadResume,
 	onDownloadCover,
+	isDeleting,
+	onDelete,
 }: ApplicationTableRowGroupProps) {
 	const addedLabel = new Date(app.created_at).toLocaleString(undefined, {
 		dateStyle: "medium",
@@ -287,6 +298,14 @@ function ApplicationTableRowGroup({
 						>
 							<Link to={applicationDetailPath(app.id)}>Open</Link>
 						</Button>
+						<DeleteApplicationControl
+							applicationId={app.id}
+							jobTitle={app.job_title}
+							companyName={app.company_name}
+							isDeleting={isDeleting}
+							onDelete={onDelete}
+							variant="table"
+						/>
 					</div>
 				</td>
 			</tr>
