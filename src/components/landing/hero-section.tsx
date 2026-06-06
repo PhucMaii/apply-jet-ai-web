@@ -3,8 +3,6 @@ import { lazy, Suspense } from "react"
 import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ExtensionChromeMock } from "@/components/landing/extension-chrome-mock"
-import { HeroExtensionPanelMock } from "@/components/landing/hero-extension-panel-mock"
 import { ROUTES } from "@/lib/constants"
 import { LANDING_COPY } from "@/lib/landing-copy"
 
@@ -103,12 +101,12 @@ export function HeroSection() {
 						>
 							<HeroCanvas />
 						</Suspense>
-						<ExtensionChromeMock
+						{/* <ExtensionChromeMock
 							className="max-w-md lg:ml-auto lg:max-w-lg"
 							url="https://applyjetai.com/applications/full-stack-developer"
 						>
 							<HeroExtensionPanelMock className="w-full" />
-						</ExtensionChromeMock>
+						</ExtensionChromeMock> */}
 					</div>
 				</div>
 			</div>

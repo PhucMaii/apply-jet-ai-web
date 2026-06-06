@@ -1,0 +1,270 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0;}
+.outer{padding:12px 0 20px;font-family:'DM Sans',var(--font-sans);}
+.topbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.topbadge{background:#0f172a;color:#94a3b8;font-size:10px;font-weight:500;padding:4px 10px;border-radius:5px;letter-spacing:0.3px;}
+.topdesc{font-size:12px;color:var(--color-text-secondary);}
+.layout{display:flex;gap:0;align-items:stretch;border:0.5px solid var(--color-border-secondary);border-radius:16px;overflow:hidden;background:var(--color-background-primary);}
+.resume{flex:0 0 420px;border-right:0.5px solid var(--color-border-secondary);background:#fff;position:relative;}
+.anno-panel{flex:1;background:var(--color-background-secondary);display:flex;flex-direction:column;gap:0;}
+
+.r-hdr{background:#0f172a;padding:22px 22px 16px;}
+.r-name{font-family:'DM Serif Display',serif;font-size:22px;color:#f8fafc;letter-spacing:-0.3px;line-height:1.1;}
+.r-role{font-size:10px;color:#64748b;margin-top:4px;letter-spacing:1px;text-transform:uppercase;font-weight:500;}
+.r-contacts{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.08);}
+.r-contact{font-size:9px;color:#475569;display:flex;align-items:center;gap:4px;}
+.r-contact i{font-size:11px;color:#334155;}
+
+.r-body{padding:16px 22px;}
+
+.r-summary{background:#f8fafc;border-left:3px solid #0f172a;padding:10px 14px;border-radius:0 6px 6px 0;margin-bottom:14px;}
+.r-summary p{font-size:10px;line-height:1.65;color:#1e293b;}
+
+.r-section{margin-bottom:14px;}
+.r-sec-label{font-size:8px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:#0f172a;padding-bottom:5px;border-bottom:1.5px solid #0f172a;margin-bottom:8px;}
+
+.r-job{margin-bottom:10px;}
+.r-job-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:1px;}
+.r-job-title{font-size:11px;font-weight:600;color:#0f172a;}
+.r-job-date{font-size:9px;color:#64748b;font-weight:500;}
+.r-job-co{font-size:9.5px;color:#475569;margin-bottom:5px;}
+.r-bullets{padding-left:13px;}
+.r-bullets li{font-size:9.5px;color:#334155;margin-bottom:3px;line-height:1.55;}
+.kw{background:rgba(22,163,74,0.12);color:#15803d;border-radius:2px;padding:0 2px;font-weight:500;}
+.kn{background:rgba(37,99,235,0.1);color:#1d4ed8;border-radius:2px;padding:0 2px;font-weight:600;}
+
+.r-proj-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.r-proj{background:#f8fafc;border:0.5px solid #e2e8f0;border-radius:6px;padding:8px 10px;}
+.r-proj-title{font-size:9.5px;font-weight:600;color:#0f172a;margin-bottom:1px;}
+.r-proj-stack{font-size:8px;color:#15803d;font-weight:500;margin-bottom:4px;}
+.r-proj-bullets{padding-left:11px;}
+.r-proj-bullets li{font-size:8.5px;color:#475569;margin-bottom:2px;line-height:1.5;}
+
+.r-skills-grid{display:flex;flex-wrap:wrap;gap:4px;}
+.r-pill{font-size:8.5px;padding:3px 8px;border-radius:4px;font-weight:500;}
+.r-pill.core{background:#0f172a;color:#e2e8f0;}
+.r-pill.sec{background:#f1f5f9;color:#334155;border:0.5px solid #cbd5e1;}
+.r-pill.hot{background:#dcfce7;color:#15803d;border:0.5px solid #86efac;}
+
+.r-edu{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:3px;}
+.r-edu-school{font-size:10px;font-weight:600;color:#0f172a;}
+.r-edu-deg{font-size:9px;color:#64748b;}
+.r-edu-gpa{font-size:9px;font-weight:600;color:#1d4ed8;}
+
+.scanpath{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;}
+
+.anno-panel-inner{padding:16px 16px;display:flex;flex-direction:column;gap:10px;}
+
+.tl{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:12px 14px;}
+.tl-title{font-size:11px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;}
+.tsteps{display:flex;}
+.ts{flex:1;text-align:center;position:relative;}
+.ts::after{content:'';position:absolute;top:10px;left:50%;width:100%;height:1px;background:var(--color-border-secondary);z-index:0;}
+.ts:last-child::after{display:none;}
+.tsdot{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;margin:0 auto 4px;color:#fff;position:relative;z-index:1;}
+.tsl{font-size:8.5px;color:var(--color-text-secondary);line-height:1.3;}
+
+.ac{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:10px;padding:10px 13px;position:relative;overflow:hidden;}
+.ac::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;}
+.ac.pu::before{background:#7F77DD;}.ac.te::before{background:#1D9E75;}.ac.bl::before{background:#378ADD;}.ac.am::before{background:#BA7517;}.ac.co::before{background:#D85A30;}
+.al{font-size:11px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+.al .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.pu .dot{background:#7F77DD;}.te .dot{background:#1D9E75;}.bl .dot{background:#378ADD;}.am .dot{background:#BA7517;}.co .dot{background:#D85A30;}
+.ab{font-size:11.5px;color:var(--color-text-secondary);line-height:1.6;}
+.ab strong{color:var(--color-text-primary);font-weight:500;}
+
+.warn-box{background:rgba(163,45,45,0.05);border:0.5px solid rgba(163,45,45,0.2);border-radius:10px;padding:10px 13px;}
+.wl{font-size:11px;font-weight:500;color:#791F1F;margin-bottom:3px;display:flex;align-items:center;gap:5px;}
+.wb{font-size:11.5px;color:var(--color-text-secondary);line-height:1.6;}
+.wb strong{color:var(--color-text-primary);font-weight:500;}
+</style>
+
+<h2 class="sr-only">ApplyJetAI annotated resume output showing a polished data analyst resume with HR scanning annotations</h2>
+
+<div class="outer">
+  <div class="topbar">
+    <span class="topbadge">ApplyJetAI · Resume Output</span>
+    <span class="topdesc">This is what your tailored resume looks like — annotations show why each section is built this way</span>
+  </div>
+
+  <div class="layout">
+
+    <!-- RESUME -->
+    <div class="resume">
+
+      <div class="r-hdr">
+        <div class="r-name">Alex Chen</div>
+        <div class="r-role">Senior Full-Stack Developer &nbsp;·&nbsp; 5 Years Experience</div>
+        <div class="r-contacts">
+          <span class="r-contact"><i class="ti ti-mail" aria-hidden="true"></i>alex@alexchen.dev</span>
+          <span class="r-contact"><i class="ti ti-brand-github" aria-hidden="true"></i>github.com/alexchen</span>
+          <span class="r-contact"><i class="ti ti-brand-linkedin" aria-hidden="true"></i>linkedin.com/in/alexchen</span>
+          <span class="r-contact"><i class="ti ti-map-pin" aria-hidden="true"></i>Vancouver, BC</span>
+        </div>
+      </div>
+
+      <div class="r-body">
+
+        <div class="r-summary">
+          <p>Full-stack developer with <span class="kn">5 years</span> shipping production features at scale. Rebuilt checkout flows used by <span class="kn">200K+</span> users, cutting load time <span class="kn">38%</span>. Deep expertise in <span class="kw">React</span>, <span class="kw">TypeScript</span>, and <span class="kw">Node.js</span> — with a track record of leading small squads and delivering on time.</p>
+        </div>
+
+        <div class="r-section">
+          <div class="r-sec-label">Experience</div>
+
+          <div class="r-job">
+            <div class="r-job-header">
+              <span class="r-job-title">Senior Software Developer</span>
+              <span class="r-job-date">Jan 2022 – Present</span>
+            </div>
+            <div class="r-job-co">Shopify &nbsp;·&nbsp; Vancouver, BC</div>
+            <ul class="r-bullets">
+              <li>Rebuilt checkout UI in <span class="kw">React</span> + <span class="kw">TypeScript</span> → cut load time <span class="kn">38%</span> for <span class="kn">200K+</span> users</li>
+              <li>Led migration of <span class="kn">12</span> microservices to <span class="kw">Node.js</span> + <span class="kw">PostgreSQL</span></li>
+              <li>Reduced bugs <span class="kn">60%</span> with <span class="kw">Jest</span> + <span class="kw">Cypress</span> test coverage initiative</li>
+              <li>Mentored <span class="kn">4</span> junior devs; introduced weekly code-review cadence</li>
+            </ul>
+          </div>
+
+          <div class="r-job">
+            <div class="r-job-header">
+              <span class="r-job-title">Software Developer</span>
+              <span class="r-job-date">Jun 2020 – Dec 2021</span>
+            </div>
+            <div class="r-job-co">Hootsuite &nbsp;·&nbsp; Vancouver, BC</div>
+            <ul class="r-bullets">
+              <li>Built <span class="kw">REST API</span> serving <span class="kn">50K</span> daily requests — <span class="kw">Express</span> + <span class="kw">Redis</span> caching</li>
+              <li>Containerised <span class="kn">8</span> services with <span class="kw">Docker</span> + <span class="kw">AWS ECS</span>; zero downtime deployments</li>
+            </ul>
+          </div>
+
+          <div class="r-job" style="opacity:0.65;">
+            <div class="r-job-header">
+              <span class="r-job-title">Junior Developer</span>
+              <span class="r-job-date">2019 – 2020</span>
+            </div>
+            <div class="r-job-co">Unbounce &nbsp;·&nbsp; Vancouver, BC</div>
+            <ul class="r-bullets">
+              <li>Maintained <span class="kw">Vue.js</span> builder; resolved <span class="kn">80+</span> backlog tickets in first quarter</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="r-section">
+          <div class="r-sec-label">Projects</div>
+          <div class="r-proj-grid">
+            <div class="r-proj">
+              <div class="r-proj-title">Open-Source CLI Toolkit</div>
+              <div class="r-proj-stack">TypeScript · Node.js · GitHub Actions</div>
+              <ul class="r-proj-bullets">
+                <li><span class="kn">1.2K</span> GitHub stars · <span class="kn">40+</span> contributors</li>
+                <li>Automated deploy pipeline — saves teams <span class="kn">3 hrs/week</span></li>
+              </ul>
+            </div>
+            <div class="r-proj">
+              <div class="r-proj-title">Real-time Analytics Dashboard</div>
+              <div class="r-proj-stack">React · WebSockets · PostgreSQL</div>
+              <ul class="r-proj-bullets">
+                <li>Streams <span class="kn">10K</span> events/sec with <span class="kn">&lt;100ms</span> latency</li>
+                <li>Used by <span class="kn">3</span> YC startups in production</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="r-section">
+          <div class="r-sec-label">Skills</div>
+          <div class="r-skills-grid">
+            <span class="r-pill core">React</span>
+            <span class="r-pill core">TypeScript</span>
+            <span class="r-pill core">Node.js</span>
+            <span class="r-pill hot">PostgreSQL</span>
+            <span class="r-pill hot">Docker</span>
+            <span class="r-pill hot">AWS</span>
+            <span class="r-pill sec">Vue.js</span>
+            <span class="r-pill sec">Redis</span>
+            <span class="r-pill sec">GraphQL</span>
+            <span class="r-pill sec">Jest</span>
+            <span class="r-pill sec">Cypress</span>
+            <span class="r-pill sec">CI/CD</span>
+          </div>
+        </div>
+
+        <div class="r-section" style="margin-bottom:0;">
+          <div class="r-sec-label">Education</div>
+          <div class="r-edu">
+            <div>
+              <div class="r-edu-school">University of British Columbia</div>
+              <div class="r-edu-deg">B.Sc. Computer Science &nbsp;·&nbsp; 2019 &nbsp;·&nbsp; Vancouver</div>
+            </div>
+            <div class="r-edu-gpa">3.8 GPA</div>
+          </div>
+        </div>
+
+      </div>
+
+      <svg class="scanpath" viewBox="0 0 420 680" preserveAspectRatio="none">
+        <defs>
+          <marker id="arr3" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto">
+            <path d="M0,0 L5,2.5 L0,5 Z" fill="#D85A30" opacity="0.6"/>
+          </marker>
+        </defs>
+        <path d="M20,44 Q390,44 390,44" stroke="#D85A30" stroke-width="1.2" fill="none" stroke-dasharray="4,3" opacity="0.45" marker-end="url(#arr3)"/>
+        <path d="M20,82 Q360,82 360,82" stroke="#D85A30" stroke-width="0.9" fill="none" stroke-dasharray="4,3" opacity="0.28"/>
+        <path d="M20,44 L20,640" stroke="#D85A30" stroke-width="0.9" fill="none" stroke-dasharray="4,3" opacity="0.2"/>
+      </svg>
+    </div>
+
+    <!-- ANNOTATIONS -->
+    <div class="anno-panel">
+      <div class="anno-panel-inner">
+
+        <div class="tl">
+          <div class="tl-title">How HR reads this in 5–6 seconds</div>
+          <div class="tsteps">
+            <div class="ts"><div class="tsdot" style="background:#7F77DD;">1</div><div class="tsl">Name + title<br><span style="color:#7F77DD;font-weight:500;">0–1s</span></div></div>
+            <div class="ts"><div class="tsdot" style="background:#1D9E75;">2</div><div class="tsl">Summary<br><span style="color:#1D9E75;font-weight:500;">1–2s</span></div></div>
+            <div class="ts"><div class="tsdot" style="background:#185FA5;">3</div><div class="tsl">Numbers<br><span style="color:#185FA5;font-weight:500;">2–3s</span></div></div>
+            <div class="ts"><div class="tsdot" style="background:#BA7517;">4</div><div class="tsl">Keywords<br><span style="color:#BA7517;font-weight:500;">3–4s</span></div></div>
+            <div class="ts"><div class="tsdot" style="background:#D85A30;">5</div><div class="tsl">Skills<br><span style="color:#D85A30;font-weight:500;">4–6s</span></div></div>
+          </div>
+          <div style="font-size:11px;color:var(--color-text-secondary);margin-top:8px;line-height:1.6;">Eyes sweep <strong style="color:var(--color-text-primary);">left to right across the top</strong>, then drop down the left edge — the F-pattern. The first word of every bullet must be strong.</div>
+        </div>
+
+        <div class="ac pu">
+          <div class="al"><span class="dot"></span>Name + role line — 0 to 1 second</div>
+          <div class="ab">The only section <strong>guaranteed to be read</strong>. The subtitle "Senior Full-Stack Developer · 5 Years" tells HR seniority and specialty instantly — before they read a word of history. No subtitle = wasted first impression.</div>
+        </div>
+
+        <div class="ac te">
+          <div class="al"><span class="dot"></span>3-line summary — your entire pitch</div>
+          <div class="ab">Most people skip this. <strong>Big mistake.</strong> If the header hooked them, this is what seals it. Lead with years + your single biggest win (200K users, 38% faster). Then tools. <strong>3 lines max</strong> — any longer and it becomes a paragraph nobody reads.</div>
+        </div>
+
+        <div class="ac bl">
+          <div class="al"><span class="dot"></span>Numbers lead every bullet</div>
+          <div class="ab">See the <strong style="color:#1d4ed8;">blue numbers</strong>? 38%, 200K, 60%, 50K. HR can't verify them — but they signal credibility instantly. <strong>Bullets that start with a metric get read. Bullets that don't, get skipped.</strong> "Rebuilt checkout" is invisible. "Cut load time 38%" is not.</div>
+        </div>
+
+        <div class="ac am">
+          <div class="al"><span class="dot"></span>Keywords pass the ATS filter first</div>
+          <div class="ab">The <strong style="color:#15803d;">green words</strong> are keywords matched from the job description. <strong>ATS software scores your resume before a human sees it.</strong> React, TypeScript, Node.js — if they're in the posting but not your resume, you're auto-rejected. ApplyJetAI mirrors the job's exact language.</div>
+        </div>
+
+        <div class="ac co">
+          <div class="al"><span class="dot"></span>Oldest role fades — recency is everything</div>
+          <div class="ab">The 2019 role gets <strong>1 bullet, lower opacity</strong>. HR barely reads past 5 years. Give your current role the most bullets (4), older roles progressively fewer. Don't bury your biggest impact under ancient history.</div>
+        </div>
+
+        <div class="warn-box">
+          <div class="wl"><i class="ti ti-alert-triangle" style="font-size:14px;vertical-align:-2px;margin-right:4px;" aria-hidden="true"></i>The 1-page rule</div>
+          <div class="wb">Under 7 years exp → <strong>1 page, no exceptions.</strong> Every extra line you add forces HR to work harder — and they won't. They'll stop reading. A longer resume signals you can't prioritise. <strong>ApplyJetAI enforces this automatically.</strong></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
