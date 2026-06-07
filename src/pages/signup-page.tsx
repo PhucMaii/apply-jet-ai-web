@@ -49,7 +49,7 @@ export function SignupPage() {
 		setNotice(null)
 		setPending(true)
 		try {
-			markOAuthSignInPending(ROUTES.applications)
+			markOAuthSignInPending(ROUTES.profile)
 			const { error: oauthError } = await supabase.auth.signInWithOAuth({
 				provider,
 				options: { redirectTo: getOAuthRedirectUrl() },
@@ -80,10 +80,18 @@ export function SignupPage() {
 		const fullName = `${trimmedFirstName} ${trimmedLastName}`.trim()
 
 		try {
-			const { error: signUpError } = await supabase.auth.signUp({
-				email: trimmedEmail,
-				password,
-			})
+			const { data: signUpData, error: signUpError } =
+				await supabase.auth.signUp({
+					email: trimmedEmail,
+					password,
+					options: {
+						data: {
+							first_name: trimmedFirstName,
+							last_name: trimmedLastName,
+							full_name: fullName,
+						},
+					},
+				})
 
 			if (signUpError) {
 				console.error("Something went wrong, sign up failed:", signUpError)
@@ -91,19 +99,40 @@ export function SignupPage() {
 				return
 			}
 
-			toast.success("Account created. Please login to continue.")
+			const newUserId = signUpData.user?.id
+			if (!newUserId) {
+				setError("Account created but user id is missing. Try logging in.")
+				return
+			}
+
+			if (!signUpData.session) {
+				const { error: signInError } =
+					await supabase.auth.signInWithPassword({
+						email: trimmedEmail,
+						password,
+					})
+
+				if (signInError) {
+					setNotice(
+						"Account created. Check your email to confirm, then log in.",
+					)
+					setTimeout(() => {
+						navigate(ROUTES.login)
+					}, 1500)
+					return
+				}
+			}
 
 			await initialUserSetup({
-				id: user?.id ?? "",
+				id: newUserId,
 				email: trimmedEmail,
 				full_name: fullName,
-				first_name: trimmedFirstName ?? "",
-				last_name: trimmedLastName ?? "",
+				first_name: trimmedFirstName,
+				last_name: trimmedLastName,
 			})
 
-			setTimeout(() => {
-				navigate(ROUTES.login)
-			}, 1000)
+			toast.success("Welcome! Let's set up your profile.")
+			navigate(ROUTES.profile)
 		} catch (err) {
 			console.error("Something went wrong, sign up failed:", err)
 			setError(err instanceof Error ? err.message : "Unexpected error.")

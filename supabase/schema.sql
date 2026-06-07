@@ -61,7 +61,7 @@ create table if not exists public.subscriptions (
 
 create unique index if not exists subscriptions_stripe_customer_uidx
 	on public.subscriptions (stripe_customer_id)
-	where stripe_customer_id is not null;
+	where stripe_customer_id is not null; 
 
 create unique index if not exists subscriptions_stripe_subscription_uidx
 	on public.subscriptions (stripe_subscription_id)
@@ -97,6 +97,10 @@ create table if not exists public.users (
 	postal_code text,
 	expected_salary numeric,
 	summary text,
+	onboarding_tour_status text
+		not null default 'pending'
+		check (onboarding_tour_status in ('pending', 'active', 'idle')),
+	onboarding_current_step text default 'welcome',
 	created_at timestamptz not null default now(),
 	updated_at timestamptz not null default now()
 );
@@ -284,7 +288,15 @@ begin
 	)
 	on conflict (id) do nothing;
 
-	insert into public.users (id, email, full_name, first_name, last_name)
+	insert into public.users (
+		id,
+		email,
+		full_name,
+		first_name,
+		last_name,
+		onboarding_tour_status,
+		onboarding_current_step
+	)
 	values (
 		new.id,
 		new.email,
@@ -294,7 +306,9 @@ begin
 			null
 		),
 		new.raw_user_meta_data->>'first_name',
-		new.raw_user_meta_data->>'last_name'
+		new.raw_user_meta_data->>'last_name',
+		'pending',
+		'welcome'
 	)
 	on conflict (id) do nothing;
 

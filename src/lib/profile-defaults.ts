@@ -26,6 +26,8 @@ export function emptyProfileRow(id: string, authEmail: string): UserProfileRow {
 		postal_code: null,
 		expected_salary: null,
 		summary: null,
+		onboarding_tour_status: null,
+		onboarding_current_step: null,
 		created_at: new Date().toISOString(),
 		updated_at: new Date().toISOString(),
 	}

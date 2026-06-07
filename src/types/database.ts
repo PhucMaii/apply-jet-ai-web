@@ -428,6 +428,8 @@ export interface Database {
           postal_code: string | null;
           expected_salary: number | null;
           summary: string | null;
+          onboarding_tour_status: "pending" | "active" | "idle" | null;
+          onboarding_current_step: string | null;
           created_at: string;
           updated_at: string;
         },
@@ -446,6 +448,8 @@ export interface Database {
           postal_code?: string | null;
           expected_salary?: number | null;
           summary?: string | null;
+          onboarding_tour_status?: "pending" | "active" | "idle" | null;
+          onboarding_current_step?: string | null;
           created_at?: string;
           updated_at?: string;
         },
@@ -464,6 +468,8 @@ export interface Database {
           postal_code?: string | null;
           expected_salary?: number | null;
           summary?: string | null;
+          onboarding_tour_status?: "pending" | "active" | "idle" | null;
+          onboarding_current_step?: string | null;
           created_at?: string;
           updated_at?: string;
         }

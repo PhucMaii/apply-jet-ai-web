@@ -1,12 +1,14 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Tabs } from "@/components/ui/tabs"
 import { ResumeSection } from "@/components/profile/resume-section"
+import { useOnboarding } from "@/context/onboarding-context"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import {
 	PROFILE_SECTION,
 	PROFILE_SECTION_META,
 	type ProfileSection,
 } from "@/lib/profile-section"
+import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card"
 import { cn } from "@/lib/utils"
@@ -78,6 +80,12 @@ export function ProfileAutofillWorkspace({
 	const [profileSection, setProfileSection] = useState<ProfileSection>(
 		PROFILE_SECTION.contact,
 	)
+	const { activeProfileSection, isTourActive } = useOnboarding()
+
+	useEffect(() => {
+		if (!isTourActive || !activeProfileSection) return
+		setProfileSection(activeProfileSection as ProfileSection)
+	}, [activeProfileSection, isTourActive])
 
 	return (
 		<Tabs
@@ -93,6 +101,7 @@ export function ProfileAutofillWorkspace({
 						<TabsTrigger
 							key={key}
 							value={key}
+							data-tour={TOUR_TARGET.profileSection(key)}
 							className={DASHBOARD_THEME.sectionTabsTrigger}
 						>
 							<SectionIcon

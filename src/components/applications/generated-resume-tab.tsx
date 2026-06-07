@@ -4,6 +4,8 @@ import { GeneratedDocumentPreview } from './document-preview'
 import { toast } from 'react-hot-toast'
 import { downloadFromUrl, downloadTextContent, invokeGenerateResume } from '@/lib/application-generation'
 import { useAuth } from '@/context/auth-context'
+import { useOnboarding } from '@/context/onboarding-context'
+import { TOUR_TARGET } from '@/lib/onboarding/selectors'
 import { Loader2, Sparkles } from 'lucide-react'
 import { EmptyDocumentHint } from './empty-document'
 import { useGeneratedResume } from '../../../hooks/useGeneratedResume'
@@ -23,6 +25,7 @@ export default function GeneratedResumeTab({
     refetchApplication
 }: GeneratedResumeTabProps) {
     const { user } = useAuth()
+    const { notifyResumeGenerated } = useOnboarding()
     const { getResumeDownloadUrl } = useGeneratedResume()
     const [generatingResume, setGeneratingResume] = useState(false)
     const [downloadingResume, setDownloadingResume] = useState(false)
@@ -48,6 +51,7 @@ export default function GeneratedResumeTab({
                 return
             }
             toast.success("Resume generated successfully")
+            notifyResumeGenerated()
             await refetchApplication()
         } catch (err) {
             console.error("Something went wrong generating resume:", err)
@@ -105,6 +109,7 @@ export default function GeneratedResumeTab({
                 size="lg"
                 className="w-full gap-2 sm:w-auto"
                 disabled={generatingResume}
+                data-tour={TOUR_TARGET.generateResume}
                 onClick={() => void handleGenerateResume()}
             >
                 {generatingResume ? (

@@ -2,6 +2,7 @@ import { Link } from "react-router-dom"
 import { FileText, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
+import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { ROUTES } from "@/lib/constants"
 
 export function ApplicationsEmptyState() {
@@ -18,7 +19,7 @@ export function ApplicationsEmptyState() {
 				Chrome extension—they will all appear here.
 			</p>
 			<Button className="mt-6 gap-2" asChild>
-				<Link to={ROUTES.applicationCreate}>
+				<Link to={ROUTES.applicationCreate} data-tour={TOUR_TARGET.newApplication}>
 					<Plus className="size-4" aria-hidden />
 					New application
 				</Link>

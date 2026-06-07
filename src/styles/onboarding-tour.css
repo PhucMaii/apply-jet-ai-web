@@ -1,0 +1,28 @@
+.applyjet-tour-popover {
+	--applyjet-tour-accent: var(--color-primary, #4f46e5);
+}
+
+.applyjet-tour-popover .driver-popover-title {
+	font-size: 1rem;
+	font-weight: 600;
+	color: #0f172a;
+}
+
+.applyjet-tour-popover .driver-popover-description {
+	font-size: 0.875rem;
+	line-height: 1.5;
+	color: #475569;
+}
+
+.applyjet-tour-popover .driver-popover-next-btn {
+	background-color: var(--applyjet-tour-accent) !important;
+	color: #fff !important;
+	border-radius: 0.5rem !important;
+	font-weight: 600 !important;
+	text-shadow: none !important;
+}
+
+.applyjet-tour-popover .driver-popover-progress-text {
+	font-size: 0.75rem;
+	color: #64748b;
+}

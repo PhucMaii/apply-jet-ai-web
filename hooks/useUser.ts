@@ -31,6 +31,8 @@ export const useUser = () => {
             email: userData.email || null,
             first_name: userData.first_name ?? null,
             last_name: userData.last_name ?? null,
+            onboarding_tour_status: "pending",
+            onboarding_current_step: "welcome",
           })
           .select("id")
           .single();

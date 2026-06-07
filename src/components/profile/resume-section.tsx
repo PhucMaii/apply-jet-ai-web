@@ -11,7 +11,9 @@ import {
 	PenLine,
 } from "lucide-react"
 import { useResume } from "../../../hooks/useResume"
+import { useOnboarding } from "@/context/onboarding-context"
 import { getAllowedAccept, isAllowedFile, prefillResume } from "../../../src/lib/resume"
+import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { RESUME_SECTION_THEME } from "@/lib/resume-section-theme"
 import { cn } from "@/lib/utils"
 import toast from "react-hot-toast"
@@ -48,6 +50,7 @@ export function ResumeSection({ userId, refetchProfile }: ResumeSectionProps) {
 	const [validationError, setValidationError] = useState<string | null>(null)
 	const [autoFillLoading, setAutoFillLoading] = useState(false)
 	const inputRef = useRef<HTMLInputElement>(null)
+	const { notifyAutofillComplete } = useOnboarding()
 
 	const handleFile = useCallback(
 		(file: File | null) => {
@@ -95,13 +98,14 @@ export function ResumeSection({ userId, refetchProfile }: ResumeSectionProps) {
 			await prefillResume(userId)
 			await refetchProfile()
 			toast.success("Resume auto-filled successfully")
+			notifyAutofillComplete()
 		} catch (err) {
 			console.error("Something went wrong auto-filling resume:", err)
 			toast.error("Failed to auto-fill resume")
 		} finally {
 			setAutoFillLoading(false)
 		}
-	}, [userId, resume, autoFillLoading, refetchProfile])
+	}, [userId, resume, autoFillLoading, refetchProfile, notifyAutofillComplete])
 
 	if (!userId) return null
 
@@ -180,6 +184,7 @@ export function ResumeSection({ userId, refetchProfile }: ResumeSectionProps) {
 							type="button"
 							onClick={openFilePicker}
 							disabled={showUploading}
+							data-tour={TOUR_TARGET.uploadResume}
 							className={cn(
 								RESUME_SECTION_THEME.uploadZone.base,
 								dragActive
@@ -273,6 +278,7 @@ export function ResumeSection({ userId, refetchProfile }: ResumeSectionProps) {
 						type="button"
 						onClick={() => void handleAutoFill()}
 						disabled={!resume || autoFillLoading}
+						data-tour={TOUR_TARGET.autofillProfile}
 						title={
 							autoFillLoading
 								? "Auto-filling resume..."
