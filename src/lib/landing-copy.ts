@@ -3,15 +3,17 @@ import { ROUTES } from "@/lib/constants"
 /** Single source of truth for marketing / landing page copy. */
 export const LANDING_COPY = {
 	hero: {
-		badge: "Web app · no install needed",
-		title: "Upload your resume. Paste the job.",
-		titleHighlight: "Get tailored application docs in seconds.",
+		badge: "Your path to the offer letter",
+		title: "One click closer to the job you deserve.",
+		titleHighlight: "Less stress. More offers",
 		description:
-			"Create a free account, upload your resume once, and we fill your profile for you. Then add any job description and generate a matched resume, cover letter, and HR contacts—all in your browser.",
-		primaryCta: "Get tailored application docs now",
+			"A tailored resume and cover letter are the key recruiters actually read. Your next chapter starts with the right words. ApplyJet is the effortless way to get them. Upload once, paste the job, and walk away with application docs built for that exact opportunity.",
+		primaryCta: "Start tailoring for free",
 		secondaryCta: "See how it works",
 		secondaryHref: `${ROUTES.home}#how-it-works`,
-		footnote: "Free to start · Pro unlocks unlimited generations and HR contact search.",
+		footnote: "Free to start · Pro unlocks unlimited tailored resumes, cover letters, and HR contacts.",
+		visualAlt:
+			"Happy professional celebrating after receiving a job offer letter",
 	},
 	trustStrip: [
 		"Works entirely in your browser—no extension required",

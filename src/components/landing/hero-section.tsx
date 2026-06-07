@@ -1,15 +1,10 @@
 import { motion } from "framer-motion"
-import { lazy, Suspense } from "react"
 import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { HeroOfferVisual } from "@/components/landing/hero-offer-visual"
 import { ROUTES } from "@/lib/constants"
 import { LANDING_COPY } from "@/lib/landing-copy"
-
-const HeroCanvas = lazy(async () => {
-	const mod = await import("@/components/three/hero-canvas")
-	return { default: mod.HeroCanvas }
-})
 
 const easeOutExpo = [0.22, 1, 0.36, 1] as [number, number, number, number]
 
@@ -90,17 +85,7 @@ export function HeroSection() {
 				<div className="relative">
 					<div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-primary/25 via-transparent to-accent/10 blur-3xl" />
 					<div className="relative space-y-5">
-						<Suspense
-							fallback={
-								<div className="flex h-[300px] w-full items-center justify-center rounded-2xl border border-border/60 bg-muted/20 md:h-[420px]">
-									<span className="text-sm text-muted-foreground">
-										Loading scene…
-									</span>
-								</div>
-							}
-						>
-							<HeroCanvas />
-						</Suspense>
+						<HeroOfferVisual />
 						{/* <ExtensionChromeMock
 							className="max-w-md lg:ml-auto lg:max-w-lg"
 							url="https://applyjetai.com/applications/full-stack-developer"

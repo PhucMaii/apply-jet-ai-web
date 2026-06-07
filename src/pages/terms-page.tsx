@@ -1,5 +1,6 @@
 import { SiteFooter } from "@/components/layout/site-footer"
 import { SiteHeader } from "@/components/layout/site-header"
+import { LINKS, SUPPORT_EMAIL } from "@/lib/constants"
 
 export function TermsPage() {
 	return (
@@ -137,7 +138,12 @@ export function TermsPage() {
         <p className="mt-3 text-base leading-7 text-gray-700">
           If you have any questions about these Terms, please contact us at:
         </p>
-        <p className="mt-3 text-base font-medium text-gray-900">maithienphuc0102@gmail.com</p>
+        <a
+          href={LINKS.contactMail}
+          className="mt-3 inline-block text-base font-medium text-gray-900 underline-offset-4 hover:underline"
+        >
+          {SUPPORT_EMAIL}
+        </a>
       </section>
     </div>
   </div>

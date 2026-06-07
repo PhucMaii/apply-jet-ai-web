@@ -3,6 +3,9 @@ export const APP_NAME = "ApplyJet AI"
 /** Served from `public/logo.png` */
 export const BRAND_LOGO_SRC = "/logo.png"
 
+/** Hero illustration — person celebrating a job offer */
+export const HERO_OFFER_IMAGE_SRC = "/hero-offer-celebration.png"
+
 export const ROUTES = {
 	home: "/",
 	login: "/login",
@@ -27,9 +30,11 @@ export const EDGE_FUNCTIONS = {
 	stripeCustomerPortal: "stripe-customer-portal",
 } as const
 
+export const SUPPORT_EMAIL = "support@applyjetai.com"
+
 export const LINKS = {
 	extensionDownload: "https://chromewebstore.google.com/detail/applyjet-ai/epeoejbbnmghpbafefmjdjdeilngnnbg",
-	contactMail: "mailto:maithienphuc0102@gmail.com",
+	contactMail: `mailto:${SUPPORT_EMAIL}`,
 } as const
 
 export const META = {

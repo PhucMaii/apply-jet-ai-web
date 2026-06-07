@@ -16,7 +16,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card"
-import { APP_NAME, LINKS, ROUTES } from "@/lib/constants"
+import { APP_NAME, LINKS, ROUTES, SUPPORT_EMAIL } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
 const SUPPORT_CARDS = [
@@ -25,6 +25,7 @@ const SUPPORT_CARDS = [
 		title: "Email the team",
 		description:
 			"Billing questions, bugs, or feature ideas—send a message and we will get back as soon as we can.",
+		email: SUPPORT_EMAIL,
 		icon: Mail,
 		ctaLabel: "Open email",
 		href: LINKS.contactMail,
@@ -143,6 +144,14 @@ export function SupportPage() {
 											</CardTitle>
 											<CardDescription className="mt-1.5 leading-relaxed">
 												{item.description}
+												{"email" in item && item.email ? (
+													<a
+														href={item.href}
+														className="mt-3 block text-base font-semibold text-primary underline-offset-4 hover:underline"
+													>
+														{item.email}
+													</a>
+												) : null}
 												{"billingHint" in item && item.billingHint ? (
 													<span className="mt-2 block text-xs text-muted-foreground">
 														Tip: open{" "}
@@ -160,25 +169,11 @@ export function SupportPage() {
 									</div>
 								</CardHeader>
 								<CardContent className="flex flex-wrap gap-2 pt-0">
-									{/* {"href" in item && item.external ? (
+									{"href" in item && item.external ? (
 										<Button size="sm" variant="secondary" asChild>
-											<a
-												href={item.href}
-												target={
-													item.href === LINKS.extensionDownload
-														? "_blank"
-														: undefined
-												}
-												rel={
-													item.href === LINKS.extensionDownload
-														? "noopener noreferrer"
-														: undefined
-												}
-											>
-												{item.ctaLabel}
-											</a>
+											<a href={item.href}>{item.ctaLabel}</a>
 										</Button>
-									) : null} */}
+									) : null}
 									{"to" in item && !item.external ? (
 										<>
 											<Button size="sm" variant="secondary" asChild>
