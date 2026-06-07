@@ -5,10 +5,10 @@ export const LANDING_COPY = {
 	hero: {
 		badge: "Web app · no install needed",
 		title: "Upload your resume. Paste the job.",
-		titleHighlight: "Get tailored application docs in minutes.",
+		titleHighlight: "Get tailored application docs in seconds.",
 		description:
 			"Create a free account, upload your resume once, and we fill your profile for you. Then add any job description and generate a matched resume, cover letter, and HR contacts—all in your browser.",
-		primaryCta: "Create free account",
+		primaryCta: "Get tailored application docs now",
 		secondaryCta: "See how it works",
 		secondaryHref: `${ROUTES.home}#how-it-works`,
 		footnote: "Free to start · Pro unlocks unlimited generations and HR contact search.",

@@ -4,7 +4,7 @@ export const ONBOARDING_WELCOME_COPY = {
 	eyebrow: "Welcome to ApplyJet",
 	title: "Let's set up your profile first",
 	description:
-		"Upload your resume and we'll pre-fill your profile. Then you can create your first tailored application in minutes.",
+		"Upload your resume and we'll pre-fill your profile. Then you can create your first tailored application in seconds.",
 	startTour: "Guide me step by step",
 	skip: "I'll explore on my own",
 } as const
