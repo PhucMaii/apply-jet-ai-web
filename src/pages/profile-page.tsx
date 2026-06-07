@@ -55,7 +55,6 @@ export function ProfilePage() {
 		<div className={DASHBOARD_THEME.page}>
 			<PageHeader
 				title={PAGE_HEADER_COPY.profileTitle}
-				description={PAGE_HEADER_COPY.profileDescription}
 				userEmail={user?.email}
 				accountInitials={accountInitials}
 				onSignOut={signOut}

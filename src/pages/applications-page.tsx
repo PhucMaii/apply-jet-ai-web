@@ -31,7 +31,6 @@ export function ApplicationsPage() {
 		<div className={APPLICATIONS_THEME.page}>
 			<PageHeader
 				title={PAGE_HEADER_COPY.applicationsTitle}
-				description={PAGE_HEADER_COPY.applicationsDescription}
 				userEmail={user?.email}
 				accountInitials={accountInitials}
 				onSignOut={signOut}

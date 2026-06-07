@@ -37,8 +37,8 @@ export function DeleteApplicationControl({
 	const navigate = useNavigate()
 	const [isOpen, setIsOpen] = useState(false)
 
-	const displayTitle = jobTitle.trim() || "this role"
-	const displayCompany = companyName.trim() || "this company"
+	const displayTitle = jobTitle?.trim() || "this role"
+	const displayCompany = companyName?.trim() || "this company"
 
 	const handleConfirm = async () => {
 		const result = await onDelete(applicationId)

@@ -13,6 +13,8 @@ import { Button } from '../ui/button'
 import { Loader2, Sparkles } from 'lucide-react'
 import { GeneratedDocumentPreview } from './document-preview'
 import { EmptyDocumentHint } from './empty-document'
+import { useProfilePage } from '@/hooks/use-profile-page'
+import { isAllowToGenerateResume } from './helpers'
 
 interface GeneratedCoverLetterTabProps {
     form: ApplicationDetailForm
@@ -28,6 +30,7 @@ function GeneratedCoverLetterTab({
 }: GeneratedCoverLetterTabProps) {
     const { user } = useAuth()
     const { getCoverLetterDownloadUrl } = useGeneratedCoverLetter()
+    const { userProfile } = useProfilePage()
 
     const [tone, setTone] = useState<CoverLetterTone>("Professional")
     const [coverCompany, setCoverCompany] = useState(form.companyName)
@@ -38,6 +41,10 @@ function GeneratedCoverLetterTab({
 
     async function handleGenerateCoverLetter() {
         if (!user) return
+        if (!isAllowToGenerateResume(userProfile)) {
+            toast.error("You need to have at least one education and one work experience or project to generate a cover letter")
+            return
+        }
         setGeneratingCover(true)
         try {
             await invokeGenerateCoverLetter({

@@ -20,7 +20,6 @@ import { cn } from "@/lib/utils"
 
 export interface PageHeaderProps {
 	title: string
-	description?: string
 	userEmail: string | undefined
 	accountInitials: string
 	onSignOut: () => void | Promise<void>
@@ -102,7 +101,6 @@ function MobileNavPill({
 
 export function PageHeader({
 	title,
-	description,
 	userEmail,
 	accountInitials,
 	onSignOut,
@@ -304,11 +302,6 @@ export function PageHeader({
 					<div className={PAGE_HEADER_THEME.heroRow}>
 						<div className={PAGE_HEADER_THEME.heroText}>
 							<h1 className={PAGE_HEADER_THEME.title}>{title}</h1>
-							{description ? (
-								<p className={PAGE_HEADER_THEME.description}>
-									{description}
-								</p>
-							) : null}
 							<p className={cn(PAGE_HEADER_THEME.metaEmail, "mt-2 sm:hidden")}>
 								{userEmail ?? PAGE_HEADER_COPY.signedInFallback}
 							</p>

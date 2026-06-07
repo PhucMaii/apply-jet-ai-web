@@ -10,6 +10,8 @@ import { Loader2, Sparkles } from 'lucide-react'
 import { EmptyDocumentHint } from './empty-document'
 import { useGeneratedResume } from '../../../hooks/useGeneratedResume'
 import type { ApplicationDetailForm, GeneratedDocumentRow } from '@/types/application-detail'
+import { useProfilePage } from '@/hooks/use-profile-page'
+import { isAllowToGenerateResume } from './helpers'
 
 interface GeneratedResumeTabProps {
     generatedResume: GeneratedDocumentRow | null
@@ -27,11 +29,17 @@ export default function GeneratedResumeTab({
     const { user } = useAuth()
     const { notifyResumeGenerated } = useOnboarding()
     const { getResumeDownloadUrl } = useGeneratedResume()
+    const { userProfile } = useProfilePage()
+
     const [generatingResume, setGeneratingResume] = useState(false)
     const [downloadingResume, setDownloadingResume] = useState(false)
 
     async function handleGenerateResume() {
         if (!user) return
+        if (!isAllowToGenerateResume(userProfile)) {
+            toast.error("You need to have at least one education and one work experience or project to generate a resume")
+            return
+        }
         setGeneratingResume(true)
         try {
             const result = await invokeGenerateResume({
