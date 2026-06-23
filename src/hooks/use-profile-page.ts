@@ -5,6 +5,7 @@ import { emptyDisclosure, emptyProfileRow } from "@/lib/profile-defaults";
 import { type ProfileNotice } from "@/lib/profile-notice";
 import {
   openStripeCustomerPortal,
+  startJobHuntPackCheckout,
   startProSubscriptionCheckout,
 } from "@/lib/stripe-client";
 import { supabase } from "@/lib/supabase";
@@ -618,6 +619,15 @@ export function useProfilePage() {
     if (!result.ok) setError(result.message);
   }
 
+  async function buyJobHuntPack() {
+    setBillingBusy(true);
+    setError(null);
+    setNotice(null);
+    const result = await startJobHuntPackCheckout();
+    setBillingBusy(false);
+    if (!result.ok) setError(result.message);
+  }
+
   async function openBillingPortal() {
     setBillingBusy(true);
     setError(null);
@@ -655,6 +665,7 @@ export function useProfilePage() {
     addSkill,
     deleteSkill,
     subscribeToPro,
+    buyJobHuntPack,
     openBillingPortal,
     onSaveDisclosure,
     onAddLink,

@@ -5,32 +5,24 @@ import { supabase } from "./supabase";
 
 type PortalResponse = { url?: string | null; error?: string };
 
-/**
- * Opens Stripe Checkout (subscription mode) for the Pro plan.
- * Requires deployed `stripe-checkout` Edge Function and secrets.
- */
-export async function startProSubscriptionCheckout() {
-  // const result = await invokeEdgeFunction<CheckoutResponse>(
-  // 	EDGE_FUNCTIONS.stripeCheckout,
-  // 	{
-  // 		origin,
-  // 		priceId: env.stripeProPriceId || undefined,
-  // 	},
-  // )
+type CheckoutMode = "subscription" | "payment";
+
+async function startStripeCheckout(priceId: string, mode: CheckoutMode) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user?.id) {
     return { ok: false as const, message: "User not found" };
   }
-  if (!env.stripeProPriceId) {
+  if (!priceId) {
     return { ok: false as const, message: "Stripe price not found" };
   }
   const result = await invokeEdgeFunction<PortalResponse>(
     EDGE_FUNCTIONS.stripeCheckout,
     {
-      priceId: env.stripeProPriceId,
+      priceId,
       userId: user.id,
+      mode,
     },
   );
 
@@ -48,6 +40,21 @@ export async function startProSubscriptionCheckout() {
 
   window.location.assign(url);
   return { ok: true as const };
+}
+
+/**
+ * Opens Stripe Checkout (subscription mode) for the Pro plan.
+ * Requires deployed `stripe-checkout` Edge Function and secrets.
+ */
+export async function startProSubscriptionCheckout() {
+  return startStripeCheckout(env.stripeProPriceId, "subscription");
+}
+
+/**
+ * Opens Stripe Checkout (payment mode) for the Job Hunt Pack.
+ */
+export async function startJobHuntPackCheckout() {
+  return startStripeCheckout(env.stripeJobHuntPackPriceId, "payment");
 }
 
 /**

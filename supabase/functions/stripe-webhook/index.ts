@@ -84,6 +84,39 @@ Deno.serve(async (req) => {
     switch (event.type) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
+        if (session.mode === "payment" && session.payment_status == "paid") {
+          const userId = session.metadata?.supabase_user_id;
+          // Get user usage
+          const { data: usage } = await admin
+            .from("user_usage")
+            .select("user_id")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          if (!usage) {
+            console.error("User usage not found:", userId);
+            return new Response("db error", { status: 500 });
+          }
+
+          const updatedUsage = {
+            resume_generations_limit: usage.resume_generations_limit + 50,
+            cover_letters_limit: usage.cover_letters_limit + 50,
+            extract_text_limit: usage.extract_text_limit + 50,
+            application_answers_limit: usage.application_answers_limit + 50,
+          }
+
+          // Update user usage
+          const { error: usageError } = await admin
+            .from("user_usage")
+            .update(updatedUsage)
+            .eq("user_id", userId);
+
+          if (usageError) {
+            console.error("Something went wrong updating user usage:", usageError);
+            return new Response("db error", { status: 500 });
+          }
+        }
+
         if (session.mode !== "subscription") break;
 
         const userId = session.metadata?.supabase_user_id;

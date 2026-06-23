@@ -5,7 +5,7 @@ export const USAGE_COPY = {
 	pageDescription:
 		"Track how much of your plan allowance you have used this billing period.",
 	freePlanHint:
-		"Free plan includes weekly limits on AI generations. Upgrade to Pro for unlimited access.",
+		"Free plan includes limits on AI generations. Upgrade to Pro for unlimited access.",
 	proPlanHint:
 		"Your Pro plan includes unlimited generations across all features below.",
 	unlimited: "Unlimited",
