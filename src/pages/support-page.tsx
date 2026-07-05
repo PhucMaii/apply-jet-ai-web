@@ -6,16 +6,10 @@ import {
 	Mail,
 	Shield,
 } from "lucide-react"
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell"
 import { SiteFooter } from "@/components/layout/site-footer"
 import { SiteHeader } from "@/components/layout/site-header"
 import { Button } from "@/components/ui/button"
-import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
-} from "@/components/ui/card"
 import { APP_NAME, LINKS, ROUTES, SUPPORT_EMAIL } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 
@@ -31,16 +25,6 @@ const SUPPORT_CARDS = [
 		href: LINKS.contactMail,
 		external: true,
 	},
-	// {
-	// 	key: "extension",
-	// 	title: "Chrome extension",
-	// 	description:
-	// 		"Install or update the extension, and make sure you are signed into the same account as on the web app.",
-	// 	icon: Chrome,
-	// 	ctaLabel: "Get extension",
-	// 	href: LINKS.extensionDownload,
-	// 	external: true,
-	// },
 	{
 		key: "account",
 		title: "Profile & applications",
@@ -78,37 +62,46 @@ const SUPPORT_CARDS = [
 
 export function SupportPage() {
 	return (
-		<div className="relative z-10 flex min-h-screen flex-col">
+		<MarketingPageShell className="flex flex-col">
 			<SiteHeader />
 			<main className="mx-auto w-full max-w-4xl flex-1 px-4 py-12 sm:px-6 sm:py-16">
 				<div
 					className={cn(
-						"rounded-2xl border border-border/60 bg-gradient-to-br from-primary/10",
-						"via-card/40 to-accent/5 p-6 shadow-glow-sm backdrop-blur-sm sm:p-8",
+						"rounded-xl border border-landing-border bg-landing-paper p-6",
+						"shadow-[0_1px_3px_rgba(26,26,46,0.06),0_12px_40px_-12px_rgba(26,26,46,0.08)]",
+						"sm:p-8",
 					)}
 				>
-					<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+					<div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
 						<div className="flex gap-4">
 							<span
 								className={cn(
-									"flex size-14 shrink-0 items-center justify-center rounded-2xl",
-									"bg-primary/15 text-primary ring-1 ring-primary/25",
+									"flex size-14 shrink-0 items-center justify-center rounded-xl",
+									"border border-landing-border bg-landing-sand text-landing-primary",
 								)}
 							>
 								<LifeBuoy className="size-7" aria-hidden />
 							</span>
 							<div>
-								<h1 className="font-display text-3xl font-bold tracking-tight">
+								<p className="text-sm font-medium text-landing-primary">
+									Help center
+								</p>
+								<h1 className="mt-1 font-display text-3xl font-medium tracking-tight text-landing-ink sm:text-4xl">
 									Support
 								</h1>
-								<p className="mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground">
+								<p className="mt-3 max-w-xl text-sm leading-relaxed text-landing-muted sm:text-base">
 									We built {APP_NAME} to cut friction on real job applications.
 									If something breaks or feels confusing, use the options below—
 									we read every message.
 								</p>
 							</div>
 						</div>
-						<Button variant="secondary" className="shrink-0 gap-2 self-start" asChild>
+						<Button
+							variant="secondary"
+							surface="light"
+							className="shrink-0 gap-2 self-start"
+							asChild
+						>
 							<a href={LINKS.contactMail}>
 								<Mail className="size-4" aria-hidden />
 								Contact us
@@ -121,66 +114,69 @@ export function SupportPage() {
 					{SUPPORT_CARDS.map((item) => {
 						const Icon = item.icon
 						return (
-							<Card
+							<article
 								key={item.key}
 								className={cn(
-									"border-border/70 bg-card/50 backdrop-blur-sm",
-									"transition-shadow duration-200 hover:shadow-glow-sm",
+									"rounded-xl border border-landing-border bg-landing-paper p-5",
+									"shadow-[0_1px_2px_rgba(26,26,46,0.04)]",
+									"transition-[transform,box-shadow,border-color] duration-300 ease-out",
+									"hover:-translate-y-0.5 hover:border-landing-primary/25",
+									"hover:shadow-[0_12px_40px_-16px_rgba(26,26,46,0.14)]",
+									"sm:p-6",
 								)}
 							>
-								<CardHeader className="space-y-3">
-									<div className="flex items-start gap-3">
-										<span
-											className={cn(
-												"flex size-10 shrink-0 items-center justify-center rounded-xl",
-												"bg-muted/50 text-info ring-1 ring-border/60",
-											)}
-										>
-											<Icon className="size-5" aria-hidden />
-										</span>
-										<div className="min-w-0">
-											<CardTitle className="font-display text-lg">
-												{item.title}
-											</CardTitle>
-											<CardDescription className="mt-1.5 leading-relaxed">
-												{item.description}
-												{"email" in item && item.email ? (
-													<a
-														href={item.href}
-														className="mt-3 block text-base font-semibold text-primary underline-offset-4 hover:underline"
+								<div className="flex items-start gap-3">
+									<span
+										className={cn(
+											"flex size-10 shrink-0 items-center justify-center rounded-lg",
+											"border border-landing-border bg-landing-sand text-landing-ink",
+										)}
+									>
+										<Icon className="size-5" aria-hidden />
+									</span>
+									<div className="min-w-0">
+										<h2 className="font-display text-lg font-medium text-landing-ink">
+											{item.title}
+										</h2>
+										<p className="mt-1.5 text-sm leading-relaxed text-landing-muted">
+											{item.description}
+											{"email" in item && item.email ? (
+												<a
+													href={item.href}
+													className="mt-3 block text-base font-semibold text-landing-primary underline-offset-4 hover:underline"
+												>
+													{item.email}
+												</a>
+											) : null}
+											{"billingHint" in item && item.billingHint ? (
+												<span className="mt-2 block text-xs text-landing-muted">
+													Tip: open{" "}
+													<Link
+														to={ROUTES.profile}
+														className="font-medium text-landing-primary underline-offset-4 hover:underline"
 													>
-														{item.email}
-													</a>
-												) : null}
-												{"billingHint" in item && item.billingHint ? (
-													<span className="mt-2 block text-xs text-muted-foreground">
-														Tip: open{" "}
-														<Link
-															to={ROUTES.profile}
-															className="font-medium text-primary underline-offset-4 hover:underline"
-														>
-															Profile
-														</Link>
-														, then switch to the Billing tab.
-													</span>
-												) : null}
-											</CardDescription>
-										</div>
+														Profile
+													</Link>
+													, then switch to the Billing tab.
+												</span>
+											) : null}
+										</p>
 									</div>
-								</CardHeader>
-								<CardContent className="flex flex-wrap gap-2 pt-0">
+								</div>
+
+								<div className="mt-5 flex flex-wrap gap-2">
 									{"href" in item && item.external ? (
-										<Button size="sm" variant="secondary" asChild>
+										<Button size="sm" variant="secondary" surface="light" asChild>
 											<a href={item.href}>{item.ctaLabel}</a>
 										</Button>
 									) : null}
 									{"to" in item && !item.external ? (
 										<>
-											<Button size="sm" variant="secondary" asChild>
+											<Button size="sm" variant="secondary" surface="light" asChild>
 												<Link to={item.to}>{item.ctaLabel}</Link>
 											</Button>
 											{"secondaryTo" in item && item.secondaryTo ? (
-												<Button size="sm" variant="ghost" asChild>
+												<Button size="sm" variant="ghost" surface="light" asChild>
 													<Link to={item.secondaryTo}>
 														{item.secondaryLabel}
 													</Link>
@@ -188,18 +184,18 @@ export function SupportPage() {
 											) : null}
 										</>
 									) : null}
-								</CardContent>
-							</Card>
+								</div>
+							</article>
 						)
 					})}
 				</div>
 
-				<p className="mt-10 text-center text-xs text-muted-foreground">
+				<p className="mt-10 text-center text-xs leading-relaxed text-landing-muted">
 					Response times vary; include your account email and what you were doing
 					when the issue happened so we can reproduce it faster.
 				</p>
 			</main>
 			<SiteFooter />
-		</div>
+		</MarketingPageShell>
 	)
 }

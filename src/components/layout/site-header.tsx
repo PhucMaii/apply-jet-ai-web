@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import { APP_NAME, BRAND_LOGO_SRC, ROUTES } from "@/lib/constants"
+import { isMarketingRoute } from "@/lib/marketing-routes"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -14,14 +15,24 @@ const nav = [
 export function SiteHeader() {
 	const { pathname } = useLocation()
 	const { user } = useAuth()
-	const isMarketing = pathname === ROUTES.home
+	const isMarketing = isMarketingRoute(pathname)
 
 	return (
-		<header className="sticky top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+		<header
+			className={cn(
+				"sticky top-0 z-50 border-b backdrop-blur-xl",
+				isMarketing
+					? "border-landing-border/80 bg-landing-bg/85"
+					: "border-border/60 bg-background/70",
+			)}
+		>
 			<div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
 				<Link
 					to={ROUTES.home}
-					className="group flex items-center gap-2.5 font-display text-lg font-bold tracking-tight text-foreground"
+					className={cn(
+						"group flex items-center gap-2.5 font-display text-lg font-semibold tracking-tight",
+						isMarketing ? "text-landing-ink" : "font-bold text-foreground",
+					)}
 				>
 					<span className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-white/20">
 						<img
@@ -51,8 +62,10 @@ export function SiteHeader() {
 								key={item.href}
 								href={item.href}
 								className={cn(
-									"rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors",
-									"hover:bg-muted/60 hover:text-foreground",
+									"rounded-md px-3 py-2 text-sm font-medium transition-colors",
+									isMarketing
+										? "text-landing-muted hover:bg-landing-sand hover:text-landing-ink"
+										: "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
 								)}
 							>
 								{item.label}
@@ -62,7 +75,13 @@ export function SiteHeader() {
 				) : null}
 
 				<div className="flex items-center gap-2">
-					<Button variant="ghost" surface="dark" size="sm" className="hidden sm:inline-flex" asChild>
+					<Button
+						variant="ghost"
+						surface={isMarketing ? "light" : "dark"}
+						size="sm"
+						className="hidden sm:inline-flex"
+						asChild
+					>
 						<Link to={ROUTES.support}>Support</Link>
 					</Button>
 					{/* <Button variant="ghost" surface="dark" size="sm" asChild>
@@ -76,19 +95,38 @@ export function SiteHeader() {
 					</Button> */}
 					{user ? (
 						<>
-							<Button variant="ghost" surface="dark" size="sm" asChild>
+							<Button
+								variant="ghost"
+								surface={isMarketing ? "light" : "dark"}
+								size="sm"
+								asChild
+							>
 								<Link to={ROUTES.profile}>Profile</Link>
 							</Button>
-							<Button surface="dark" size="sm" asChild>
+							<Button surface={isMarketing ? "light" : "dark"} size="sm" asChild>
 								<Link to={ROUTES.applications}>Applications</Link>
 							</Button>
 						</>
 					) : (
 						<>
-							<Button variant="secondary" surface="dark" size="sm" asChild>
+							<Button
+								variant="ghost"
+								surface={isMarketing ? "light" : "dark"}
+								size="sm"
+								asChild
+							>
 								<Link to={ROUTES.login}>Log in</Link>
 							</Button>
-							<Button surface="dark" size="sm" className="hidden sm:inline-flex" asChild>
+							<Button
+								surface={isMarketing ? "light" : "dark"}
+								size="sm"
+								className={cn(
+									"hidden sm:inline-flex",
+									isMarketing &&
+										"bg-landing-primary text-white hover:bg-landing-primary-hover",
+								)}
+								asChild
+							>
 								<Link to={ROUTES.signup}>Get started</Link>
 							</Button>
 						</>

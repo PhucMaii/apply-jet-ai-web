@@ -2,7 +2,18 @@
 
 @theme {
 	--font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-	--font-display: "Outfit", ui-sans-serif, system-ui, sans-serif;
+	--font-display: "Fraunces", ui-serif, Georgia, serif;
+
+	--color-landing-bg: #fafaf8;
+	--color-landing-paper: #ffffff;
+	--color-landing-ink: #1a1a2e;
+	--color-landing-muted: #5c5c6b;
+	--color-landing-muted-on-dark: #a8a8b8;
+	--color-landing-border: #e8e6e1;
+	--color-landing-primary: #4f46e5;
+	--color-landing-primary-hover: #4338ca;
+	--color-landing-accent: #c9a96e;
+	--color-landing-sand: #f3f0e8;
 
 	--color-background: #050510;
 	--color-foreground: #f8fafc;
@@ -79,6 +90,23 @@
 	-webkit-backdrop-filter: blur(18px);
 	border: 1px solid var(--color-border);
 	box-shadow: var(--shadow-glow-sm);
+}
+
+.landing-page {
+	--color-background: var(--color-landing-bg);
+	--color-foreground: var(--color-landing-ink);
+	--color-muted: var(--color-landing-sand);
+	--color-muted-foreground: var(--color-landing-muted);
+	--color-card: var(--color-landing-paper);
+	--color-card-foreground: var(--color-landing-ink);
+	--color-border: var(--color-landing-border);
+	--color-primary: var(--color-landing-primary);
+	--color-primary-foreground: #ffffff;
+	--color-accent: var(--color-landing-accent);
+	--color-accent-foreground: var(--color-landing-ink);
+	--color-ring: color-mix(in oklab, var(--color-landing-primary) 45%, transparent);
+	--shadow-glow: none;
+	--shadow-glow-sm: none;
 }
 
 @utility thin-scrollbar {

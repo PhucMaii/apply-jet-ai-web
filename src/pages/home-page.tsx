@@ -7,12 +7,13 @@ import { WhySection } from "@/components/landing/why-section"
 import { PricingSection } from "@/components/landing/pricing-section"
 import { AuthCtaSection } from "@/components/landing/auth-cta-section"
 import { FinalCta } from "@/components/landing/final-cta"
+import { MarketingPageShell } from "@/components/layout/marketing-page-shell"
 import { SiteFooter } from "@/components/layout/site-footer"
 import { SiteHeader } from "@/components/layout/site-header"
 
 export function HomePage() {
 	return (
-		<div className="relative z-10 flex min-h-screen flex-col">
+		<MarketingPageShell className="flex flex-col">
 			<SiteHeader />
 			<main>
 				<HeroSection />
@@ -26,6 +27,6 @@ export function HomePage() {
 				<FinalCta />
 			</main>
 			<SiteFooter />
-		</div>
+		</MarketingPageShell>
 	)
 }

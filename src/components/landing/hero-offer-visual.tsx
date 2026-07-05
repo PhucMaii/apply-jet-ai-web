@@ -1,8 +1,8 @@
 import { motion, useReducedMotion } from "framer-motion"
 import { HERO_OFFER_IMAGE_SRC } from "@/lib/constants"
-import { LANDING_COPY } from "@/lib/landing-copy"
 
-const { visualAlt } = LANDING_COPY.hero
+const HERO_VISUAL_ALT =
+	"Happy professional celebrating after receiving a job offer letter"
 
 export function HeroOfferVisual() {
 	const reduceMotion = useReducedMotion()
@@ -20,7 +20,7 @@ export function HeroOfferVisual() {
 			/>
 			<motion.img
 				src={HERO_OFFER_IMAGE_SRC}
-				alt={visualAlt}
+				alt={HERO_VISUAL_ALT}
 				width={960}
 				height={720}
 				loading="eager"

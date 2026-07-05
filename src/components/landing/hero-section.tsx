@@ -1,98 +1,69 @@
-import { motion } from "framer-motion"
+import { motion, useReducedMotion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { HeroOfferVisual } from "@/components/landing/hero-offer-visual"
+import { HeroResumeMock } from "@/components/landing/hero-resume-mock"
 import { ROUTES } from "@/lib/constants"
 import { LANDING_COPY } from "@/lib/landing-copy"
-
-const easeOutExpo = [0.22, 1, 0.36, 1] as [number, number, number, number]
-
-const fadeUp = {
-	hidden: { opacity: 0, y: 18 },
-	show: (i: number) => ({
-		opacity: 1,
-		y: 0,
-		transition: { delay: 0.08 * i, duration: 0.55, ease: easeOutExpo },
-	}),
-}
+import { LANDING_EASE_OUT } from "@/lib/landing-motion"
 
 const { hero } = LANDING_COPY
 
 export function HeroSection() {
+	const reduceMotion = useReducedMotion()
+
 	return (
-		<section className="relative overflow-hidden pt-6 pb-20 sm:pb-24">
-			<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,_color-mix(in_oklab,var(--color-primary)_22%,transparent),transparent_55%)]" />
-			<div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1.05fr_0.95fr] lg:gap-10">
-				<div>
-					<motion.p
-						custom={0}
-						variants={fadeUp}
-						initial="hidden"
-						animate="show"
-						className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-md"
-					>
-						<span className="size-1.5 rounded-full bg-accent shadow-[0_0_12px_color-mix(in_oklab,var(--color-accent)_60%,transparent)]" />
-						{hero.badge}
-					</motion.p>
+		<section className="relative overflow-hidden pt-10 pb-16 sm:pt-14 sm:pb-24 lg:pt-20 lg:pb-28">
+			<div className="mx-auto grid w-full min-w-0 max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:gap-16 xl:gap-20">
+				<div className="min-w-0 max-w-xl lg:max-w-none">
 					<motion.h1
-						custom={1}
-						variants={fadeUp}
-						initial="hidden"
-						animate="show"
-						className="font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-5xl lg:text-[3.25rem]"
+						initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.55, ease: LANDING_EASE_OUT }}
+						className="font-display text-[2rem] font-medium leading-[1.12] tracking-tight text-landing-ink sm:text-5xl lg:text-[3.25rem] lg:leading-[1.08]"
 					>
-						{hero.title}{" "}
-						<span className="text-gradient">{hero.titleHighlight}</span>
+						{hero.title}
 					</motion.h1>
+
 					<motion.p
-						custom={2}
-						variants={fadeUp}
-						initial="hidden"
-						animate="show"
-						className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg"
+						initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{
+							duration: 0.55,
+							ease: LANDING_EASE_OUT,
+							delay: reduceMotion ? 0 : 0.1,
+						}}
+						className="mt-5 text-base leading-relaxed text-landing-muted sm:mt-6 sm:text-lg sm:leading-relaxed"
 					>
 						{hero.description}
 					</motion.p>
+
 					<motion.div
-						custom={3}
-						variants={fadeUp}
-						initial="hidden"
-						animate="show"
-						className="mt-8 flex flex-wrap items-center gap-3"
+						initial={reduceMotion ? false : { opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{
+							duration: 0.55,
+							ease: LANDING_EASE_OUT,
+							delay: reduceMotion ? 0 : 0.2,
+						}}
+						className="mt-8 sm:mt-10"
 					>
-						<Button size="lg" surface="dark" className="gap-2 shadow-glow" asChild>
+						<Button
+							size="lg"
+							surface="light"
+							className="gap-2 bg-landing-primary text-white hover:bg-landing-primary-hover hover:scale-[1.02] hover:shadow-none active:scale-[0.98]"
+							asChild
+						>
 							<Link to={ROUTES.signup}>
 								{hero.primaryCta}
 								<ArrowRight className="size-4" aria-hidden />
 							</Link>
 						</Button>
-						<Button size="lg" variant="secondary" surface="dark" className="gap-2" asChild>
-							<a href={hero.secondaryHref}>{hero.secondaryCta}</a>
-						</Button>
 					</motion.div>
-					<motion.p
-						custom={4}
-						variants={fadeUp}
-						initial="hidden"
-						animate="show"
-						className="mt-4 text-xs text-muted-foreground"
-					>
-						{hero.footnote}
-					</motion.p>
 				</div>
 
-				<div className="relative">
-					<div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-primary/25 via-transparent to-accent/10 blur-3xl" />
-					<div className="relative space-y-5">
-						<HeroOfferVisual />
-						{/* <ExtensionChromeMock
-							className="max-w-md lg:ml-auto lg:max-w-lg"
-							url="https://applyjetai.com/applications/full-stack-developer"
-						>
-							<HeroExtensionPanelMock className="w-full" />
-						</ExtensionChromeMock> */}
-					</div>
+				<div className="relative min-w-0 w-full lg:mx-0">
+					<HeroResumeMock />
 				</div>
 			</div>
 		</section>
