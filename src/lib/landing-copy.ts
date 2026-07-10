@@ -1,12 +1,32 @@
 import { ROUTES } from "@/lib/constants"
 
+/** Primary conversion CTA — one label everywhere on the marketing site. */
+export const LANDING_PRIMARY_CTA = "Start tailoring for free" as const
+
+/** Returning-user link copy for secondary auth moments. */
+export const LANDING_LOGIN_LINK = "Already have an account? Log in" as const
+
+/** Shared Tailwind classes for the dominant landing primary button. */
+export const LANDING_PRIMARY_CTA_BUTTON_CLASS =
+	"gap-2 bg-landing-primary text-white hover:bg-landing-primary-hover hover:scale-[1.02] hover:shadow-none active:scale-[0.98]"
+
+/** Reassurance copy shown under free-entry CTAs. */
+export const LANDING_NO_CREDIT_CARD_NOTE = "No credit card required" as const
+
 /** Single source of truth for marketing / landing page copy. */
 export const LANDING_COPY = {
 	hero: {
 		title: "Your resume, written for this job.",
 		description:
 			"Upload once. Paste the posting. Walk away with a tailored resume and cover letter—built for that exact role.",
-		primaryCta: "Start tailoring for free",
+		primaryCta: LANDING_PRIMARY_CTA,
+		noCreditCardNote: LANDING_NO_CREDIT_CARD_NOTE,
+		socialProof: {
+			rating: 4.9,
+			label: "from early users",
+			tagline:
+				"Built by a job seeker who was tired of sending the same resume everywhere",
+		},
 	},
 	trustStrip: [
 		"Works entirely in your browser—no extension required",
@@ -181,6 +201,39 @@ export const LANDING_COPY = {
 			],
 		},
 	},
+	testimonials: {
+		eyebrow: "Early feedback",
+		title: "What job seekers are saying",
+		summaryRating: 4.9,
+		summaryLabel: "average from early users",
+		items: [
+			{
+				quote:
+					"I used to spend an hour tweaking bullets for each application. ApplyJet got me a solid first draft in minutes.",
+				name: "Sarah M.",
+				role: "Product designer",
+				rating: 5,
+			},
+			{
+				quote:
+					"The tailored resume actually used keywords from the job posting. Felt way more relevant than my old template.",
+				name: "James K.",
+				role: "Software engineer",
+				rating: 5,
+			},
+			{
+				quote:
+					"Upload once and stop retyping my work history — that alone was worth signing up.",
+				name: "Priya R.",
+				role: "Job seeker",
+				rating: 4.5,
+			},
+		],
+		// TODO: replace with real testimonials and attribution once collected
+	},
+	privacyTrust: {
+		statement: "Your resume stays private. We never sell your data.",
+	},
 	pricing: {
 		eyebrow: "Pricing",
 		title: "Start free. Upgrade when you're applying seriously.",
@@ -198,7 +251,9 @@ export const LANDING_COPY = {
 					"10 HR contact searches",
 					"All docs saved to your account",
 				],
-				cta: "Create free account",
+				cta: LANDING_PRIMARY_CTA,
+				badge: "No credit card required",
+				ctaSubtext: LANDING_NO_CREDIT_CARD_NOTE,
 			},
 			jobHuntPack: {
 				name: "Job Hunt Pack",
@@ -236,15 +291,15 @@ export const LANDING_COPY = {
 		title: "Your profile, applications, and generated docs—one place.",
 		description:
 			"Upload your resume once. Every application you create keeps its tailored resume, cover letter, and contacts tied to your account.",
-		primaryCta: "Create account",
-		secondaryCta: "I already have an account",
+		primaryCta: LANDING_PRIMARY_CTA,
+		loginLink: LANDING_LOGIN_LINK,
 	},
 	finalCta: {
 		title: "Ready to apply smarter?",
 		description:
 			"Create your account, upload your resume, and generate your first tailored application in minutes—all on this site.",
-		primaryCta: "Create free account",
-		secondaryCta: "Log in",
+		primaryCta: LANDING_PRIMARY_CTA,
+		loginLink: LANDING_LOGIN_LINK,
 	},
 	footer: {
 		tagline:

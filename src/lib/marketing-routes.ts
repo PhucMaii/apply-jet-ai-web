@@ -2,6 +2,7 @@ import { ROUTES } from "@/lib/constants"
 
 export const MARKETING_ROUTE_PATHS = [
 	ROUTES.home,
+	ROUTES.adsLanding,
 	ROUTES.login,
 	ROUTES.signup,
 	ROUTES.support,

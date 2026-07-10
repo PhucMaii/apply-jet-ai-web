@@ -183,8 +183,18 @@ function TierCard({
 	)
 }
 
-export function ExperienceBulletsSection() {
+export function ExperienceBulletsSection({
+	variant = "full",
+}: {
+	variant?: "full" | "condensed"
+}) {
 	const { jobContext, principles } = experienceBullets
+	const isCondensed = variant === "condensed"
+	const visibleTiers = isCondensed
+		? experienceBullets.tiers.filter(
+				(tier) => tier.key === "bad" || tier.key === "excellent",
+			)
+		: experienceBullets.tiers
 
 	return (
 		<section
@@ -197,11 +207,15 @@ export function ExperienceBulletsSection() {
 						{experienceBullets.eyebrow}
 					</p>
 					<h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-						{experienceBullets.title}
+						{isCondensed
+							? "Generic bullets get skipped. Tailored ones get interviews."
+							: experienceBullets.title}
 					</h2>
-					<p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
-						{experienceBullets.description}
-					</p>
+					{!isCondensed ? (
+						<p className="mt-4 text-base leading-relaxed text-muted-foreground sm:text-lg">
+							{experienceBullets.description}
+						</p>
+					) : null}
 				</div>
 
 				<motion.div
@@ -235,38 +249,47 @@ export function ExperienceBulletsSection() {
 					</div>
 				</motion.div>
 
-				<div className="mt-8 grid gap-3 sm:grid-cols-3">
-					{principles.map((principle, index) => {
-						const PrincipleIcon = principleIcons[index]
-						return (
-							<motion.div
-								key={principle.title}
-								initial={{ opacity: 0, y: 10 }}
-								whileInView={{ opacity: 1, y: 0 }}
-								viewport={{ once: true }}
-								transition={{ delay: 0.05 * index, duration: 0.4 }}
-								className="flex gap-3 rounded-xl border border-border/60 bg-background/50 px-4 py-3"
-							>
-								<span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-									<PrincipleIcon className="size-4" aria-hidden />
-								</span>
-								<div>
-									<p className="text-sm font-semibold">{principle.title}</p>
-									<p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-										{principle.body}
-									</p>
-								</div>
-							</motion.div>
-						)
-					})}
-				</div>
+				{!isCondensed ? (
+					<div className="mt-8 grid gap-3 sm:grid-cols-3">
+						{principles.map((principle, index) => {
+							const PrincipleIcon = principleIcons[index]
+							return (
+								<motion.div
+									key={principle.title}
+									initial={{ opacity: 0, y: 10 }}
+									whileInView={{ opacity: 1, y: 0 }}
+									viewport={{ once: true }}
+									transition={{ delay: 0.05 * index, duration: 0.4 }}
+									className="flex gap-3 rounded-xl border border-border/60 bg-background/50 px-4 py-3"
+								>
+									<span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+										<PrincipleIcon className="size-4" aria-hidden />
+									</span>
+									<div>
+										<p className="text-sm font-semibold">{principle.title}</p>
+										<p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+											{principle.body}
+										</p>
+									</div>
+								</motion.div>
+							)
+						})}
+					</div>
+				) : null}
 
 				<p className="mt-10 text-center text-sm font-medium text-muted-foreground">
-					Same person. Same job. Three ways to write it ↓
+					{isCondensed
+						? "Same experience. Two ways to present it ↓"
+						: "Same person. Same job. Three ways to write it ↓"}
 				</p>
 
-				<div className="mt-6 grid gap-5 lg:grid-cols-3">
-					{experienceBullets.tiers.map((tier, index) => (
+				<div
+					className={cn(
+						"mt-6 grid gap-5",
+						isCondensed ? "lg:grid-cols-2" : "lg:grid-cols-3",
+					)}
+				>
+					{visibleTiers.map((tier, index) => (
 						<TierCard key={tier.key} tier={tier} index={index} />
 					))}
 				</div>

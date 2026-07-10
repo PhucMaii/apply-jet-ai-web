@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom"
 import { ProtectedRoute } from "@/components/layout/protected-route"
 import { ROUTES } from "@/lib/constants"
 import { HomePage } from "@/pages/home-page"
+import { AdsLandingPage } from "@/pages/ads-landing-page"
 import { LoginPage } from "@/pages/login-page"
 import { SignupPage } from "@/pages/signup-page"
 import { ApplicationsPage } from "@/pages/applications-page"
@@ -17,6 +18,7 @@ export function AppRoutes() {
 	return (
 		<Routes>
 			<Route path={ROUTES.home} element={<HomePage />} />
+			<Route path={ROUTES.adsLanding} element={<AdsLandingPage />} />
 			<Route path={ROUTES.login} element={<LoginPage />} />
 			<Route path={ROUTES.signup} element={<SignupPage />} />
 			<Route path={ROUTES.authCallback} element={<AuthCallbackPage />} />

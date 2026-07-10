@@ -1,6 +1,11 @@
 import { Link, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import { APP_NAME, BRAND_LOGO_SRC, ROUTES } from "@/lib/constants"
+import {
+	LANDING_PRIMARY_CTA,
+	LANDING_PRIMARY_CTA_BUTTON_CLASS,
+} from "@/lib/landing-copy"
+import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { isMarketingRoute } from "@/lib/marketing-routes"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
@@ -122,12 +127,16 @@ export function SiteHeader() {
 								size="sm"
 								className={cn(
 									"hidden sm:inline-flex",
-									isMarketing &&
-										"bg-landing-primary text-white hover:bg-landing-primary-hover",
+									isMarketing && LANDING_PRIMARY_CTA_BUTTON_CLASS,
 								)}
 								asChild
 							>
-								<Link to={ROUTES.signup}>Get started</Link>
+								<LandingSignupLink
+									location="header"
+									label={LANDING_PRIMARY_CTA}
+								>
+									{LANDING_PRIMARY_CTA}
+								</LandingSignupLink>
 							</Button>
 						</>
 					)}

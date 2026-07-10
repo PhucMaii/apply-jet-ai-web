@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react"
+import { useState, useEffect, type FormEvent } from "react"
 import { Link, Navigate, useNavigate } from "react-router-dom"
 import { Chrome, Loader2 } from "lucide-react"
 import toast from "react-hot-toast"
@@ -14,6 +14,7 @@ import {
 	markOAuthSignInPending,
 } from "@/lib/auth-oauth"
 import { APP_NAME, ROUTES } from "@/lib/constants"
+import { trackSignupCompleted, trackSignupStarted } from "@/lib/analytics"
 import { supabase } from "@/lib/supabase"
 import { useUser } from "../../hooks/useUser"
 
@@ -29,6 +30,10 @@ export function SignupPage() {
 	const [lastName, setLastName] = useState("")
 	const [email, setEmail] = useState("")
 	const [password, setPassword] = useState("")
+
+	useEffect(() => {
+		trackSignupStarted({ source: "signup_page" })
+	}, [])
 
 	if (!isConfigured) {
 		return (
@@ -49,6 +54,7 @@ export function SignupPage() {
 		setError(null)
 		setNotice(null)
 		setPending(true)
+		trackSignupStarted({ source: "signup_page", method: "google" })
 		try {
 			markOAuthSignInPending(ROUTES.profile)
 			const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -74,6 +80,7 @@ export function SignupPage() {
 		setError(null)
 		setNotice(null)
 		setPending(true)
+		trackSignupStarted({ source: "signup_page", method: "email" })
 
 		const trimmedFirstName = firstName.trim()
 		const trimmedLastName = lastName.trim()
@@ -132,6 +139,7 @@ export function SignupPage() {
 				last_name: trimmedLastName,
 			})
 
+			trackSignupCompleted({ method: "email" })
 			toast.success("Welcome! Let's set up your profile.")
 			navigate(ROUTES.profile)
 		} catch (err) {

@@ -14,6 +14,7 @@ export interface PricingPlan {
 	features: readonly string[]
 	cta?: string
 	badge?: string
+	ctaSubtext?: string
 	highlight?: boolean
 }
 
@@ -101,9 +102,18 @@ export function getProfilePlanAction(
 
 export function getLandingPlanAction(planKey: PricingPlanKey): PricingPlanAction {
 	const plan = getPricingPlan(planKey)
+
+	if (planKey === "free") {
+		return {
+			label: plan.cta ?? "Get started",
+			href: ROUTES.signup,
+			variant: "default",
+		}
+	}
+
 	return {
 		label: plan.cta ?? "Get started",
 		href: ROUTES.signup,
-		variant: plan.highlight ? "default" : "secondary",
+		variant: "outline",
 	}
 }

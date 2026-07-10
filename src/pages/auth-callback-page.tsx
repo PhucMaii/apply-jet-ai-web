@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import {
 	completeOAuthCallback,
 	getOAuthSuccessRedirectPath,
+	peekOAuthReturnPath,
 } from "@/lib/auth-oauth"
 import { ROUTES } from "@/lib/constants"
+import { trackSignupCompleted } from "@/lib/analytics"
 
 export function AuthCallbackPage() {
 	const navigate = useNavigate()
@@ -21,6 +23,9 @@ export function AuthCallbackPage() {
 			if (cancelled) return
 
 			if (result.success) {
+				if (peekOAuthReturnPath() === ROUTES.profile) {
+					trackSignupCompleted({ method: "google" })
+				}
 				navigate(getOAuthSuccessRedirectPath(), { replace: true })
 				return
 			}

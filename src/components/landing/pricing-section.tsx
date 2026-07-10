@@ -2,6 +2,7 @@ import {
 	PricingPlansGrid,
 	PricingSectionHeader,
 } from "@/components/pricing/pricing-plans-grid"
+import { PrivacyTrustLine } from "@/components/landing/privacy-trust-line"
 
 export function PricingSection() {
 	return (
@@ -11,6 +12,7 @@ export function PricingSection() {
 				<div className="mt-12">
 					<PricingPlansGrid variant="landing" />
 				</div>
+				<PrivacyTrustLine />
 			</div>
 		</section>
 	)

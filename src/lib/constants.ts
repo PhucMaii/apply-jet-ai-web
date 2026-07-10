@@ -18,6 +18,7 @@ export const ROUTES = {
 	privacy: "/privacy",
 	terms: "/terms",
 	support: "/support",
+	adsLanding: "/lp/ads",
 } as const
 
 export function applicationDetailPath(applicationId: string) {

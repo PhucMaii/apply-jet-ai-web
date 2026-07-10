@@ -2,7 +2,9 @@ import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
+import { ROUTES } from "@/lib/constants"
 import {
 	PRICING_MAX_FEATURE_ROWS,
 	type PricingPlan,
@@ -26,7 +28,7 @@ const CARD_LAYOUT = {
 	description: "min-h-[4.5rem]",
 	price: "h-10",
 	featureRow: "min-h-[2.75rem]",
-	cta: "h-11",
+	ctaBlock: "min-h-[4.25rem]",
 } as const
 
 function padFeatureRows(features: readonly string[]): (string | null)[] {
@@ -40,9 +42,11 @@ function padFeatureRows(features: readonly string[]): (string | null)[] {
 function PlanBadge({
 	label,
 	variant,
+	tone = "solid",
 }: {
 	label: string
 	variant: PricingPlanCardVariant
+	tone?: "solid" | "outline"
 }) {
 	const isLanding = variant === "landing"
 
@@ -51,9 +55,11 @@ function PlanBadge({
 			className={cn(
 				"inline-flex items-center rounded-full px-2.5 py-0.5",
 				"text-[10px] font-bold uppercase tracking-wide",
-				isLanding
-					? "bg-primary text-primary-foreground"
-					: "border border-emerald-200 bg-emerald-50 text-emerald-700",
+				isLanding && tone === "solid"
+					? "bg-landing-primary text-white"
+					: isLanding && tone === "outline"
+						? "border border-landing-border bg-landing-paper text-landing-muted"
+						: "border border-emerald-200 bg-emerald-50 text-emerald-700",
 			)}
 		>
 			{label}
@@ -69,7 +75,9 @@ export function PricingPlanCard({
 	animationIndex = 0,
 }: PricingPlanCardProps) {
 	const isLanding = variant === "landing"
-	const isHighlighted = isLanding ? plan.highlight : isCurrentPlan
+	const isHighlighted = isLanding
+		? plan.key === "free"
+		: isCurrentPlan
 	const featureRows = padFeatureRows(plan.features)
 	const badgeLabel =
 		isCurrentPlan && !isLanding
@@ -77,14 +85,16 @@ export function PricingPlanCard({
 			: isLanding && plan.badge
 				? plan.badge
 				: null
+	const badgeTone =
+		isLanding && plan.key !== "free" ? "outline" : "solid"
 
 	const cardClassName = cn(
 		"relative grid h-full grid-rows-[auto_auto_auto_auto_1fr_auto]",
 		"rounded-2xl border p-6 sm:p-7",
 		isLanding
 			? isHighlighted
-				? "border-primary/50 bg-gradient-to-b from-primary/15 via-card/80 to-background shadow-glow"
-				: "border-border/70 bg-card/40"
+				? "border-landing-primary/40 bg-gradient-to-b from-landing-primary/10 via-landing-paper to-landing-bg shadow-[0_12px_40px_-16px_rgba(79,70,229,0.35)]"
+				: "border-landing-border bg-landing-paper/80"
 			: isHighlighted
 				? "border-emerald-300 bg-gradient-to-b from-emerald-50 via-white to-white shadow-md ring-1 ring-emerald-200"
 				: cn(DASHBOARD_THEME.card, "bg-white"),
@@ -94,7 +104,11 @@ export function PricingPlanCard({
 		<>
 			<div className={cn("flex items-center justify-end", CARD_LAYOUT.badge)}>
 				{badgeLabel ? (
-					<PlanBadge label={badgeLabel} variant={variant} />
+					<PlanBadge
+						label={badgeLabel}
+						variant={variant}
+						tone={badgeTone}
+					/>
 				) : null}
 			</div>
 
@@ -172,24 +186,55 @@ export function PricingPlanCard({
 				))}
 			</ul>
 
-			<div className={cn("mt-7", CARD_LAYOUT.cta)}>
+			<div className={cn("mt-7 space-y-2", CARD_LAYOUT.ctaBlock)}>
 				{action ? (
 					action.href ? (
-						<Button
-							size="lg"
-							surface={isLanding ? "dark" : undefined}
-							className="h-full w-full"
-							variant={action.variant ?? "secondary"}
-							asChild
-						>
-							<Link to={action.href}>{action.label}</Link>
-						</Button>
+						action.href === ROUTES.signup && action.variant === "default" ? (
+							<Button
+								size="lg"
+								surface={isLanding ? "light" : undefined}
+								className={cn(
+									"h-11 w-full",
+									isLanding &&
+										"bg-landing-primary text-white hover:bg-landing-primary-hover",
+								)}
+								variant={action.variant ?? "secondary"}
+								asChild
+							>
+								<LandingSignupLink
+									location={`pricing_${plan.key}`}
+									label={action.label}
+								>
+									{action.label}
+								</LandingSignupLink>
+							</Button>
+						) : (
+							<Button
+								size="lg"
+								surface={isLanding ? "light" : undefined}
+								className={cn(
+									"h-11 w-full",
+									isLanding &&
+										action.variant === "default" &&
+										"bg-landing-primary text-white hover:bg-landing-primary-hover",
+								)}
+								variant={action.variant ?? "secondary"}
+								asChild
+							>
+								<Link to={action.href}>{action.label}</Link>
+							</Button>
+						)
 					) : (
 						<Button
 							type="button"
 							size="lg"
-							surface={isLanding ? "dark" : undefined}
-							className="h-full w-full"
+							surface={isLanding ? "light" : undefined}
+							className={cn(
+								"h-11 w-full",
+								isLanding &&
+									action.variant === "default" &&
+									"bg-landing-primary text-white hover:bg-landing-primary-hover",
+							)}
 							variant={action.variant ?? "secondary"}
 							disabled={action.disabled}
 							onClick={action.onClick}
@@ -200,6 +245,11 @@ export function PricingPlanCard({
 							{action.label}
 						</Button>
 					)
+				) : null}
+				{isLanding && plan.ctaSubtext ? (
+					<p className="text-center text-xs text-landing-muted">
+						{plan.ctaSubtext}
+					</p>
 				) : null}
 			</div>
 		</>

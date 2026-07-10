@@ -1,10 +1,13 @@
 import { motion, useReducedMotion } from "framer-motion"
-import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { HeroResumeMock } from "@/components/landing/hero-resume-mock"
-import { ROUTES } from "@/lib/constants"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { LandingSignupLink } from "@/components/landing/landing-signup-link"
+import { StarRating } from "@/components/landing/star-rating"
+import {
+	LANDING_COPY,
+	LANDING_PRIMARY_CTA_BUTTON_CLASS,
+} from "@/lib/landing-copy"
 import { LANDING_EASE_OUT } from "@/lib/landing-motion"
 
 const { hero } = LANDING_COPY
@@ -51,14 +54,33 @@ export function HeroSection() {
 						<Button
 							size="lg"
 							surface="light"
-							className="gap-2 bg-landing-primary text-white hover:bg-landing-primary-hover hover:scale-[1.02] hover:shadow-none active:scale-[0.98]"
+							className={LANDING_PRIMARY_CTA_BUTTON_CLASS}
 							asChild
 						>
-							<Link to={ROUTES.signup}>
+							<LandingSignupLink
+								location="hero"
+								label={hero.primaryCta}
+							>
 								{hero.primaryCta}
 								<ArrowRight className="size-4" aria-hidden />
-							</Link>
+							</LandingSignupLink>
 						</Button>
+						<p className="mt-2.5 text-sm text-landing-muted">
+							{hero.noCreditCardNote}
+						</p>
+						<div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2">
+							<StarRating
+								rating={hero.socialProof.rating}
+								size="md"
+								showValue
+							/>
+							<span className="text-sm text-landing-muted">
+								{hero.socialProof.label}
+							</span>
+						</div>
+						<p className="mt-2.5 text-sm text-landing-muted/90">
+							{hero.socialProof.tagline}
+						</p>
 					</motion.div>
 				</div>
 

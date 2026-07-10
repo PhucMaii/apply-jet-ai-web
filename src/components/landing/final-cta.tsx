@@ -2,8 +2,12 @@ import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { ROUTES } from "@/lib/constants"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import {
+	LANDING_COPY,
+	LANDING_PRIMARY_CTA_BUTTON_CLASS,
+} from "@/lib/landing-copy"
 
 const { finalCta } = LANDING_COPY
 
@@ -24,16 +28,27 @@ export function FinalCta() {
 					<p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
 						{finalCta.description}
 					</p>
-					<div className="mt-8 flex flex-wrap justify-center gap-3">
-						<Button size="lg" surface="dark" className="gap-2 shadow-glow" asChild>
-							<Link to={ROUTES.signup}>
+					<div className="mt-8 flex flex-col items-center gap-3">
+						<Button
+							size="lg"
+							surface="light"
+							className={LANDING_PRIMARY_CTA_BUTTON_CLASS}
+							asChild
+						>
+							<LandingSignupLink
+								location="final_cta"
+								label={finalCta.primaryCta}
+							>
 								{finalCta.primaryCta}
 								<ArrowRight className="size-4" aria-hidden />
-							</Link>
+							</LandingSignupLink>
 						</Button>
-						<Button size="lg" variant="secondary" surface="dark" asChild>
-							<Link to={ROUTES.login}>{finalCta.secondaryCta}</Link>
-						</Button>
+						<Link
+							to={ROUTES.login}
+							className="text-sm text-landing-muted transition-colors hover:text-landing-primary"
+						>
+							{finalCta.loginLink}
+						</Link>
 					</div>
 				</motion.div>
 			</div>

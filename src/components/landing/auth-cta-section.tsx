@@ -2,8 +2,12 @@ import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { ArrowRight, Monitor } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { ROUTES } from "@/lib/constants"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import {
+	LANDING_COPY,
+	LANDING_PRIMARY_CTA_BUTTON_CLASS,
+} from "@/lib/landing-copy"
 
 const { authCta } = LANDING_COPY
 
@@ -32,16 +36,27 @@ export function AuthCtaSection() {
 								{authCta.description}
 							</p>
 						</div>
-						<div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-							<Button size="lg" surface="dark" className="gap-2 shadow-glow" asChild>
-								<Link to={ROUTES.signup}>
+						<div className="flex flex-col items-start gap-3">
+							<Button
+								size="lg"
+								surface="light"
+								className={LANDING_PRIMARY_CTA_BUTTON_CLASS}
+								asChild
+							>
+								<LandingSignupLink
+									location="auth_cta"
+									label={authCta.primaryCta}
+								>
 									{authCta.primaryCta}
 									<ArrowRight className="size-4" aria-hidden />
-								</Link>
+								</LandingSignupLink>
 							</Button>
-							<Button size="lg" variant="secondary" surface="dark" asChild>
-								<Link to={ROUTES.login}>{authCta.secondaryCta}</Link>
-							</Button>
+							<Link
+								to={ROUTES.login}
+								className="text-sm text-landing-muted transition-colors hover:text-landing-primary"
+							>
+								{authCta.loginLink}
+							</Link>
 						</div>
 					</div>
 				</motion.div>
