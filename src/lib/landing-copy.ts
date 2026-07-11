@@ -28,6 +28,42 @@ export const LANDING_COPY = {
 				"Built by a job seeker who was tired of sending the same resume everywhere",
 		},
 	},
+	tryItNow: {
+		sectionId: "try-it-now",
+		eyebrow: "Try it now",
+		title: "Add your resume. Paste the job. See what changes.",
+		description:
+			"Get a feel for ApplyJet before you sign up—upload or paste your resume, then add the posting you're targeting.",
+		resume: {
+			label: "Your resume",
+			modes: {
+				upload: "Upload file",
+				paste: "Paste text",
+			},
+			dropzoneDefault: "Drop your resume here or click to browse",
+			dropzoneDragHover: "Release to upload your resume",
+			acceptedTypes: "PDF or DOCX",
+			removeFile: "Remove file",
+			replaceFile: "Replace",
+			paste: {
+				label: "Resume text",
+				placeholder: "Paste your resume text here…",
+				charCountLabel: "{count} characters",
+				clear: "Clear text",
+			},
+		},
+		jobDescription: {
+			label: "Job description",
+			placeholder: "Paste the job description here…",
+			charCountLabel: "{count} characters",
+		},
+		cta: "Tailor My Resume",
+		loading: "Tailoring your resume…",
+		results: {
+			lockMessage: "Sign up to see your tailored resume",
+			signupCta: LANDING_PRIMARY_CTA,
+		},
+	},
 	trustStrip: [
 		"Works entirely in your browser—no extension required",
 		"Resume upload fills your profile automatically",

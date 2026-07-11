@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { supabase } from "../src/lib/supabase";
+import FingerPrintJS from "@fingerprintjs/fingerprintjs";
 
 export type InitialUserPayload = {
   id: string;
@@ -98,5 +99,20 @@ export const useUser = () => {
     }
   }, []);
 
-  return { initialUserSetup };
+  const checkAndRegisterVisitor = useCallback(async () => {
+    const fpPromise = FingerPrintJS.load();
+    const fp = await fpPromise;
+    const result = await fp.get();
+    const fingerprint = result.visitorId;
+    const { data, error } = await supabase.functions.invoke('check-and-register-visitor', {
+      body: JSON.stringify({ fingerprint }),
+    });
+    if (error) {
+      console.error("Something went wrong checking visitor:", error);
+      throw error;
+    }
+    return data;
+  }, []);
+
+  return { initialUserSetup, checkAndRegisterVisitor };
 };
