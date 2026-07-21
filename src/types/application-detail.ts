@@ -9,6 +9,8 @@ export interface GeneratedDocumentRow {
 	created_at: string
 	file_url?: string | null
 	status?: string | null
+	old_score?: number | null
+	new_score?: number | null
 }
 
 export interface ApplicationDetailRecord extends ApplicationRow {

@@ -12,6 +12,10 @@ import { useGeneratedResume } from '../../../hooks/useGeneratedResume'
 import type { ApplicationDetailForm, GeneratedDocumentRow } from '@/types/application-detail'
 import { useProfilePage } from '@/hooks/use-profile-page'
 import { isAllowToGenerateResume } from './helpers'
+import {
+	getMatchScores,
+	MatchScoreComparison,
+} from '@/components/shared/match-score-comparison'
 
 interface GeneratedResumeTabProps {
     generatedResume: GeneratedDocumentRow | null
@@ -33,6 +37,10 @@ export default function GeneratedResumeTab({
 
     const [generatingResume, setGeneratingResume] = useState(false)
     const [downloadingResume, setDownloadingResume] = useState(false)
+    const matchScores = getMatchScores(
+        generatedResume?.old_score,
+        generatedResume?.new_score,
+    )
 
     async function handleGenerateResume() {
         if (!user) return
@@ -129,13 +137,21 @@ export default function GeneratedResumeTab({
             </Button> : null}
 
             {generatedResume ? (
-                <GeneratedDocumentPreview
-                    title="Generated resume"
-                    content={generatedResume.content}
-                    createdAt={generatedResume.created_at}
-                    downloading={downloadingResume}
-                    onDownload={() => void handleDownloadResume()}
-                />
+                <>
+                    {matchScores ? (
+                        <MatchScoreComparison
+                            oldScore={matchScores.oldScore}
+                            newScore={matchScores.newScore}
+                        />
+                    ) : null}
+                    <GeneratedDocumentPreview
+                        title="Generated resume"
+                        content={generatedResume.content}
+                        createdAt={generatedResume.created_at}
+                        downloading={downloadingResume}
+                        onDownload={() => void handleDownloadResume()}
+                    />
+                </>
             ) : (
                 <EmptyDocumentHint label="No resume generated yet for this application." />
             )}

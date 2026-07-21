@@ -47,37 +47,76 @@ Deno.serve(async (req) => {
   );
 
   // 1. cookie already used a trial — any row at all means "seen before"
-  const { count: cookieCount } = await supabase
+  const { data: visitorData } = await supabase
     .from('visitors')
-    .select('*', { count: 'exact', head: true })
+    .select('*')
     .eq('anon_id', anon_id);
 
-  if ((cookieCount ?? 0) > 0) {
-    return jsonResponse({ error: 'Trial already used' }, 400, headers);
+  if (visitorData && visitorData.length > 0) {
+    // update the visitor count and last visit date
+    const { error: updateError } = await supabase
+      .from('visitors')
+      .update({
+        visit_count: visitorData[0]?.visit_count + 1,
+        last_visit_at: new Date().toISOString(),
+      })
+      .eq('anon_id', anon_id);
+
+    if (updateError) {
+      return jsonResponse({ error: updateError.message }, 500, headers);
+    }
+
+    return jsonResponse({ data: {anonId: visitorData[0]?.anon_id} }, 200, headers);
   }
 
   // 2. same fingerprint seen within the last 30 days
   const thirtyDaysAgo = new Date(Date.now() - 1000 * 60 * 60 * 24 * 30).toISOString();
-  const { count: fingerprintCount } = await supabase
+  const { data: fingerprintData } = await supabase
     .from('visitors')
-    .select('*', { count: 'exact', head: true })
+    .select('*')
     .eq('fingerprint', fingerprint)
     .gt('created_at', thirtyDaysAgo);
 
-  if ((fingerprintCount ?? 0) > 0) {
-    return jsonResponse({ error: 'Fingerprint already used' }, 400, headers);
+  if (fingerprintData && fingerprintData.length > 0) {
+    // update the visitor count and last visit date
+    const { error: updateError } = await supabase
+      .from('visitors')
+      .update({
+        visit_count: fingerprintData[0]?.visit_count + 1,
+        last_visit_at: new Date().toISOString(),
+      })
+      .eq('anon_id', fingerprintData[0]?.anon_id);
+
+    if (updateError) {
+      return jsonResponse({ error: updateError.message }, 500, headers);
+    }
+
+    return jsonResponse({ data: {anonId: fingerprintData[0]?.anon_id} }, 200, headers);
   }
 
   // 3. soft rate limit — max 3 trials per IP per 24h
   const oneDayAgo = new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString();
-  const { count: ipCount } = await supabase
+  const { data: ipData } = await supabase
     .from('visitors')
-    .select('*', { count: 'exact', head: true })
+    .select('*')
     .eq('ip_hash', ip_hash)
     .gt('created_at', oneDayAgo);
 
-  if ((ipCount ?? 0) >= 3) {
-    return jsonResponse({ error: 'IP rate limited' }, 400, headers);
+  if (ipData && ipData.length > 0) {
+    // update the visitor count and last visit date
+    const { error: updateError } = await supabase
+      .from('visitors')
+      .update({
+        visit_count: ipData[0]?.visit_count + 1,
+        last_visit_at: new Date().toISOString(),
+      })
+      .eq('anon_id', ipData[0]?.anon_id);
+
+    if (updateError) {
+      return jsonResponse({ error: updateError.message }, 500, headers);
+    }
+
+    return jsonResponse({ data: {anonId: ipData[0]?.anon_id} }, 200, headers);
   }
 
   // register
@@ -85,6 +124,8 @@ Deno.serve(async (req) => {
     anon_id,
     ip_hash,
     fingerprint,
+    visit_count: 1,
+    last_visit_at: new Date().toISOString(),
   });
 
   if (insertError) {

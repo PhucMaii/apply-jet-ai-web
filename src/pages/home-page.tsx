@@ -1,5 +1,5 @@
 import { HeroSection } from "@/components/landing/hero-section"
-// import { TryItNowSection } from "@/components/landing/try-it-now-section"
+import { TryItNowSection } from "@/components/landing/try-it-now-section"
 import { TrustStrip } from "@/components/landing/trust-strip"
 import { HowItWorks } from "@/components/landing/how-it-works"
 import { ExperienceBulletsSection } from "@/components/landing/experience-bullets-section"
@@ -29,7 +29,7 @@ export function HomePage() {
 			<SiteHeader />
 			<main>
 				<HeroSection />
-				{/* <TryItNowSection /> */}
+				<TryItNowSection />
 				<TrustStrip />
 				<HowItWorks />
 				<ExperienceBulletsSection />

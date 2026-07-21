@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import { supabase } from "../src/lib/supabase";
 import FingerPrintJS from "@fingerprintjs/fingerprintjs";
+import { env } from "@/lib/env";
+import { useVisitorAnonId } from "../hooks/useVisitorAnonId";
 
 export type InitialUserPayload = {
   id: string;
@@ -11,6 +13,8 @@ export type InitialUserPayload = {
 };
 
 export const useUser = () => {
+  const { setAnonId } = useVisitorAnonId();
+
   const initialUserSetup = useCallback(async (userData: InitialUserPayload) => {
     if (!userData.id) return;
 
@@ -100,19 +104,27 @@ export const useUser = () => {
   }, []);
 
   const checkAndRegisterVisitor = useCallback(async () => {
+
     const fpPromise = FingerPrintJS.load();
     const fp = await fpPromise;
     const result = await fp.get();
     const fingerprint = result.visitorId;
     const { data, error } = await supabase.functions.invoke('check-and-register-visitor', {
       body: JSON.stringify({ fingerprint }),
+      headers: {
+        "Content-Type": "application/json",
+        "X-Secret-Key": env.xsecretkey!,
+      },
     });
     if (error) {
       console.error("Something went wrong checking visitor:", error);
       throw error;
     }
+
+    // Set anon id in local storage
+    setAnonId(data.data.anonId);
     return data;
-  }, []);
+  }, [setAnonId]);
 
   return { initialUserSetup, checkAndRegisterVisitor };
 };

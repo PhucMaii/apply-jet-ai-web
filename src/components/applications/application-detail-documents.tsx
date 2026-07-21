@@ -52,10 +52,6 @@ export function ApplicationDetailDocuments({
 		return usage.cover_letters_used >= usage.cover_letters_limit
 	}, [usage])
 
-	console.log(isGuardResume, isGuardCoverLetter, "isGuardResume, isGuardCoverLetter")
-
-
-
 	return (
 		<section
 			className={cn(

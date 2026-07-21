@@ -60,8 +60,18 @@ export const LANDING_COPY = {
 		cta: "Tailor My Resume",
 		loading: "Tailoring your resume…",
 		results: {
-			lockMessage: "Sign up to see your tailored resume",
+			lockMessage: "Sign up to keep tailoring resumes",
 			signupCta: LANDING_PRIMARY_CTA,
+			downloadTitle: "Your tailored resume is ready",
+			downloadDescription:
+				"Download the PDF below. Create a free account to save it and tailor more applications.",
+			downloadCta: "Download resume",
+			downloadLastCta: "Download tailored resume",
+			downloadLoading: "Downloading…",
+			downloadFilename: "tailored-resume.pdf",
+			scoreHeading: "Match score vs job description",
+			scoreBefore: "Before",
+			scoreAfter: "After",
 		},
 	},
 	trustStrip: [

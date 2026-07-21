@@ -3,9 +3,9 @@
 // This enables autocomplete, go to definition, etc.
 
 // Setup type definitions for built-in Supabase Runtime APIs
-import "jsr:@supabase/functions-js/edge-runtime.d.ts"
-import { jsonResponse, STRIPE_FUNCTION_CORS } from "../_shared/stripe-cors"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { jsonResponse, STRIPE_FUNCTION_CORS } from "../_shared/stripe-cors.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 declare const Deno: {
   serve: (handler: (req: Request) => Response | Promise<Response>) => void;
@@ -15,11 +15,11 @@ declare const Deno: {
 type BuildPromptForTrialParams = {
   resumeText: string;
   jdText: string;
-}
+};
 
-const GEMINI_MODEL = "gemini-3.1-flash-lite"
+const GEMINI_MODEL = "gemini-3.1-flash-lite";
 const GEMINI_URL = (apiKey: string) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`
+  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
 const COMBINED_JSON_SCHEMA = `
 Output MUST be a single valid JSON object with this exact structure (no markdown, no code fence):
@@ -79,7 +79,7 @@ Output MUST be a single valid JSON object with this exact structure (no markdown
     "softSkills": [],
     "tools": []
   }
-}`
+}`;
 
 function buildResumePromptForTrial({
   resumeText,
@@ -373,6 +373,75 @@ RULES:
    - "keywords_missing_but_relevant": relevant but couldn't naturally fit
  
 ========================
+MATCH SCORING (NEW — REQUIRED OUTPUT FIELDS: old_score, new_score)
+========================
+
+You must compute and return TWO match-percentage scores (integers, 0–100), each measuring
+how well a resume matches the JOB DESCRIPTION above:
+
+  - "old_score": the match score of the CANDIDATE'S ORIGINAL, UNTAILORED resume — i.e.
+    the raw CANDIDATE RESUME (RAW TEXT) exactly as provided, BEFORE any extraction,
+    rewriting, keyword integration, or optimization — scored against the JD.
+
+  - "new_score": the match score of the FINAL TAILORED RESUME you are producing in this
+    response (the "header" + "sections" object) against the SAME JD.
+
+Both scores MUST be computed using the IDENTICAL rubric below, so the two numbers are
+directly comparable. Do NOT eyeball a flattering number — score each version independently
+against the rubric, then report the result.
+
+SCORING RUBRIC (100 points total):
+
+  1. Required Keyword Coverage — 40 pts
+     % of REQUIRED JD keywords (hard skills, tools, certifications explicitly required)
+     that are present (verbatim or clearly synonymous) in the resume version being scored.
+
+  2. Preferred Keyword Coverage — 20 pts
+     % of PREFERRED/NICE-TO-HAVE JD keywords present in the resume version being scored.
+
+  3. Role & Domain Alignment — 20 pts
+     How closely the candidate's job titles, industry, and domain focus (as WRITTEN in
+     that resume version) match the JD's stated role type and domain (see ROLE ADAPTATION
+     rules above).
+
+  4. Experience Level & Scope Fit — 10 pts
+     Whether the seniority, years of experience, and scope of responsibility shown in that
+     resume version match what the JD asks for (e.g., individual contributor vs. lead,
+     years required, team/budget scope).
+
+  5. Signal Strength & Specificity — 10 pts
+     Whether achievements are quantified, bullets follow WHAT+HOW+IMPACT, and the summary
+     makes a sharp positioning statement — vs. vague, generic, or filler language.
+
+SCORING METHODOLOGY:
+
+  a. For "old_score": evaluate ONLY the raw resumeText as literally written — the raw
+     wording, raw job titles, raw (possibly flat or missing) skills list, no inferred
+     skills, no keyword integration, no restructuring, no page-fill optimization. This
+     represents the candidate's "before" baseline. It is normal and expected for this
+     number to be noticeably lower than new_score, since raw, unedited resume text has
+     not been keyword-optimized, quantified, or restructured for this JD. If the raw
+     text is thin, poorly formatted, or missing sections entirely, old_score should
+     reflect that honestly (it can legitimately be low, e.g. under 40).
+
+  b. For "new_score": evaluate the ACTUAL FINAL "header"/"sections" JSON you are about
+     to output in this response — not an idealized version. If you excluded relevant
+     keywords, left bullets unquantified, or omitted a JD requirement the candidate
+     could legitimately support given the raw text, new_score must reflect that honestly
+     (i.e., it should NOT default to 90+ automatically).
+
+  c. new_score should typically be higher than old_score (that is the point of tailoring),
+     but do not force a large or fixed gap — the gap must be earned by what you actually
+     changed. If the raw resume text already covers the JD extremely well, old_score may
+     legitimately already be high and the gap small.
+
+  d. Round each score to the nearest whole number. Do not output decimals, ranges, or
+     letter grades — only a plain integer 0–100 for each field.
+
+  e. These two fields are returned at the TOP LEVEL of the JSON output (siblings of
+     "header" and "sections" — see JSON SCHEMA CONTRACT below), NOT nested inside "sections".
+
+========================
 JSON SCHEMA CONTRACT (NON-NEGOTIABLE — RENDERER WILL REJECT VIOLATIONS)
 ========================
  
@@ -383,12 +452,21 @@ You MUST follow every rule below exactly.
 ── TOP-LEVEL SHAPE ──────────────────────────────────────────────────────────
  
 {
-  "header":   { ... },   ← object, REQUIRED
-  "sections": { ... }    ← object, REQUIRED
+  "header":    { ... },   ← object, REQUIRED
+  "sections":  { ... },   ← object, REQUIRED
+  "old_score": 0,         ← integer 0–100, REQUIRED (see MATCH SCORING above)
+  "new_score": 0          ← integer 0–100, REQUIRED (see MATCH SCORING above)
 }
  
 Do NOT wrap in any outer key. This is WRONG:
   { "resume": { "header": ..., "sections": ... } }   ✗
+
+"old_score" and "new_score" must be plain numbers (integers), NOT strings, NOT objects,
+NOT nested inside "sections" or "header".
+  "old_score": 47      ✓
+  "old_score": "47"    ✗  (string = validator rejects)
+  "old_score": "47%"   ✗  (string with symbol = validator rejects)
+  "new_score": { "value": 85 }  ✗  (object = validator rejects)
  
 ── header RULES ─────────────────────────────────────────────────────────────
  
@@ -509,12 +587,14 @@ Each item in "education" must be an object:
  
   • "summary" must be a single plain string, not wrapped in any container.
     It is rendered directly with wrapLines() — no iteration expected.
+
+  • "old_score" and "new_score" are plain integers at the TOP LEVEL, not inside "sections".
  
 ── PRE-OUTPUT SCHEMA SELF-CHECK ─────────────────────────────────────────────
  
 Before finalizing JSON, verify each point:
  
-  [ ] Root object has exactly "header" and "sections" (no outer wrapper key)
+  [ ] Root object has exactly "header", "sections", "old_score", "new_score" (no outer wrapper key)
   [ ] header.name is a non-empty string
   [ ] sections.summary is a string
   [ ] sections.education is an array
@@ -526,6 +606,9 @@ Before finalizing JSON, verify each point:
   [ ] education items have "degree" and "details" as SEPARATE string fields
   [ ] No bullet string starts with "•", "-", or "*"
   [ ] Every employer, title, degree, and date traces back to the raw resume text
+  [ ] old_score is an integer 0–100, computed against the RAW resumeText per the rubric
+  [ ] new_score is an integer 0–100, computed against the FINAL output per the same rubric
+  [ ] old_score and new_score are top-level numbers, not strings, not nested
  
 If any check fails → fix before outputting.
  
@@ -536,7 +619,8 @@ OUTPUT REQUIREMENTS
 Return STRICT JSON ONLY.
 No markdown fences, no preamble, no explanation — raw JSON starting with { and ending with }.
  
-Follow EXACT schema defined in the JSON SCHEMA CONTRACT above.
+Follow EXACT schema defined in the JSON SCHEMA CONTRACT above, including the top-level
+"old_score" and "new_score" fields.
  
 ${COMBINED_JSON_SCHEMA}
  
@@ -568,42 +652,43 @@ FINAL CHECKLIST BEFORE OUTPUT
 [ ] Does the resume fill 90–100% of a full page?
 [ ] Does the JSON pass all schema checks listed above?
 [ ] Does every fact in the output trace back to the raw resume text?
+[ ] Have old_score and new_score both been honestly computed against the same rubric?
  
 Only output JSON when ALL boxes are checked.
-`
+`;
 }
 
 function validateResume(resume: unknown): boolean {
-  if (!resume || typeof resume !== "object") return false
-  const r = resume as Record<string, unknown>
-  const header = r.header
-  if (!header || typeof header !== "object") return false
-  const h = header as Record<string, unknown>
-  if (typeof h.name !== "string" || !h.name.trim()) return false
-  const sections = r.sections
-  if (!sections || typeof sections !== "object") return false
-  const sec = sections as Record<string, unknown>
+  if (!resume || typeof resume !== "object") return false;
+  const r = resume as Record<string, unknown>;
+  const header = r.header;
+  if (!header || typeof header !== "object") return false;
+  const h = header as Record<string, unknown>;
+  if (typeof h.name !== "string" || !h.name.trim()) return false;
+  const sections = r.sections;
+  if (!sections || typeof sections !== "object") return false;
+  const sec = sections as Record<string, unknown>;
   const arrKeys = [
     "education",
     "experience",
     "leadership",
     "projects",
-    "summary"
-  ]
+    "summary",
+  ];
   for (const key of arrKeys) {
-    if (key === "summary" && typeof sec[key] === "string") return true
-    if (!Array.isArray(sec[key])) return false
+    if (key === "summary" && typeof sec[key] === "string") return true;
+    if (!Array.isArray(sec[key])) return false;
   }
-  const skills = sec.skills
-  if (skills != null && typeof skills !== "object") return false
-  const certifications = sec.certifications
+  const skills = sec.skills;
+  if (skills != null && typeof skills !== "object") return false;
+  const certifications = sec.certifications;
   if (certifications != null) {
-    if (!Array.isArray(certifications)) return false
+    if (!Array.isArray(certifications)) return false;
     for (const cert of certifications) {
-      if (typeof cert !== "string") return false
+      if (typeof cert !== "string") return false;
     }
   }
-  return true
+  return true;
 }
 
 Deno.serve(async (req) => {
@@ -611,115 +696,178 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: STRIPE_FUNCTION_CORS });
   }
 
-  const authHeader = req.headers.get("X-Secret-Key")
-  if (authHeader !== Deno.env.get("X-SECRET-KEY")) {
-    return jsonResponse({ error: "Unauthorized" }, 401)
+  const secret = Deno.env.get("X-SECRET-KEY")!;
+
+  const authHeader = req.headers.get("X-Secret-Key");
+  if (authHeader !== secret) {
+    return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
-  const { jdText, resumeText, visitorId } = await req.json()
+  const { jdText, resumeText, visitorAnonId } = await req.json();
 
-  if (!jdText || !resumeText || !visitorId) {
-    return jsonResponse({ error: "Missing required fields" }, 400)
+  console.log("jdText", jdText);
+  console.log("resumeText", resumeText);
+  console.log("visitorAnonId", visitorAnonId);
+  if (!jdText || !resumeText || !visitorAnonId) {
+    console.error("Missing required fields");
+    return jsonResponse({ error: "Missing required fields" }, 400);
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!
-  const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
+  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+  const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
-  const apiKey = Deno.env.get("GEMINI_API_KEY")
+  // check if visitor exists
+  const { data: visitor, error: visitorError } = await supabase
+    .from("visitors")
+    .select("*")
+    .eq("anon_id", visitorAnonId)
+    .single();
+  if (visitorError) {
+    console.error(visitorError);
+    return jsonResponse({ error: "Visitor not found" }, 404);
+  }
+
+  if (!visitor) {
+    console.error("Visitor not found");
+    return jsonResponse({ error: "Visitor not found" }, 404);
+  }
+
+  const apiKey = Deno.env.get("GEMINI_API_KEY");
   if (!apiKey) {
-    return jsonResponse({ error: "GEMINI_API_KEY is not set" }, 500)
+    console.error("GEMINI_API_KEY is not set");
+    return jsonResponse({ error: "GEMINI_API_KEY is not set" }, 500);
   }
 
-  const prompt = buildResumePromptForTrial({ jdText, resumeText })
+  const prompt = buildResumePromptForTrial({ jdText, resumeText });
   const payload = {
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.2,
       maxOutputTokens: 8192,
-      responseMimeType: "application/json"
-    }
-  }
+      responseMimeType: "application/json",
+    },
+  };
 
-  const url = GEMINI_URL(apiKey)
-  let res: Response
+  const url = GEMINI_URL(apiKey);
+  let res: Response;
   try {
     res = await fetch(url, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload)
-    })
-    
+      body: JSON.stringify(payload),
+    });
+
     // Mark as used trial
-    const { error } = await supabase.from("visitors").update({ used_trial_resume: true }).eq("id", visitorId)
+    const { error } = await supabase
+      .from("visitors")
+      .update({ used_resume: true })
+      .eq("id", visitor.id);
     if (error) {
-      console.error(error)
-      return jsonResponse({ error: "Failed to mark as used trial" }, 500)
+      console.error(error);
+      return jsonResponse({ error: "Failed to mark as used trial" }, 500);
     }
   } catch (e: unknown) {
-    console.error(e)
-    return jsonResponse({ error: "Failed to generate resume and cover letter" }, 500)
+    console.error(e);
+    return jsonResponse(
+      { error: "Failed to generate resume and cover letter" },
+      500,
+    );
   }
 
   if (!res.ok) {
-    return jsonResponse({ error: "Failed to generate resume" }, 500)
+    return jsonResponse({ error: "Failed to generate resume" }, 500);
   }
 
   let data: {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>
-    usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number }
-  }
+    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    usageMetadata?: {
+      promptTokenCount?: number;
+      candidatesTokenCount?: number;
+    };
+  };
   try {
-    data = await res.json()
+    data = await res.json();
   } catch {
-    console.error("Invalid Gemini response")
-    return jsonResponse({ error: "Invalid Gemini response" }, 502)
+    console.error("Invalid Gemini response");
+    return jsonResponse({ error: "Invalid Gemini response" }, 502);
   }
 
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim()
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+  console.log("text", text);
   if (!text) {
-    console.error("Empty response from Gemini")
-    return jsonResponse({ error: "Empty response from Gemini" }, 502)
+    console.error("Empty response from Gemini");
+    return jsonResponse({ error: "Empty response from Gemini" }, 502);
   }
 
-  let jsonStr = text
-  const match = text.match(/^```(?:json)?\s*([\s\S]*?)```$/m)
-  if (match) jsonStr = match[1].trim()
+  let jsonStr = text;
+  const match = text.match(/^```(?:json)?\s*([\s\S]*?)```$/m);
+  if (match) jsonStr = match[1].trim();
 
-  let parsed: unknown
+  let parsed: unknown;
   try {
-    parsed = JSON.parse(jsonStr)
+    parsed = JSON.parse(jsonStr);
   } catch {
-    console.error("Gemini did not return valid JSON")
+    console.error("Gemini did not return valid JSON");
     return jsonResponse(
       { error: "Gemini did not return valid JSON", raw: text.slice(0, 500) },
-      502
-    )
+      502,
+    );
   }
 
-  const obj = parsed as Record<string, unknown>
-  const resume = obj.resume ?? parsed
-  const recommendations = obj.recommendations
+  const obj = parsed as Record<string, unknown>;
+  const resume = obj.resume ?? parsed;
+  const recommendations = obj.recommendations;
   const applicationInfo = obj.application_info as {
-    company_name: string
-    job_title: string
-  }
+    company_name: string;
+    job_title: string;
+  };
 
-  console.log(recommendations, applicationInfo)
+  console.log(resume);
   if (!validateResume(resume)) {
-    console.error("Invalid resume in response: missing header.name or sections")
+    console.error(
+      "Invalid resume in response: missing header.name or sections",
+    );
     return jsonResponse(
       { error: "Invalid resume in response: missing header.name or sections" },
-      502
-    )
+      502,
+    );
   }
 
+  const { error: renderResumePdfError } = await supabase.functions.invoke(
+    "render-resume-pdf",
+    {
+      headers: { "X-Secret-Key": secret },
+      body: {
+        resume: resume,
+        visitorId: visitor.id,
+        keywords: obj.keywords as {
+          hardSkills: string[];
+          softSkills: string[];
+          tools: string[];
+        },
+        tokensInput: data.usageMetadata?.promptTokenCount ?? 0,
+        tokensOutput: data.usageMetadata?.candidatesTokenCount ?? 0,
+      },
+    },
+  );
 
+  if (renderResumePdfError) {
+    console.error(renderResumePdfError);
+    return jsonResponse({ error: "Failed to render resume PDF" }, 500);
+  }
 
-  return jsonResponse({ prompt }, 200)
-})
+  return jsonResponse(
+    {
+      resume: resume,
+      recommendations: recommendations,
+      applicationInfo: applicationInfo,
+    },
+    200,
+  );
+});
 
 /* To invoke locally:
 

@@ -30,7 +30,6 @@ export function GeneratedDocumentPreview({
                 </div>
                 <Button
                     type="button"
-                    variant="outline"
                     size="sm"
                     className="gap-2"
                     disabled={downloading}
