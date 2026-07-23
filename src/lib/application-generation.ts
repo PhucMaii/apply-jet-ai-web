@@ -133,10 +133,7 @@ export function extractSkillsFromJobDescription(
 }
 
 export async function invokeGenerateResume(payload: GenerateResumePayload) {
-  if (!payload.resumeText) {
-    throw new Error("Please upload your resume first");
-  }
-
+  console.log("invokeGenerateResume", payload);
   if (!payload.jdText) {
     throw new Error("Please enter the job description");
   }
@@ -148,7 +145,6 @@ export async function invokeGenerateResume(payload: GenerateResumePayload) {
     headers: { "X-Secret-Key": secretKey },
     method: "POST",
     body: {
-      resumeText: payload.resumeText,
       jdText: payload.jdText,
       targetRole: payload.targetRole,
       userId: payload.userId,
@@ -171,10 +167,6 @@ export async function invokeGenerateResume(payload: GenerateResumePayload) {
 export async function invokeGenerateCoverLetter(
   payload: GenerateCoverLetterPayload,
 ) {
-  if (!payload.resumeText) {
-    throw new Error("Please upload your resume first");
-  }
-
   if (!payload.jdText) {
     throw new Error("Please enter the job description");
   }
@@ -185,7 +177,6 @@ export async function invokeGenerateCoverLetter(
     {
       headers: { "X-Secret-Key": secretKey },
       body: {
-        resumeText: payload.resumeText,
         jdText: payload.jdText,
         userId: payload.userId,
         jobUrl: payload.jobUrl,
