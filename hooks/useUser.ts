@@ -3,6 +3,7 @@ import { supabase } from "../src/lib/supabase";
 import FingerPrintJS from "@fingerprintjs/fingerprintjs";
 import { env } from "@/lib/env";
 import { useVisitorAnonId } from "../hooks/useVisitorAnonId";
+import useEmail from "@/hooks/use-email";
 
 export type InitialUserPayload = {
   id: string;
@@ -14,6 +15,7 @@ export type InitialUserPayload = {
 
 export const useUser = () => {
   const { setAnonId } = useVisitorAnonId();
+  const { sendWelcomeEmail } = useEmail();
 
   const initialUserSetup = useCallback(async (userData: InitialUserPayload) => {
     if (!userData.id) return;
@@ -49,6 +51,9 @@ export const useUser = () => {
           );
           throw error;
         }
+
+        // Send welcome email
+        await sendWelcomeEmail(userData.email, userData.full_name ?? "");
 
         dbUserId = newUser.id;
       }
@@ -87,11 +92,9 @@ export const useUser = () => {
           usageSelectErr.message,
         );
       } else if (!userUsage) {
-        const { error: usageErr } = await supabase
-          .from("user_usage")
-          .insert({
-            user_id: dbUserId!,
-          });
+        const { error: usageErr } = await supabase.from("user_usage").insert({
+          user_id: dbUserId!,
+        });
 
         if (usageErr) {
           console.warn("user_usage insert skipped:", usageErr.message);
@@ -104,18 +107,20 @@ export const useUser = () => {
   }, []);
 
   const checkAndRegisterVisitor = useCallback(async () => {
-
     const fpPromise = FingerPrintJS.load();
     const fp = await fpPromise;
     const result = await fp.get();
     const fingerprint = result.visitorId;
-    const { data, error } = await supabase.functions.invoke('check-and-register-visitor', {
-      body: JSON.stringify({ fingerprint }),
-      headers: {
-        "Content-Type": "application/json",
-        "X-Secret-Key": env.xsecretkey!,
+    const { data, error } = await supabase.functions.invoke(
+      "check-and-register-visitor",
+      {
+        body: JSON.stringify({ fingerprint }),
+        headers: {
+          "Content-Type": "application/json",
+          "X-Secret-Key": env.xsecretkey!,
+        },
       },
-    });
+    );
     if (error) {
       console.error("Something went wrong checking visitor:", error);
       throw error;
