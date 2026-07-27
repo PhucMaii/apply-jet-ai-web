@@ -11,6 +11,8 @@ import {
   type CreateApplicationForm,
 } from "@/types/application-create";
 import useEmail from "./use-email";
+import { APP_RESUME_SECTION_TYPE, APP_RESUME_STATUS } from "@/lib/enums/resume";
+import { buildAppResumeSections, buildHeaderBlock, getUserProfile } from "@/lib/resume";
 
 export function useCreateApplication() {
   const { user } = useAuth();
@@ -102,6 +104,8 @@ export function useCreateApplication() {
         return;
       }
 
+      await initializeAppResume(user.id, data.id);
+
       navigate(applicationDetailPath(data.id));
     } catch (err) {
       console.error("Something went wrong creating application:", err);
@@ -113,6 +117,212 @@ export function useCreateApplication() {
     }
   }
 
+  const initializeAppResume = async (userId: string, applicationId: string) => {
+    const {
+      userData,
+      userLinksArray,
+      userExperiencesArray,
+      userProjectsArray,
+      userSkillsArray,
+      userEducationArray,
+    } = await getUserProfile(userId);
+    const hasUserExperiences = userExperiencesArray.length > 0;
+    const hasUserProjects = userProjectsArray.length > 0;
+    const hasUserEducation = userEducationArray.length > 0;
+    const hasUserSkills = userSkillsArray.length > 0;
+
+    // Create app resume based on user info
+    const { data: appResumeData, error: appResumeError } = await supabase
+      .from("app_resumes")
+      .insert({
+        user_id: userId,
+        application_id: applicationId,
+        status: APP_RESUME_STATUS.DRAFT,
+      })
+      .select("id")
+      .single();
+    if (appResumeError) {
+      throw new Error("Failed to create app resume");
+    }
+
+    // Create app resume section
+    const sections = buildAppResumeSections(
+      appResumeData.id,
+      hasUserExperiences,
+      hasUserProjects,
+      hasUserEducation,
+      hasUserSkills,
+    );
+    const idsMap = new Map<string, string>();
+    await Promise.all(
+      sections.map(async (section) => {
+        const { data: appResumeSectionData, error: appResumeSectionError } =
+          await supabase
+            .from("app_resume_sections")
+            .insert(section)
+            .select("id")
+            .single();
+        if (appResumeSectionError) {
+          throw new Error("Failed to create app resume section");
+        }
+
+        idsMap.set(section.section_type, appResumeSectionData.id);
+      }),
+    );
+
+    // Create app resume block
+    // Header block
+    const headerBlocks = buildHeaderBlock(idsMap.get(APP_RESUME_SECTION_TYPE.HEADER)!, form.jobTitle.trim(), userData, userLinksArray);
+    await Promise.all(
+      headerBlocks.map(async (block) => {
+        const { data: appResumeBlockData, error: appResumeBlockError } =
+          await supabase
+            .from("app_resume_blocks")
+            .insert(block)
+            .select("id")
+            .single();
+        if (appResumeBlockError) {
+          console.error(appResumeBlockError);
+          throw new Error(appResumeBlockError.message);
+        }
+        return appResumeBlockData.id;
+      }),
+    );
+
+    // Summary Block
+    const summaryBlock = {
+      section_id: idsMap.get(APP_RESUME_SECTION_TYPE.SUMMARY)!,
+      block_type: "rich_text",
+      content_json: {
+        text: userData.summary,
+      },
+      sort_key: 0,
+      style_json: {
+        color: "black",
+        fontSize: 12,
+      },
+    }
+    const { error: appResumeBlockError } =
+      await supabase
+        .from("app_resume_blocks")
+        .insert(summaryBlock)
+        .select("id")
+        .single();
+    if (appResumeBlockError) {
+      console.error(appResumeBlockError);
+      throw new Error(appResumeBlockError.message);
+    }
+
+    // Experience Block
+    const experienceBlocks = userExperiencesArray.map((experience, index) => ({
+      section_id: idsMap.get(APP_RESUME_SECTION_TYPE.EXPERIENCE)!,
+      block_type: "job_entry",
+      content_json: {
+        company: experience.company,
+        title: experience.title,
+        start_date: experience.start_date,
+        end_date: experience.end_date,
+        description: experience.description?.split(".").filter(Boolean) || [],
+      },
+      sort_key: index,
+    }));
+    await Promise.all(
+      experienceBlocks.map(async (block) => {
+        const { data: appResumeBlockData, error: appResumeBlockError } =
+          await supabase
+            .from("app_resume_blocks")
+            .insert(block)
+            .select("id")
+            .single();
+        if (appResumeBlockError) {
+          console.error(appResumeBlockError);
+          throw new Error(appResumeBlockError.message);
+        }
+        return appResumeBlockData.id;
+      }),
+    );
+
+    // Projects Block
+    const projectsBlocks = userProjectsArray.map((project, index) => ({
+      section_id: idsMap.get(APP_RESUME_SECTION_TYPE.PROJECTS)!,
+      block_type: "project_entry",
+      content_json: {
+        name: project.project_name,
+        description: project.description?.split(".").filter(Boolean) || [],
+      },
+      sort_key: index,
+    }));
+    await Promise.all(
+      projectsBlocks.map(async (block) => {
+        const { data: appResumeBlockData, error: appResumeBlockError } =
+          await supabase
+            .from("app_resume_blocks")
+            .insert(block)
+            .select("id")
+            .single();
+        if (appResumeBlockError) {
+          console.error(appResumeBlockError);
+          throw new Error(appResumeBlockError.message);
+        }
+        return appResumeBlockData.id;
+      }),
+    );
+
+    // Education Block
+    const educationBlocks = userEducationArray.map((education, index) => ({
+      section_id: idsMap.get(APP_RESUME_SECTION_TYPE.EDUCATION)!,
+      block_type: "education_entry",
+      content_json: {
+        school: education.school,
+        degree: education.degree,
+        start_date: education.start_date,
+        end_date: education.end_date,
+      },
+      sort_key: index,
+    }));
+    await Promise.all(
+      educationBlocks.map(async (block) => {
+        const { data: appResumeBlockData, error: appResumeBlockError } =
+          await supabase
+            .from("app_resume_blocks")
+            .insert(block)
+            .select("id")
+            .single();
+        if (appResumeBlockError) {
+          console.error(appResumeBlockError);
+          throw new Error(appResumeBlockError.message);
+        }
+        return appResumeBlockData.id;
+      }),
+    );
+
+    // Skills Block
+    const skillsBlocks = userSkillsArray.map((skill) => ({
+      section_id: idsMap.get(APP_RESUME_SECTION_TYPE.SKILLS)!,
+      block_type: "skill_entry",
+      content_json: {
+        name: skill.name,
+        categoryId: 0,
+        categoryName: ""
+      },
+    }));
+    await Promise.all(
+      skillsBlocks.map(async (block) => {
+        const { data: appResumeBlockData, error: appResumeBlockError } =
+          await supabase
+            .from("app_resume_blocks")
+            .insert(block)
+            .select("id")
+            .single();
+        if (appResumeBlockError) {
+          console.error(appResumeBlockError);
+          throw new Error(appResumeBlockError.message);
+        }
+        return appResumeBlockData.id;
+      }),
+    );
+  };
+
   return {
     form,
     patchForm,
@@ -120,5 +330,6 @@ export function useCreateApplication() {
     error,
     submitting,
     submit,
+    initializeAppResume,
   };
 }

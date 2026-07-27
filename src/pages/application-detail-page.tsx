@@ -1,9 +1,8 @@
 import { Link, useParams } from "react-router-dom"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { ApplicationDetailDocuments } from "@/components/applications/application-detail-documents"
-import { ApplicationDetailOverview } from "@/components/applications/application-detail-overview"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
-import { APP_NAME, BRAND_LOGO_SRC, ROUTES } from "@/lib/constants"
+import { ROUTES } from "@/lib/constants"
 import { useApplicationDetail } from "@/hooks/use-application-detail"
 import { useApplications } from "@/hooks/use-applications"
 import { cn } from "@/lib/utils"
@@ -11,9 +10,7 @@ import { cn } from "@/lib/utils"
 export function ApplicationDetailPage() {
 	const { applicationId } = useParams<{ applicationId: string }>()
 	const {
-		application,
 		isLoadingApplication,
-
 		record,
 		form,
 		refetchApplication,
@@ -22,7 +19,7 @@ export function ApplicationDetailPage() {
 		updatingStatus,
 		error,
 		notice,
-		saveDetails,
+		saveApplication,
 		updateStatus,
 		resolveStatus,
 		patchForm,
@@ -31,115 +28,74 @@ export function ApplicationDetailPage() {
 	const { deleteApplication, deletingId } = useApplications()
 
 	return (
-		<div className={APPLICATIONS_THEME.page}>
-			<header className={APPLICATIONS_THEME.header}>
-				<div className={APPLICATIONS_THEME.headerInner}>
-					<div className="flex min-w-0 flex-col gap-3">
-						<Link
-							to={ROUTES.applications}
-							className={cn(
-								"inline-flex w-fit items-center gap-1.5 text-sm font-medium",
-								APPLICATIONS_THEME.link,
-							)}
-						>
-							<ArrowLeft className="size-4" aria-hidden />
-							Back to applications
-						</Link>
-						<div className="flex items-center gap-2">
-							<span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-neutral-200">
-								<img
-									src={BRAND_LOGO_SRC}
-									alt=""
-									width={36}
-									height={36}
-									className="size-9 object-contain object-center"
-									decoding="async"
-								/>
-							</span>
-							<p className={APPLICATIONS_THEME.brandLabel}>{APP_NAME}</p>
-						</div>
-						{record && form ? (
-							<div>
-								<h1 className="font-display text-3xl font-bold tracking-tight text-neutral-900">
-									{form.jobTitle || record.job_title}
-								</h1>
-								<p className="mt-1 text-base text-neutral-600">
-									{form.companyName || record.company_name}
-								</p>
-							</div>
-						) : (
-							<h1 className={APPLICATIONS_THEME.title}>
-								Application details
-							</h1>
-						)}
-					</div>
-				</div>
-			</header>
-
-			<main className={APPLICATIONS_THEME.main}>
-				{error ? (
-					<p className={APPLICATIONS_THEME.error} role="alert">
+		<div className="flex min-h-dvh flex-col bg-neutral-50">
+			{error ? (
+				<div className="shrink-0 border-b border-red-200 bg-red-50 px-4 py-2">
+					<p className="text-sm text-red-700" role="alert">
 						{error}
 					</p>
-				) : null}
-				{notice ? (
-					<p
-						className={cn(
-							"rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800",
-						)}
-						role="status"
-					>
+				</div>
+			) : null}
+			{notice ? (
+				<div className="shrink-0 border-b border-emerald-200 bg-emerald-50 px-4 py-2">
+					<p className="text-sm text-emerald-800" role="status">
 						{notice}
 					</p>
-				) : null}
+				</div>
+			) : null}
 
-				{isLoadingApplication || !record || !form ? (
-					<div
-						className="flex flex-col items-center justify-center gap-3 py-24"
-						aria-busy="true"
+			{isLoadingApplication || !record || !form ? (
+				<div
+					className="flex flex-1 flex-col items-center justify-center gap-3"
+					aria-busy="true"
+				>
+					<Loader2
+						className="size-8 animate-spin text-primary"
+						aria-hidden
+					/>
+					<span className={APPLICATIONS_THEME.muted}>
+						Loading application…
+					</span>
+				</div>
+			) : (
+				<main className="flex min-h-0 flex-1 flex-col">
+					<ApplicationDetailDocuments
+						form={form}
+						status={resolveStatus(record.status)}
+						createdAt={record.created_at}
+						generatedResume={record.generatedResume}
+						generatedCoverLetter={record.generatedCoverLetter}
+						recruiterEmails={record.recruiterEmails}
+						refreshingDocuments={isRefetchingApplication}
+						savingDetails={savingDetails}
+						updatingStatus={updatingStatus}
+						isDeleting={deletingId === record.id}
+						onPatchForm={patchForm}
+						onSaveApplication={() => void saveApplication()}
+						onStatusChange={(next) => void updateStatus(next)}
+						onDelete={deleteApplication}
+						refetchApplication={() => void refetchApplication()}
+					/>
+				</main>
+			)}
+
+			{!isLoadingApplication && !record ? (
+				<div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
+					<p className={APPLICATIONS_THEME.muted}>
+						Application not found.
+					</p>
+					<Link
+						to={ROUTES.applications}
+						className={cn(
+							"inline-flex items-center gap-1.5 text-sm font-medium",
+							APPLICATIONS_THEME.link,
+						)}
 					>
-						<Loader2
-							className="size-8 animate-spin text-primary"
-							aria-hidden
-						/>
-						<span className={APPLICATIONS_THEME.muted}>
-							Loading application…
-						</span>
-					</div>
-				) : (
-					<div className="space-y-8">
-						<div className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6">
-							<ApplicationDetailOverview
-								form={form}
-								status={resolveStatus(record.status)}
-								updatingStatus={updatingStatus}
-								savingDetails={savingDetails}
-								createdAt={record.created_at}
-								onPatchForm={patchForm}
-								onStatusChange={(next) => void updateStatus(next)}
-								onSaveDetails={() => void saveDetails()}
-								isDeleting={deletingId === record.id}
-								onDelete={deleteApplication}
-							/>
-						</div>
-
-						<ApplicationDetailDocuments
-							form={application ?? {
-								id: applicationId ?? "",
-								jobTitle: "",
-								companyName: "",
-								jobUrl: "",
-								jobDescription: "",
-							}}
-							generatedResume={record.generatedResume}
-							generatedCoverLetter={record.generatedCoverLetter}
-							recruiterEmails={record.recruiterEmails}
-							refreshingDocuments={isRefetchingApplication}
-							refetchApplication={() => void refetchApplication()}
-						/>
-					</div>
-				)}
-			</main>
+						<ArrowLeft className="size-4" aria-hidden />
+						Back to applications
+					</Link>
+				</div>
+			) : null}
 		</div>
 	)
 }

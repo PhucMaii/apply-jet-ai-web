@@ -1,6 +1,9 @@
 import { pdfFileToBase64Images } from "@/lib/pdf-to-images";
 import { supabase } from "@/lib/supabase";
 import { env } from "./env";
+import type { UserEducationRow, UserLinkRow, UserProfileRow, UserProjectRow, UserSkillRow, UserWorkExperienceRow } from "@/types/database";
+import { APP_RESUME_SECTION_TYPE } from "./enums/resume";
+import type { AppResumeSection } from "@/types/app-resume";
 
 export const RESUMES_BUCKET = "resumes";
 
@@ -217,3 +220,186 @@ export const prefillResume = async (userId: string) => {
 
   return data;
 };
+
+export const getUserProfile = async (userId: string) => {
+  // Get user info
+  const { data: userData } = await supabase.from("users").select("*").eq("id", userId).single();
+  if (!userData) {
+    throw new Error("User not found");
+  }
+
+  // Get user links
+  const { data: userLinks, error: userLinksError } = await supabase.from("user_links").select("*").eq("user_id", userId);
+  if (userLinksError) {
+    throw new Error("Failed to get user links");
+  }
+  const userLinksArray = userLinks as UserLinkRow[];
+  if (!userLinksArray) {
+    throw new Error("User links not found");
+  }
+
+  // Get user experiences
+  const { data: userExperiences, error: userExperiencesError } = await supabase.from("user_work_experiences").select("*").eq("user_id", userId);
+  if (userExperiencesError) {
+    throw new Error("Failed to get user experiences");
+  }
+  const userExperiencesArray = userExperiences as UserWorkExperienceRow[];
+  if (!userExperiencesArray) {
+    throw new Error("User experiences not found");
+  }
+
+  // Get user projects
+  const { data: userProjects, error: userProjectsError } = await supabase.from("user_projects").select("*").eq("user_id", userId);
+  if (userProjectsError) {
+    throw new Error("Failed to get user projects");
+  }
+  const userProjectsArray = userProjects as UserProjectRow[];
+  if (!userProjectsArray) {
+    throw new Error("User projects not found");
+  }
+
+  // Get user skills
+  const { data: userSkills, error: userSkillsError } = await supabase.from("user_skills").select("*").eq("user_id", userId);
+  if (userSkillsError) {
+    throw new Error("Failed to get user skills");
+  }
+  const userSkillsArray = userSkills as UserSkillRow[];
+  if (!userSkillsArray) {
+    throw new Error("User skills not found");
+  }
+  
+  // Get user education
+  const { data: userEducation, error: userEducationError } = await supabase.from("user_educations").select("*").eq("user_id", userId);
+  if (userEducationError) {
+    throw new Error("Failed to get user education");
+  }
+  const userEducationArray = userEducation as UserEducationRow[];
+  if (!userEducationArray) {
+    throw new Error("User education not found");
+  }
+
+  return {
+    userData,
+    userLinksArray,
+    userExperiencesArray,
+    userProjectsArray,
+    userSkillsArray,
+    userEducationArray,
+  };
+}
+
+export const buildAppResumeSections = (appResumeId: string, hasUserExperiences: boolean, hasUserProjects: boolean, hasUserEducation: boolean, hasUserSkills: boolean) => {
+  const sections = [
+    {
+      app_resume_id: appResumeId,
+      section_type: APP_RESUME_SECTION_TYPE.HEADER,
+      display_name: 'Header',
+      sort_key: 0,
+    },
+    {
+      app_resume_id: appResumeId,
+      section_type: APP_RESUME_SECTION_TYPE.SUMMARY,
+      display_name: 'Summary',
+      sort_key: 1,
+    },
+    hasUserExperiences && {
+      app_resume_id: appResumeId,
+      section_type: APP_RESUME_SECTION_TYPE.EXPERIENCE,
+      display_name: 'Experience',
+      sort_key: 2,
+    },
+    hasUserProjects && {
+      app_resume_id: appResumeId,
+      section_type: APP_RESUME_SECTION_TYPE.PROJECTS,
+      display_name: 'Projects',
+      sort_key: 3,
+    },
+    hasUserEducation && {
+      app_resume_id: appResumeId,
+      section_type: APP_RESUME_SECTION_TYPE.EDUCATION,
+      display_name: 'Education',
+      sort_key: 4,
+    },
+    hasUserSkills && {
+      app_resume_id: appResumeId,
+      section_type: APP_RESUME_SECTION_TYPE.SKILLS,
+      display_name: 'Skills',
+      sort_key: 5,
+    },
+  ].filter(Boolean) as AppResumeSection[];
+
+  return sections;
+}
+
+export const buildHeaderBlock = (appResumeSectionId: string, job_title: string, userData: UserProfileRow, userLinksArray: UserLinkRow[]) => {
+  const headerBlocks = [
+    {
+      section_id: appResumeSectionId,
+      block_type: "rich_text",
+      content_json: {
+        text: userData.full_name,
+      },
+      sort_key: 0,
+      style_json: {
+        bold: true,
+        color: "black",
+        fontSize: 16,
+      },
+    },
+    {
+      section_id: appResumeSectionId,
+      block_type: "rich_text",
+      content_json: {
+        text: job_title,
+      },
+      sort_key: 1,
+      style_json: {
+        bold: true,
+        color: "black",
+        fontSize: 12,
+      },
+    },
+    {
+      section_id: appResumeSectionId,
+      block_type: "group_text",
+      sort_key: 2,
+      content_json: {
+        texts: [
+          userData?.city &&
+            userData?.province && {
+              text: `${userData.city}, ${userData.province}`,
+              style_json: {
+                color: "black",
+                fontSize: 8,
+              },
+            },
+          userData?.phone && {
+            text: `| ${userData.phone}`,
+            style_json: {
+              color: "black",
+              fontSize: 8,
+            },
+          },
+          userData?.email && {
+            text: `| ${userData.email}`,
+            style_json: {
+              color: "black",
+              fontSize: 8,
+            },
+          },
+          ...userLinksArray
+            .filter((link) => link.url)
+            .map((link) => ({
+              text: `| ${link.url}`,
+              style_json: {
+                color: "black",
+                fontSize: 8,
+              },
+            })),
+        ].filter(Boolean),
+      },
+    },
+  ];
+
+  return headerBlocks;
+}

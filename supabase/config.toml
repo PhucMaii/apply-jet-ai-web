@@ -82,3 +82,9 @@ entrypoint = "./functions/email-after-first-application/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/email-after-first-application/*.html" ]
+
+[functions.tailor-app-resume]
+enabled = true
+verify_jwt = false
+import_map = "./functions/tailor-app-resume/deno.json"
+entrypoint = "./functions/tailor-app-resume/index.ts"

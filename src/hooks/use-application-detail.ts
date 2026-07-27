@@ -46,8 +46,6 @@ export function useApplicationDetail(applicationId: string | undefined) {
     enabled: !!applicationId && !!user,
   });
 
-  console.log({ application, form });
-
   const loadApplication = useCallback(
     async (options?: { silent?: boolean }) => {
       if (!user || !applicationId) return;
@@ -126,7 +124,7 @@ export function useApplicationDetail(applicationId: string | undefined) {
     void loadApplication();
   }, [loadApplication]);
 
-  async function saveDetails() {
+  async function saveApplication() {
     if (!user || !applicationId || !form) return;
     setSavingDetails(true);
     setError(null);
@@ -212,7 +210,7 @@ export function useApplicationDetail(applicationId: string | undefined) {
     loadApplication,
     refetchApplication,
     isRefetchingApplication,
-    saveDetails,
+    saveApplication,
     updateStatus,
     resolveStatus,
     patchForm,
