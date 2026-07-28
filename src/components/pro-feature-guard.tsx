@@ -22,7 +22,8 @@ export function ProFeatureGuard({
 	className,
 }: ProFeatureGuardProps) {
 	if (!isGuard) {
-		return <>{children}</>
+		if (!className) return <>{children}</>
+		return <div className={className}>{children}</div>
 	}
 
 	const title = featureName

@@ -13,7 +13,7 @@ import type {
 } from "@/types/application-detail";
 import type { ApplicationRow } from "@/types/database";
 import { useQuery } from "@tanstack/react-query";
-import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume";
+import type { AppResume } from "@/types/app-resume";
 
 function toForm(row: ApplicationRow): ApplicationDetailForm {
   return {
@@ -35,8 +35,6 @@ export function useApplicationDetail(applicationId: string | undefined) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [appResume, setAppResume] = useState<AppResume | null>(null);
-  const [appResumeSections, setAppResumeSections] = useState<AppResumeSection[]>([]);
-  const [appResumeBlocks, setAppResumeBlocks] = useState<AppResumeBlock[]>([]);
 
   const {
     data: application,
@@ -163,7 +161,7 @@ export function useApplicationDetail(applicationId: string | undefined) {
       })),
     }
 
-    console.log(formattedAppResume, "formattedAppResume");
+    setAppResume(formattedAppResume);
   }, [applicationId, user]);
 
   useEffect(() => {
@@ -258,8 +256,6 @@ export function useApplicationDetail(applicationId: string | undefined) {
     notice,
     isRefetchingApplication,
     appResume,
-    appResumeSections,
-    appResumeBlocks,
     
     setNotice,
     loadApplication,

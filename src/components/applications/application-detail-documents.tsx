@@ -20,7 +20,7 @@ import { useUserSubscription } from "@/hooks/use-user-subscription"
 import ProFeatureGuard, { ProFeatureBadge } from "../pro-feature-guard"
 import useUserUsage from "@/hooks/use-user-usage"
 import { useMemo } from "react"
-import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume"
+import type { AppResume } from "@/types/app-resume"
 
 const DOCUMENT_TAB_TRIGGER = cn(
 	"relative h-11 min-w-0 shrink-0 rounded-none border-b-2 border-transparent",
@@ -44,8 +44,6 @@ interface ApplicationDetailDocumentsProps {
 	updatingStatus?: boolean
 	isDeleting?: boolean
 	appResume: AppResume | null
-	appResumeSections: AppResumeSection[]
-	appResumeBlocks: AppResumeBlock[]
 	onPatchForm: (patch: Partial<ApplicationDetailForm>) => void
 	onSaveApplication: () => void
 	onStatusChange: (status: ApplicationStatus) => void
@@ -67,9 +65,6 @@ export function ApplicationDetailDocuments({
 	updatingStatus = false,
 	isDeleting = false,
 	appResume,
-	appResumeSections,
-	appResumeBlocks,
-
 	onPatchForm,
 	onSaveApplication,
 	onStatusChange,
@@ -152,9 +147,12 @@ export function ApplicationDetailDocuments({
 
 				<TabsContent
 					value="resume"
-					className="mt-0 flex min-h-0 flex-1 flex-col outline-none data-[state=inactive]:hidden"
+					className="mt-0 flex h-full min-h-0 flex-1 flex-col overflow-hidden outline-none data-[state=inactive]:hidden"
 				>
-					<ProFeatureGuard isGuard={isGuardResume}>
+					<ProFeatureGuard
+						isGuard={isGuardResume}
+						className="flex h-full min-h-0 flex-1 flex-col"
+					>
 						<ResumeStudio
 							form={form}
 							status={status}
@@ -167,8 +165,6 @@ export function ApplicationDetailDocuments({
 							onStatusChange={onStatusChange}
 							onDelete={onDelete}
 							appResume={appResume}
-							appResumeSections={appResumeSections}
-							appResumeBlocks={appResumeBlocks}
 						/>
 					</ProFeatureGuard>
 				</TabsContent>

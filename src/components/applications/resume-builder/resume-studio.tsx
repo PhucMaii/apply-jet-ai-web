@@ -11,15 +11,13 @@ import type { ApplicationStatus } from "@/lib/application-status"
 import { ROUTES } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import type { ApplicationDetailForm } from "@/types/application-detail"
-import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume"
+import type { AppResume } from "@/types/app-resume"
 import { ResumeTab } from "./resume-tab"
 
 type StudioView = "editor" | "tailored"
 
 interface ResumeStudioProps {
 	appResume: AppResume | null
-	appResumeSections: AppResumeSection[]
-	appResumeBlocks: AppResumeBlock[]
 	form: ApplicationDetailForm
 	status: ApplicationStatus
 	createdAt: string
@@ -37,8 +35,6 @@ interface ResumeStudioProps {
 
 export function ResumeStudio({
 	appResume,
-	appResumeSections,
-	appResumeBlocks,
 	form,
 	status,
 	createdAt,
@@ -71,7 +67,7 @@ export function ResumeStudio({
 	}
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col bg-neutral-100">
+		<div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-neutral-100">
 			<header className="sticky top-0 z-10 shrink-0 border-b border-neutral-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/90">
 				<div className="flex flex-wrap items-center gap-2 px-3 py-2 sm:gap-3 sm:px-4 sm:py-3">
 					<Link
@@ -156,8 +152,6 @@ export function ResumeStudio({
 					onGenerate={handleGenerate}
 					hasGenerated={hasGenerated}
 					appResume={appResume}
-					appResumeSections={appResumeSections}
-					appResumeBlocks={appResumeBlocks}
 				/>
 			) : null}
 			{!isGenerating && view === "tailored" && hasGenerated ? (

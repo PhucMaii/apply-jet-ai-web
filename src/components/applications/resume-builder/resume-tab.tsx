@@ -1,5 +1,4 @@
 import {
-	useMemo,
 	useRef,
 	useState,
 	type DragEvent,
@@ -27,7 +26,6 @@ import { ApplicationsStatusBadge } from "@/components/applications/applications-
 import { DeleteApplicationControl } from "@/components/applications/delete-application-control"
 import {
 	applyEditableText,
-	formatDateRange,
 	getEditableText,
 	getBlockPreviewText,
 	sortBlocks,
@@ -35,6 +33,7 @@ import {
 } from "@/components/applications/resume-builder/app-resume-utils"
 import { AccordionPanel } from "@/components/applications/resume-builder/accordion-panel"
 import { mockAppResume } from "@/components/applications/resume-builder/mock-app-resume"
+import { ResumeDocumentPreview } from "@/components/applications/resume-builder/resume-document-preview"
 import { ScoreGauge } from "@/components/applications/resume-builder/score-gauge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -51,7 +50,6 @@ import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type {
 	AppResume,
 	AppResumeBlock,
-	AppResumeSection,
 	AppResumeSectionType,
 } from "@/types/app-resume"
 import type { ApplicationDetailForm } from "@/types/application-detail"
@@ -94,8 +92,6 @@ function sectionIcon(type: AppResumeSectionType) {
 
 interface ResumeTabProps {
 	appResume: AppResume | null
-	appResumeSections: AppResumeSection[]
-	appResumeBlocks: AppResumeBlock[]
 	form: ApplicationDetailForm
 	status: ApplicationStatus
 	createdAt: string
@@ -115,8 +111,6 @@ interface ResumeTabProps {
 
 export function ResumeTab({
 	appResume,
-	appResumeSections,
-	appResumeBlocks,
 	form,
 	status,
 	createdAt,
@@ -130,13 +124,10 @@ export function ResumeTab({
 	onGenerate,
 	hasGenerated,
 }: ResumeTabProps) {
-	void appResumeBlocks
 	const seedSections =
 		appResume?.sections?.length
 			? appResume.sections
-			: appResumeSections.length > 0
-				? appResumeSections
-				: mockAppResume.sections
+			: mockAppResume.sections
 
 	const [sections, setSections] = useState(() =>
 		sortSections(structuredClone(seedSections)),
@@ -156,11 +147,12 @@ export function ResumeTab({
 		() => !hasCompleteJobDetails(form),
 	)
 	const [dragId, setDragId] = useState<string | null>(null)
+	const [pageCount, setPageCount] = useState(1)
 	const previewRefs = useRef<Record<string, HTMLElement | null>>({})
 
-	const issueTotal = useMemo(
-		() => sections.reduce((sum, section) => sum + (section.issueCount ?? 0), 0),
-		[sections],
+	const issueTotal = sections.reduce(
+		(sum, section) => sum + (section.issueCount ?? 0),
+		0,
 	)
 	const jobDetailsComplete = hasCompleteJobDetails(form)
 	const showJobForm = isEditingJob || !jobDetailsComplete
@@ -295,14 +287,14 @@ export function ResumeTab({
 	}
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col xl:grid xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)_minmax(0,260px)]">
-			<aside className="max-h-72 shrink-0 overflow-y-auto border-b border-neutral-200 bg-white xl:max-h-none xl:overflow-y-auto xl:border-b-0 xl:border-r">
-				<div className="border-b border-neutral-100 px-4 py-3">
+		<div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden xl:grid xl:grid-cols-[minmax(0,400px)_minmax(0,1fr)_minmax(0,260px)]">
+			<aside className="flex max-h-72 min-h-0 shrink-0 flex-col overflow-hidden border-b border-neutral-200 bg-white xl:max-h-none xl:h-full xl:border-b-0 xl:border-r">
+				<div className="shrink-0 border-b border-neutral-100 px-4 py-3">
 					<p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
 						Sections
 					</p>
 				</div>
-				<div className="space-y-2 p-3">
+				<div className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain p-3">
 					{sortSections(sections).map((section) => {
 						const Icon = sectionIcon(section.section_type)
 						const expanded = expandedId === section.id
@@ -553,42 +545,16 @@ export function ResumeTab({
 				</div>
 			</aside>
 
-			<section className="relative flex min-h-[min(480px,60dvh)] min-w-0 flex-1 flex-col bg-neutral-100/90 xl:min-h-0">
-				<div className="flex-1 overflow-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-					<article className="mx-auto h-[1056px] w-[816px] shrink-0 overflow-hidden rounded-sm bg-white px-10 py-10 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_40px_rgba(0,0,0,0.08)]">
-						{sortSections(sections).map((section) => (
-							<div
-								key={section.id}
-								ref={(node) => {
-									previewRefs.current[section.id] = node
-								}}
-								className={cn(
-									"mb-6 scroll-mt-8 rounded-md transition-shadow",
-									activeSectionId === section.id &&
-										"ring-2 ring-primary/20 ring-offset-2",
-								)}
-							>
-								{section.section_type !== "header" ? (
-									<h2 className="mb-2 border-b border-neutral-300 pb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-700">
-										{section.display_name}
-									</h2>
-								) : null}
-								{sortBlocks(section.blocks).map((block) => (
-									<ReadOnlyBlockPreview
-										key={block.id}
-										block={block}
-										isName={
-											section.section_type === "header" &&
-											block.block_type === "rich_text" &&
-											block.sort_key === 0
-										}
-									/>
-								))}
-							</div>
-						))}
-					</article>
+			<section className="relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-neutral-100/90 xl:h-full">
+				<div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+					<ResumeDocumentPreview
+						sections={sections}
+						activeSectionId={activeSectionId}
+						sectionRefs={previewRefs}
+						onPageCountChange={setPageCount}
+					/>
 				</div>
-				<div className="flex items-center justify-center gap-2 border-t border-neutral-200 bg-white/90 px-4 py-2">
+				<div className="flex shrink-0 items-center justify-center gap-2 border-t border-neutral-200 bg-white/90 px-4 py-2">
 					<Button type="button" size="sm" variant="ghost" disabled>
 						<ZoomOut className="size-4" aria-hidden />
 					</Button>
@@ -597,14 +563,14 @@ export function ResumeTab({
 						<ZoomIn className="size-4" aria-hidden />
 					</Button>
 					<span className="mx-2 h-4 w-px bg-neutral-200" aria-hidden />
-					<Button type="button" size="sm" variant="ghost" disabled>
-						Fit to Page
-					</Button>
+					<span className="text-xs font-medium text-neutral-500">
+						{pageCount} page{pageCount === 1 ? "" : "s"}
+					</span>
 				</div>
 			</section>
 
-			<aside className="shrink-0 overflow-y-auto border-t border-neutral-200 bg-white xl:max-h-[calc(100dvh-8rem)] xl:border-t-0 xl:border-l">
-				<div className="space-y-4 p-4">
+			<aside className="flex max-h-72 min-h-0 shrink-0 flex-col overflow-hidden border-t border-neutral-200 bg-white xl:max-h-none xl:h-full xl:border-t-0 xl:border-l">
+				<div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4">
 					{showJobForm ? (
 						<div className="space-y-4">
 							<div className="space-y-1">
@@ -915,119 +881,4 @@ function stringListValue(value: unknown): string[] {
 			.filter(Boolean)
 	}
 	return []
-}
-
-function ReadOnlyBlockPreview({
-	block,
-	isName,
-}: {
-	block: AppResumeBlock
-	isName?: boolean
-}) {
-	const content = block.content_json
-	const fontSize = block.style_json.fontSize
-	const isBold = block.style_json.bold
-
-	if (block.block_type === "rich_text" && "text" in content) {
-		return (
-			<p
-				className={cn(
-					"mb-1 leading-relaxed text-neutral-800",
-					isName &&
-						"font-display text-3xl font-semibold tracking-tight text-neutral-900",
-					!isName && isBold && "font-semibold",
-					!isName && fontSize && fontSize <= 12 && "text-sm text-neutral-700",
-				)}
-			>
-				{content.text}
-			</p>
-		)
-	}
-
-	if (block.block_type === "group_text" && "texts" in content) {
-		return (
-			<p className="mb-1 text-sm text-neutral-600">
-				{content.texts.map((item) => item.text).join(" ")}
-			</p>
-		)
-	}
-
-	if (block.block_type === "job_entry" && "title" in content) {
-		return (
-			<div className="mb-2 space-y-1">
-				<div className="flex flex-wrap items-baseline justify-between gap-2">
-					<p className="text-sm font-semibold text-neutral-900">
-						{content.title}
-						<span className="font-normal text-neutral-600">
-							{" "}
-							— {content.company}
-						</span>
-					</p>
-					<p className="text-xs text-neutral-500">
-						{formatDateRange(content.start_date, content.end_date)}
-					</p>
-				</div>
-				<ul className="space-y-0.5">
-					{content.description.map((line) => (
-						<li
-							key={line}
-							className="flex gap-2 text-[13px] leading-relaxed text-neutral-800"
-						>
-							<span aria-hidden>•</span>
-							<span>{line}</span>
-						</li>
-					))}
-				</ul>
-			</div>
-		)
-	}
-
-	if (block.block_type === "education_entry" && "school" in content) {
-		return (
-			<div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-				<div>
-					<p className="text-sm font-semibold text-neutral-900">
-						{content.degree}
-					</p>
-					<p className="text-sm text-neutral-600">{content.school}</p>
-				</div>
-				<p className="text-xs text-neutral-500">
-					{formatDateRange(content.start_date, content.end_date)}
-				</p>
-			</div>
-		)
-	}
-
-	if (block.block_type === "project_entry" && "name" in content) {
-		return (
-			<div className="mb-2 space-y-1">
-				<p className="text-sm font-semibold text-neutral-900">{content.name}</p>
-				{"description" in content ? (
-					<ul className="space-y-0.5">
-						{content.description.map((line) => (
-							<li
-								key={line}
-								className="flex gap-2 text-[13px] leading-relaxed text-neutral-800"
-							>
-								<span aria-hidden>•</span>
-								<span>{line}</span>
-							</li>
-						))}
-					</ul>
-				) : null}
-			</div>
-		)
-	}
-
-	if (block.block_type === "skill_entry" && "name" in content) {
-		return (
-			<span className="mr-1.5 inline-flex rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-800">
-				{content.name}
-			</span>
-		)
-	}
-
-	return (
-		<p className="mb-1 text-sm text-neutral-500">{getBlockPreviewText(block)}</p>
-	)
 }

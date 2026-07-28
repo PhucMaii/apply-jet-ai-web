@@ -19,8 +19,6 @@ export function ApplicationDetailPage() {
 		error,
 		notice,
 		appResume,
-		appResumeSections,
-		appResumeBlocks,
 
 		refetchApplication,
 		saveApplication,
@@ -32,7 +30,7 @@ export function ApplicationDetailPage() {
 	const { deleteApplication, deletingId } = useApplications()
 
 	return (
-		<div className="flex min-h-dvh flex-col bg-neutral-50">
+		<div className="flex h-dvh flex-col overflow-hidden bg-neutral-50">
 			{error ? (
 				<div className="shrink-0 border-b border-red-200 bg-red-50 px-4 py-2">
 					<p className="text-sm text-red-700" role="alert">
@@ -80,8 +78,6 @@ export function ApplicationDetailPage() {
 						onDelete={deleteApplication}
 						refetchApplication={() => void refetchApplication()}
 						appResume={appResume}
-						appResumeSections={appResumeSections}
-						appResumeBlocks={appResumeBlocks}
 					/>
 				</main>
 			)}
