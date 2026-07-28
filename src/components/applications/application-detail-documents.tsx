@@ -20,6 +20,7 @@ import { useUserSubscription } from "@/hooks/use-user-subscription"
 import ProFeatureGuard, { ProFeatureBadge } from "../pro-feature-guard"
 import useUserUsage from "@/hooks/use-user-usage"
 import { useMemo } from "react"
+import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume"
 
 const DOCUMENT_TAB_TRIGGER = cn(
 	"relative h-11 min-w-0 shrink-0 rounded-none border-b-2 border-transparent",
@@ -42,6 +43,9 @@ interface ApplicationDetailDocumentsProps {
 	savingDetails?: boolean
 	updatingStatus?: boolean
 	isDeleting?: boolean
+	appResume: AppResume | null
+	appResumeSections: AppResumeSection[]
+	appResumeBlocks: AppResumeBlock[]
 	onPatchForm: (patch: Partial<ApplicationDetailForm>) => void
 	onSaveApplication: () => void
 	onStatusChange: (status: ApplicationStatus) => void
@@ -62,6 +66,10 @@ export function ApplicationDetailDocuments({
 	savingDetails = false,
 	updatingStatus = false,
 	isDeleting = false,
+	appResume,
+	appResumeSections,
+	appResumeBlocks,
+
 	onPatchForm,
 	onSaveApplication,
 	onStatusChange,
@@ -158,6 +166,9 @@ export function ApplicationDetailDocuments({
 							onSaveApplication={onSaveApplication}
 							onStatusChange={onStatusChange}
 							onDelete={onDelete}
+							appResume={appResume}
+							appResumeSections={appResumeSections}
+							appResumeBlocks={appResumeBlocks}
 						/>
 					</ProFeatureGuard>
 				</TabsContent>

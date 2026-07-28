@@ -172,7 +172,7 @@ export function useCreateApplication() {
 
     // Create app resume block
     // Header block
-    const headerBlocks = buildHeaderBlock(idsMap.get(APP_RESUME_SECTION_TYPE.HEADER)!, form.jobTitle.trim(), userData, userLinksArray);
+    const headerBlocks = buildHeaderBlock(appResumeData.id, idsMap.get(APP_RESUME_SECTION_TYPE.HEADER)!, form.jobTitle.trim(), userData, userLinksArray);
     await Promise.all(
       headerBlocks.map(async (block) => {
         const { data: appResumeBlockData, error: appResumeBlockError } =
@@ -191,6 +191,7 @@ export function useCreateApplication() {
 
     // Summary Block
     const summaryBlock = {
+      app_resume_id: appResumeData.id,
       section_id: idsMap.get(APP_RESUME_SECTION_TYPE.SUMMARY)!,
       block_type: "rich_text",
       content_json: {
@@ -215,6 +216,7 @@ export function useCreateApplication() {
 
     // Experience Block
     const experienceBlocks = userExperiencesArray.map((experience, index) => ({
+      app_resume_id: appResumeData.id,
       section_id: idsMap.get(APP_RESUME_SECTION_TYPE.EXPERIENCE)!,
       block_type: "job_entry",
       content_json: {
@@ -244,6 +246,7 @@ export function useCreateApplication() {
 
     // Projects Block
     const projectsBlocks = userProjectsArray.map((project, index) => ({
+      app_resume_id: appResumeData.id,
       section_id: idsMap.get(APP_RESUME_SECTION_TYPE.PROJECTS)!,
       block_type: "project_entry",
       content_json: {
@@ -270,6 +273,7 @@ export function useCreateApplication() {
 
     // Education Block
     const educationBlocks = userEducationArray.map((education, index) => ({
+      app_resume_id: appResumeData.id,
       section_id: idsMap.get(APP_RESUME_SECTION_TYPE.EDUCATION)!,
       block_type: "education_entry",
       content_json: {
@@ -298,6 +302,7 @@ export function useCreateApplication() {
 
     // Skills Block
     const skillsBlocks = userSkillsArray.map((skill) => ({
+      app_resume_id: appResumeData.id,
       section_id: idsMap.get(APP_RESUME_SECTION_TYPE.SKILLS)!,
       block_type: "skill_entry",
       content_json: {

@@ -13,12 +13,16 @@ export function ApplicationDetailPage() {
 		isLoadingApplication,
 		record,
 		form,
-		refetchApplication,
 		isRefetchingApplication,
 		savingDetails,
 		updatingStatus,
 		error,
 		notice,
+		appResume,
+		appResumeSections,
+		appResumeBlocks,
+
+		refetchApplication,
 		saveApplication,
 		updateStatus,
 		resolveStatus,
@@ -75,6 +79,9 @@ export function ApplicationDetailPage() {
 						onStatusChange={(next) => void updateStatus(next)}
 						onDelete={deleteApplication}
 						refetchApplication={() => void refetchApplication()}
+						appResume={appResume}
+						appResumeSections={appResumeSections}
+						appResumeBlocks={appResumeBlocks}
 					/>
 				</main>
 			)}

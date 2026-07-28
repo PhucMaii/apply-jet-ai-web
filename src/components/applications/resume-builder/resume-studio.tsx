@@ -11,11 +11,15 @@ import type { ApplicationStatus } from "@/lib/application-status"
 import { ROUTES } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import type { ApplicationDetailForm } from "@/types/application-detail"
+import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume"
 import { ResumeTab } from "./resume-tab"
 
 type StudioView = "editor" | "tailored"
 
 interface ResumeStudioProps {
+	appResume: AppResume | null
+	appResumeSections: AppResumeSection[]
+	appResumeBlocks: AppResumeBlock[]
 	form: ApplicationDetailForm
 	status: ApplicationStatus
 	createdAt: string
@@ -32,6 +36,9 @@ interface ResumeStudioProps {
 }
 
 export function ResumeStudio({
+	appResume,
+	appResumeSections,
+	appResumeBlocks,
 	form,
 	status,
 	createdAt,
@@ -148,6 +155,9 @@ export function ResumeStudio({
 					onDelete={onDelete}
 					onGenerate={handleGenerate}
 					hasGenerated={hasGenerated}
+					appResume={appResume}
+					appResumeSections={appResumeSections}
+					appResumeBlocks={appResumeBlocks}
 				/>
 			) : null}
 			{!isGenerating && view === "tailored" && hasGenerated ? (

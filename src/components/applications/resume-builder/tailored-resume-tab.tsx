@@ -1,353 +1,134 @@
 import { useMemo, useState } from "react"
 import { Check, ChevronDown, ChevronRight, Sparkles } from "lucide-react"
+import {
+	formatDateRange,
+	getBlockPreviewText,
+	sortBlocks,
+	sortSections,
+} from "@/components/applications/resume-builder/app-resume-utils"
+import { mockAppResume } from "@/components/applications/resume-builder/mock-app-resume"
 import { Button } from "@/components/ui/button"
+import type { AppResumeBlock, AppResumeSection } from "@/types/app-resume"
 import { cn } from "@/lib/utils"
 
-type BlockType =
-	| "heading"
-	| "subheading"
-	| "bullet"
-	| "text"
-	| "date_range"
-	| "contact_line"
-
-interface MockBlock {
-	id: string
-	blockKey: string
-	type: BlockType
-	content: string
-	order: number
-	isNew?: boolean
-	isRemoved?: boolean
+type TailoredBlock = AppResumeBlock & {
+	is_new?: boolean
+	is_removed?: boolean
 }
 
-interface MockSection {
-	id: string
-	sectionKey: string
-	type:
-		| "header"
-		| "summary"
-		| "experience_entry"
-		| "education_entry"
-		| "skills"
-		| "projects"
-	title: string
-	order: number
-	blocks: MockBlock[]
+type TailoredSection = Omit<AppResumeSection, "blocks"> & {
+	blocks: TailoredBlock[]
 }
 
-const mockOriginalResume: MockSection[] = [
-	{
-		id: "sec-1",
-		sectionKey: "key-header",
-		type: "header",
-		title: "Resume Header",
-		order: 0,
-		blocks: [
-			{
-				id: "b-1",
-				blockKey: "k-name",
-				type: "heading",
-				content: "Phuc Mai",
-				order: 0,
-			},
-			{
-				id: "b-2",
-				blockKey: "k-contact",
-				type: "contact_line",
-				content:
-					"New Westminster, BC | (431) 289-0132 | maithienphuc0102@gmail.com",
-				order: 1,
-			},
-		],
-	},
-	{
-		id: "sec-2",
-		sectionKey: "key-summary",
-		type: "summary",
-		title: "Professional Summary",
-		order: 1,
-		blocks: [
-			{
-				id: "b-3",
-				blockKey: "k-summary",
-				type: "text",
-				content:
-					"Full-stack developer with 3 years of experience building scalable web applications, from internal ERP tooling to customer-facing e-commerce systems.",
-				order: 0,
-			},
-		],
-	},
-	{
-		id: "sec-3",
-		sectionKey: "key-exp-1",
-		type: "experience_entry",
-		title: "Supreme Sprouts Ltd. — Software Developer",
-		order: 2,
-		blocks: [
-			{
-				id: "b-4",
-				blockKey: "k-exp1-date",
-				type: "date_range",
-				content: "January 2023 - January 2026",
-				order: 0,
-			},
-			{
-				id: "b-5",
-				blockKey: "k-exp1-b1",
-				type: "bullet",
-				content:
-					"Developed a full-stack system consolidating order processing, inventory tracking, payment handling, and delivery logistics.",
-				order: 1,
-			},
-			{
-				id: "b-6",
-				blockKey: "k-exp1-b2",
-				type: "bullet",
-				content:
-					"Revamped the order page from a multi-input form to a visual grid, converting 55% of users from phone orders to in-app orders.",
-				order: 2,
-			},
-			{
-				id: "b-7",
-				blockKey: "k-exp1-b3",
-				type: "bullet",
-				content:
-					"Integrated payment and inventory systems into a single app, saving the team 6+ hours per week.",
-				order: 3,
-			},
-			{
-				id: "b-8",
-				blockKey: "k-exp1-b4",
-				type: "bullet",
-				content:
-					"Built automated order reminders via cron job, reducing missed orders by 88%.",
-				order: 4,
-			},
-		],
-	},
-	{
-		id: "sec-4",
-		sectionKey: "key-exp-2",
-		type: "experience_entry",
-		title: "Trade and Track — Intern Full Stack Developer",
-		order: 3,
-		blocks: [
-			{
-				id: "b-9",
-				blockKey: "k-exp2-date",
-				type: "date_range",
-				content: "December 2023 - February 2024",
-				order: 0,
-			},
-			{
-				id: "b-10",
-				blockKey: "k-exp2-b1",
-				type: "bullet",
-				content:
-					"Designed dark/light theme mode using MUI theme config with React.js.",
-				order: 1,
-			},
-			{
-				id: "b-11",
-				blockKey: "k-exp2-b2",
-				type: "bullet",
-				content:
-					"Built a month-view calendar using the full-calendar library, integrated with a custom trade-results API.",
-				order: 2,
-			},
-			{
-				id: "b-12",
-				blockKey: "k-exp2-b3",
-				type: "bullet",
-				content:
-					"Optimized and restructured API code with Next.js and Prisma.",
-				order: 3,
-			},
-		],
-	},
-	{
-		id: "sec-5",
-		sectionKey: "key-skills",
-		type: "skills",
-		title: "Skills",
-		order: 4,
-		blocks: [
-			{
-				id: "b-13",
-				blockKey: "k-skills",
-				type: "text",
-				content:
-					"React, TypeScript, Node.js, Next.js, Prisma, PostgreSQL, Supabase, PocketBase",
-				order: 0,
-			},
-		],
-	},
-]
+const mockTailoredResume: TailoredSection[] = structuredClone(
+	mockAppResume.sections,
+).map((section) => {
+	if (section.section_type === "summary") {
+		return {
+			...section,
+			blocks: section.blocks.map((block) =>
+				block.block_type === "rich_text" && "text" in block.content_json
+					? {
+							...block,
+							content_json: {
+								text: "Full-stack TypeScript developer with strong React, REST API, and PostgreSQL experience building production web apps for fast-moving product teams.",
+							},
+						}
+					: block,
+			),
+		}
+	}
 
-const mockTailoredResume: MockSection[] = [
-	{
-		id: "t-sec-1",
-		sectionKey: "key-header",
-		type: "header",
-		title: "Resume Header",
-		order: 0,
-		blocks: [
-			{
-				id: "t-b-1",
-				blockKey: "k-name",
-				type: "heading",
-				content: "Phuc Mai",
-				order: 0,
-			},
-			{
-				id: "t-b-2",
-				blockKey: "k-contact",
-				type: "contact_line",
-				content:
-					"New Westminster, BC | (431) 289-0132 | maithienphuc0102@gmail.com",
-				order: 1,
-			},
-		],
-	},
-	{
-		id: "t-sec-2",
-		sectionKey: "key-summary",
-		type: "summary",
-		title: "Professional Summary",
-		order: 1,
-		blocks: [
-			{
-				id: "t-b-3",
-				blockKey: "k-summary",
-				type: "text",
-				content:
-					"Full-stack Software Developer with 3 years of React, TypeScript, and REST API experience building scalable product systems for fast-moving teams.",
-				order: 0,
-			},
-		],
-	},
-	{
-		id: "t-sec-3",
-		sectionKey: "key-exp-1",
-		type: "experience_entry",
-		title: "Supreme Sprouts Ltd. — Software Developer",
-		order: 2,
-		blocks: [
-			{
-				id: "t-b-4",
-				blockKey: "k-exp1-date",
-				type: "date_range",
-				content: "January 2023 - January 2026",
-				order: 0,
-			},
-			{
-				id: "t-b-5",
-				blockKey: "k-exp1-b1",
-				type: "bullet",
-				content:
-					"Built a React + TypeScript full-stack system consolidating order processing, inventory, payments, and delivery logistics behind clean REST APIs.",
-				order: 1,
-			},
-			{
-				id: "t-b-6",
-				blockKey: "k-exp1-b2",
-				type: "bullet",
-				content:
-					"Redesigned the order experience into a visual grid UI that converted 55% of phone-order customers to in-app ordering.",
-				order: 2,
-			},
-			{
-				id: "t-b-7",
-				blockKey: "k-exp1-b3",
-				type: "bullet",
-				content:
-					"Integrated payment and inventory systems into one PostgreSQL-backed app, saving the team 6+ hours every week.",
-				order: 3,
-			},
-			{
-				id: "t-b-8",
-				blockKey: "k-exp1-b4",
-				type: "bullet",
-				content:
-					"Built automated order reminders via cron job, reducing missed orders by 88%.",
-				order: 4,
-			},
-			{
-				id: "t-b-new",
-				blockKey: "k-exp1-new",
-				type: "bullet",
-				content:
-					"Designed and documented REST API contracts that helped product and engineering ship features with fewer handoff bugs.",
-				order: 5,
-				isNew: true,
-			},
-		],
-	},
-	{
-		id: "t-sec-4",
-		sectionKey: "key-exp-2",
-		type: "experience_entry",
-		title: "Trade and Track — Intern Full Stack Developer",
-		order: 3,
-		blocks: [
-			{
-				id: "t-b-9",
-				blockKey: "k-exp2-date",
-				type: "date_range",
-				content: "December 2023 - February 2024",
-				order: 0,
-			},
-			{
-				id: "t-b-10",
-				blockKey: "k-exp2-b1",
-				type: "bullet",
-				content:
-					"Shipped dark/light theme support in React using a shared theme config for consistent product UI.",
-				order: 1,
-			},
-			{
-				id: "t-b-11",
-				blockKey: "k-exp2-b2",
-				type: "bullet",
-				content:
-					"Built a month-view calendar using the full-calendar library, integrated with a custom trade-results API.",
-				order: 2,
-				isRemoved: true,
-			},
-			{
-				id: "t-b-12",
-				blockKey: "k-exp2-b3",
-				type: "bullet",
-				content:
-					"Optimized and restructured API layers with Next.js, Prisma, and PostgreSQL for clearer data access.",
-				order: 3,
-			},
-		],
-	},
-	{
-		id: "t-sec-5",
-		sectionKey: "key-skills",
-		type: "skills",
-		title: "Skills",
-		order: 4,
-		blocks: [
-			{
-				id: "t-b-13",
-				blockKey: "k-skills",
-				type: "text",
-				content:
-					"React, TypeScript, Node.js, Next.js, Prisma, PostgreSQL, REST APIs, Supabase",
-				order: 0,
-			},
-		],
-	},
-]
+	if (section.section_type === "experience") {
+		return {
+			...section,
+			blocks: [
+				...section.blocks.map((block, index) => {
+					if (
+						index === 1 &&
+						block.block_type === "job_entry" &&
+						"description" in block.content_json
+					) {
+						return {
+							...block,
+							content_json: {
+								...block.content_json,
+								description: [
+									...block.content_json.description,
+									"Shipped CI/CD improvements that cut release friction across the product team",
+								],
+							},
+						}
+					}
+					return block
+				}),
+				{
+					id: "tailored-exp-aws",
+					app_resume_id: mockAppResume.id,
+					section_id: section.id,
+					block_type: "job_entry",
+					sort_key: section.blocks.length,
+					is_new: true,
+					content_json: {
+						title: "Platform Engineer (Contract)",
+						company: "CloudOps Studio",
+						start_date: "2024-06-01",
+						end_date: "2024-12-01",
+						description: [
+							"Implemented AWS deployment workflows and GraphQL services for internal tooling",
+						],
+					},
+					style_json: {},
+					created_at: "2026-07-27T18:10:08.900000+00:00",
+					updated_at: "2026-07-27T18:10:08.900000+00:00",
+				},
+			],
+		}
+	}
 
-const mockScores = {
-	original: 61,
-	tailored: 84,
-}
+	if (section.section_type === "skills") {
+		return {
+			...section,
+			blocks: [
+				...section.blocks,
+				{
+					id: "tailored-skill-graphql",
+					app_resume_id: mockAppResume.id,
+					section_id: section.id,
+					block_type: "skill_entry",
+					sort_key: section.blocks.length,
+					is_new: true,
+					content_json: {
+						name: "GraphQL",
+						categoryId: 0,
+						categoryName: "",
+					},
+					style_json: {},
+					created_at: "2026-07-27T18:10:08.910000+00:00",
+					updated_at: "2026-07-27T18:10:08.910000+00:00",
+				},
+				{
+					id: "tailored-skill-aws",
+					app_resume_id: mockAppResume.id,
+					section_id: section.id,
+					block_type: "skill_entry",
+					sort_key: section.blocks.length + 1,
+					is_new: true,
+					content_json: {
+						name: "AWS",
+						categoryId: 0,
+						categoryName: "",
+					},
+					style_json: {},
+					created_at: "2026-07-27T18:10:08.920000+00:00",
+					updated_at: "2026-07-27T18:10:08.920000+00:00",
+				},
+			],
+		}
+	}
+
+	return section
+})
 
 interface TailoredResumeTabProps {
 	appliedBlockKeys: string[]
@@ -359,95 +140,85 @@ export function TailoredResumeTab({
 	onAppliedKeysChange,
 }: TailoredResumeTabProps) {
 	const [workingResume, setWorkingResume] = useState(() =>
-		structuredClone(mockOriginalResume),
+		structuredClone(mockAppResume.sections),
 	)
 	const [keywordsOpen, setKeywordsOpen] = useState(true)
+	const score = 61 + Math.min(23, appliedBlockKeys.length * 8)
 
-	const originalByKey = useMemo(() => {
-		const map = new Map<string, MockBlock>()
-		for (const section of mockOriginalResume) {
-			for (const block of section.blocks) map.set(block.blockKey, block)
+	const originalById = useMemo(() => {
+		const map = new Map<string, AppResumeBlock>()
+		for (const section of mockAppResume.sections) {
+			for (const block of section.blocks) map.set(block.id, block)
 		}
 		return map
 	}, [])
 
 	const actionableKeys = useMemo(() => {
-		return mockTailoredResume
-			.flatMap((section) => section.blocks)
-			.filter((block) => {
-				const original = originalByKey.get(block.blockKey)
-				if (block.isNew || block.isRemoved) return true
-				return original && original.content !== block.content
-			})
-			.map((block) => block.blockKey)
-	}, [originalByKey])
+		const keys: string[] = []
+		for (const section of mockTailoredResume) {
+			for (const block of section.blocks) {
+				const original = originalById.get(block.id)
+				const changed =
+					block.is_new ||
+					block.is_removed ||
+					(original &&
+						JSON.stringify(original.content_json) !==
+							JSON.stringify(block.content_json))
+				if (changed) keys.push(block.id)
+			}
+		}
+		return keys
+	}, [originalById])
 
-	const score = useMemo(() => {
-		if (actionableKeys.length === 0) return mockScores.original
-		const appliedCount = actionableKeys.filter((key) =>
-			appliedBlockKeys.includes(key),
-		).length
-		const ratio = appliedCount / actionableKeys.length
-		return Math.round(
-			mockScores.original +
-				(mockScores.tailored - mockScores.original) * ratio,
-		)
-	}, [actionableKeys, appliedBlockKeys])
-
-	function applyBlock(blockKey: string) {
+	function applyBlock(blockId: string) {
 		const tailoredBlock = mockTailoredResume
 			.flatMap((section) => section.blocks)
-			.find((block) => block.blockKey === blockKey)
+			.find((block) => block.id === blockId)
 		if (!tailoredBlock) return
 
 		setWorkingResume((prev) =>
 			prev.map((section) => {
-				const hasBlock = section.blocks.some(
-					(block) => block.blockKey === blockKey,
-				)
-				if (tailoredBlock.isRemoved && hasBlock) {
+				if (section.id !== tailoredBlock.section_id) return section
+
+				if (tailoredBlock.is_removed) {
 					return {
 						...section,
-						blocks: section.blocks.filter(
-							(block) => block.blockKey !== blockKey,
-						),
+						blocks: section.blocks.filter((block) => block.id !== blockId),
 					}
 				}
-				if (hasBlock) {
+
+				const exists = section.blocks.some((block) => block.id === blockId)
+				if (exists) {
 					return {
 						...section,
 						blocks: section.blocks.map((block) =>
-							block.blockKey === blockKey
-								? { ...block, content: tailoredBlock.content }
+							block.id === blockId
+								? {
+										...tailoredBlock,
+										is_new: false,
+										is_removed: false,
+									}
 								: block,
 						),
 					}
 				}
-				if (
-					tailoredBlock.isNew &&
-					section.sectionKey ===
-						mockTailoredResume.find((item) =>
-							item.blocks.some((block) => block.blockKey === blockKey),
-						)?.sectionKey
-				) {
-					return {
-						...section,
-						blocks: [
-							...section.blocks,
-							{
-								...tailoredBlock,
-								id: `applied-${tailoredBlock.id}`,
-								isNew: false,
-							},
-						],
-					}
+
+				return {
+					...section,
+					blocks: [
+						...section.blocks,
+						{
+							...tailoredBlock,
+							is_new: false,
+							is_removed: false,
+						},
+					],
 				}
-				return section
 			}),
 		)
 
-		if (!appliedBlockKeys.includes(blockKey)) {
-			onAppliedKeysChange([...appliedBlockKeys, blockKey])
+		if (!appliedBlockKeys.includes(blockId)) {
+			onAppliedKeysChange([...appliedBlockKeys, blockId])
 		}
 	}
 
@@ -479,93 +250,73 @@ export function TailoredResumeTab({
 				</div>
 				<div className="flex-1 overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
 					<article className="mx-auto min-h-[640px] w-full max-w-[720px] rounded-sm bg-white px-6 py-8 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_40px_rgba(0,0,0,0.08)] sm:px-8 sm:py-10 lg:px-10">
-						{[...mockTailoredResume]
-							.sort((a, b) => a.order - b.order)
-							.map((section) => (
-								<div key={section.id} className="mb-6">
-									{section.type !== "header" ? (
-										<h2 className="mb-2 border-b border-neutral-300 pb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-700">
-											{section.title}
-										</h2>
-									) : null}
-									{[...section.blocks]
-										.sort((a, b) => a.order - b.order)
-										.map((block) => {
-											const original = originalByKey.get(block.blockKey)
-											const changed =
-												block.isNew ||
-												block.isRemoved ||
-												(original && original.content !== block.content)
-											const applied = appliedBlockKeys.includes(block.blockKey)
-											return (
-												<div key={block.id} className="mb-2">
-													{changed && original && !block.isNew ? (
-														<p
-															className={cn(
-																"mb-1 px-1 text-[13px] leading-relaxed text-neutral-400 line-through",
-																block.type === "heading" &&
-																	"font-display text-2xl",
-															)}
-														>
-															{block.type === "bullet" ? `• ${original.content}` : original.content}
-														</p>
-													) : null}
-													{!block.isRemoved ? (
-														<div
-															className={cn(
-																"rounded px-1 py-0.5",
-																changed && !applied && "bg-emerald-50",
-																block.type === "heading" &&
-																	"font-display text-3xl font-semibold tracking-tight text-neutral-900",
-																(
-																	block.type === "contact_line" ||
-																	block.type === "date_range"
-																)
-																	? "text-sm text-neutral-600"
-																	: block.type === "heading"
-																		? null
-																		: "text-[13.5px] leading-relaxed text-neutral-800",
-															)}
-														>
-															{block.type === "bullet"
-																? `• ${block.content}`
-																: block.content}
-														</div>
-													) : null}
-													{changed ? (
-														<div className="mt-1 mb-2 flex flex-wrap items-center gap-2 px-1">
-															{block.isNew ? (
-																<span className="rounded-md bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-800">
-																	AI added
-																</span>
-															) : null}
-															{block.isRemoved ? (
-																<span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
-																	AI suggests removing
-																</span>
-															) : null}
-															{applied ? (
-																<span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
-																	<Check className="size-3" aria-hidden />
-																	Applied
-																</span>
-															) : (
-																<Button
-																	type="button"
-																	size="sm"
-																	variant="outline"
-																	onClick={() => applyBlock(block.blockKey)}
-																>
-																	Replace
-																</Button>
-															)}
-														</div>
-													) : null}
+						{sortSections(mockTailoredResume).map((section) => (
+							<div key={section.id} className="mb-6">
+								{section.section_type !== "header" ? (
+									<h2 className="mb-2 border-b border-neutral-300 pb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-700">
+										{section.display_name}
+									</h2>
+								) : null}
+								{sortBlocks(section.blocks).map((block) => {
+									const original = originalById.get(block.id)
+									const changed =
+										block.is_new ||
+										block.is_removed ||
+										(original &&
+											JSON.stringify(original.content_json) !==
+												JSON.stringify(block.content_json))
+									const applied = appliedBlockKeys.includes(block.id)
+									return (
+										<div key={block.id} className="mb-3">
+											{changed && original && !block.is_new ? (
+												<p className="mb-1 px-1 text-[13px] leading-relaxed text-neutral-400 line-through">
+													{getBlockPreviewText(original)}
+												</p>
+											) : null}
+											{!block.is_removed ? (
+												<div
+													className={cn(
+														"rounded px-1 py-0.5",
+														changed && !applied && "bg-emerald-50",
+													)}
+												>
+													<TailoredBlockPreview block={block} />
 												</div>
-											)
-										})}
-								</div>
-							))}
+											) : null}
+											{changed ? (
+												<div className="mt-1 mb-2 flex flex-wrap items-center gap-2 px-1">
+													{block.is_new ? (
+														<span className="rounded-md bg-sky-50 px-2 py-0.5 text-[11px] font-semibold text-sky-800">
+															AI added
+														</span>
+													) : null}
+													{block.is_removed ? (
+														<span className="rounded-md bg-amber-50 px-2 py-0.5 text-[11px] font-semibold text-amber-900">
+															AI suggests removing
+														</span>
+													) : null}
+													{applied ? (
+														<span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
+															<Check className="size-3" aria-hidden />
+															Applied
+														</span>
+													) : (
+														<Button
+															type="button"
+															size="sm"
+															variant="outline"
+															onClick={() => applyBlock(block.id)}
+														>
+															Replace
+														</Button>
+													)}
+												</div>
+											) : null}
+										</div>
+									)
+								})}
+							</div>
+						))}
 					</article>
 				</div>
 			</section>
@@ -581,9 +332,10 @@ export function TailoredResumeTab({
 							<span className="text-base text-neutral-500"> / 100</span>
 						</p>
 						<p className="mt-2 text-sm text-neutral-600">
-							{actionableKeys.length - appliedBlockKeys.filter((key) =>
-								actionableKeys.includes(key),
-							).length}{" "}
+							{actionableKeys.length -
+								appliedBlockKeys.filter((key) =>
+									actionableKeys.includes(key),
+								).length}{" "}
 							suggestions left
 						</p>
 					</div>
@@ -620,5 +372,93 @@ export function TailoredResumeTab({
 				</div>
 			</aside>
 		</div>
+	)
+}
+
+function TailoredBlockPreview({ block }: { block: TailoredBlock }) {
+	const content = block.content_json
+
+	if (block.block_type === "rich_text" && "text" in content) {
+		return (
+			<p
+				className={cn(
+					"text-[13.5px] leading-relaxed text-neutral-800",
+					block.sort_key === 0 &&
+						block.style_json.fontSize &&
+						block.style_json.fontSize >= 16 &&
+						"font-display text-3xl font-semibold tracking-tight text-neutral-900",
+					block.style_json.bold && block.style_json.fontSize === 12 &&
+						"text-sm font-semibold text-neutral-700",
+				)}
+			>
+				{content.text}
+			</p>
+		)
+	}
+
+	if (block.block_type === "group_text" && "texts" in content) {
+		return (
+			<p className="text-sm text-neutral-600">
+				{content.texts.map((item) => item.text).join(" ")}
+			</p>
+		)
+	}
+
+	if (block.block_type === "job_entry" && "title" in content) {
+		return (
+			<div className="space-y-1">
+				<div className="flex flex-wrap items-baseline justify-between gap-2">
+					<p className="text-sm font-semibold text-neutral-900">
+						{content.title}
+						<span className="font-normal text-neutral-600">
+							{" "}
+							— {content.company}
+						</span>
+					</p>
+					<p className="text-xs text-neutral-500">
+						{formatDateRange(content.start_date, content.end_date)}
+					</p>
+				</div>
+				<ul className="space-y-0.5">
+					{content.description.map((line) => (
+						<li
+							key={line}
+							className="flex gap-2 text-[13px] leading-relaxed text-neutral-800"
+						>
+							<span aria-hidden>•</span>
+							<span>{line}</span>
+						</li>
+					))}
+				</ul>
+			</div>
+		)
+	}
+
+	if (block.block_type === "education_entry" && "school" in content) {
+		return (
+			<div className="flex flex-wrap items-baseline justify-between gap-2">
+				<div>
+					<p className="text-sm font-semibold text-neutral-900">
+						{content.degree}
+					</p>
+					<p className="text-sm text-neutral-600">{content.school}</p>
+				</div>
+				<p className="text-xs text-neutral-500">
+					{formatDateRange(content.start_date, content.end_date)}
+				</p>
+			</div>
+		)
+	}
+
+	if (block.block_type === "skill_entry" && "name" in content) {
+		return (
+			<span className="mr-1.5 inline-flex rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-800">
+				{content.name}
+			</span>
+		)
+	}
+
+	return (
+		<p className="text-sm text-neutral-500">{getBlockPreviewText(block)}</p>
 	)
 }

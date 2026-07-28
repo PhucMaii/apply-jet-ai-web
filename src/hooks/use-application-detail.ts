@@ -13,6 +13,7 @@ import type {
 } from "@/types/application-detail";
 import type { ApplicationRow } from "@/types/database";
 import { useQuery } from "@tanstack/react-query";
+import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume";
 
 function toForm(row: ApplicationRow): ApplicationDetailForm {
   return {
@@ -33,6 +34,9 @@ export function useApplicationDetail(applicationId: string | undefined) {
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [appResume, setAppResume] = useState<AppResume | null>(null);
+  const [appResumeSections, setAppResumeSections] = useState<AppResumeSection[]>([]);
+  const [appResumeBlocks, setAppResumeBlocks] = useState<AppResumeBlock[]>([]);
 
   const {
     data: application,
@@ -120,6 +124,52 @@ export function useApplicationDetail(applicationId: string | undefined) {
     [applicationId, user],
   );
 
+  const fetchAppResume = useCallback(async () => {
+    if (!user || !applicationId) return;
+    const { data: appResume, error: appResumeError } = await supabase
+      .from("app_resumes")
+      .select("*")
+      .eq("application_id", applicationId)
+      .maybeSingle();
+    if (appResumeError) {
+      console.error("Something went wrong fetching app resume:", appResumeError);
+      return;
+    }
+
+    const { data: appResumeSections, error: appResumeSectionsError } = await supabase
+      .from("app_resume_sections")
+      .select("*")
+      .eq("app_resume_id", appResume.id);
+    if (appResumeSectionsError) {
+      console.error("Something went wrong fetching app resume sections:", appResumeSectionsError);
+      return;
+    }
+    
+    const { data: appResumeBlocks, error: appResumeBlocksError } = await supabase
+      .from("app_resume_blocks")
+      .select("*")
+      .eq("app_resume_id", appResume.id);
+    if (appResumeBlocksError) {
+      console.error("Something went wrong fetching app resume blocks:", appResumeBlocksError);
+      return;
+    }
+    
+    // Format the data for resume tab
+    const formattedAppResume: any = {
+      ...appResume,
+      sections: appResumeSections.map((section) => ({
+        ...section,
+        blocks: appResumeBlocks.filter((block) => block.section_id === section.id),
+      })),
+    }
+
+    console.log(formattedAppResume, "formattedAppResume");
+  }, [applicationId, user]);
+
+  useEffect(() => {
+    void fetchAppResume();
+  }, [fetchAppResume]);
+
   useEffect(() => {
     void loadApplication();
   }, [loadApplication]);
@@ -206,10 +256,14 @@ export function useApplicationDetail(applicationId: string | undefined) {
     updatingStatus,
     error,
     notice,
+    isRefetchingApplication,
+    appResume,
+    appResumeSections,
+    appResumeBlocks,
+    
     setNotice,
     loadApplication,
     refetchApplication,
-    isRefetchingApplication,
     saveApplication,
     updateStatus,
     resolveStatus,

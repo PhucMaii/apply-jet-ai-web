@@ -1,11 +1,8 @@
 import {
-	useEffect,
 	useMemo,
 	useRef,
 	useState,
 	type DragEvent,
-	type KeyboardEvent,
-	type ReactNode,
 } from "react"
 import {
 	AlertCircle,
@@ -28,6 +25,17 @@ import {
 } from "lucide-react"
 import { ApplicationsStatusBadge } from "@/components/applications/applications-status-badge"
 import { DeleteApplicationControl } from "@/components/applications/delete-application-control"
+import {
+	applyEditableText,
+	formatDateRange,
+	getEditableText,
+	getBlockPreviewText,
+	sortBlocks,
+	sortSections,
+} from "@/components/applications/resume-builder/app-resume-utils"
+import { AccordionPanel } from "@/components/applications/resume-builder/accordion-panel"
+import { mockAppResume } from "@/components/applications/resume-builder/mock-app-resume"
+import { ScoreGauge } from "@/components/applications/resume-builder/score-gauge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -40,6 +48,12 @@ import {
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import { PROFILE_SURFACE } from "@/lib/profile-surface"
+import type {
+	AppResume,
+	AppResumeBlock,
+	AppResumeSection,
+	AppResumeSectionType,
+} from "@/types/app-resume"
 import type { ApplicationDetailForm } from "@/types/application-detail"
 import { cn } from "@/lib/utils"
 
@@ -51,191 +65,6 @@ function hasCompleteJobDetails(form: ApplicationDetailForm) {
 	)
 }
 
-type BlockType =
-	| "heading"
-	| "subheading"
-	| "bullet"
-	| "text"
-	| "date_range"
-	| "contact_line"
-
-interface MockBlock {
-	id: string
-	blockKey: string
-	type: BlockType
-	content: string
-	order: number
-	isNew?: boolean
-	isRemoved?: boolean
-}
-
-interface MockSection {
-	id: string
-	sectionKey: string
-	type:
-		| "header"
-		| "summary"
-		| "experience_entry"
-		| "education_entry"
-		| "skills"
-		| "projects"
-	title: string
-	order: number
-	blocks: MockBlock[]
-	issueCount?: number
-}
-
-const mockOriginalResume: MockSection[] = [
-	{
-		id: "sec-1",
-		sectionKey: "key-header",
-		type: "header",
-		title: "Resume Header",
-		order: 0,
-		blocks: [
-			{
-				id: "b-1",
-				blockKey: "k-name",
-				type: "heading",
-				content: "Phuc Mai",
-				order: 0,
-			},
-			{
-				id: "b-2",
-				blockKey: "k-contact",
-				type: "contact_line",
-				content:
-					"New Westminster, BC | (431) 289-0132 | maithienphuc0102@gmail.com",
-				order: 1,
-			},
-		],
-	},
-	{
-		id: "sec-2",
-		sectionKey: "key-summary",
-		type: "summary",
-		title: "Professional Summary",
-		order: 1,
-		issueCount: 1,
-		blocks: [
-			{
-				id: "b-3",
-				blockKey: "k-summary",
-				type: "text",
-				content:
-					"Full-stack developer with 3 years of experience building scalable web applications, from internal ERP tooling to customer-facing e-commerce systems.",
-				order: 0,
-			},
-		],
-	},
-	{
-		id: "sec-3",
-		sectionKey: "key-exp-1",
-		type: "experience_entry",
-		title: "Supreme Sprouts Ltd. — Software Developer",
-		order: 2,
-		blocks: [
-			{
-				id: "b-4",
-				blockKey: "k-exp1-date",
-				type: "date_range",
-				content: "January 2023 - January 2026",
-				order: 0,
-			},
-			{
-				id: "b-5",
-				blockKey: "k-exp1-b1",
-				type: "bullet",
-				content:
-					"Developed a full-stack system consolidating order processing, inventory tracking, payment handling, and delivery logistics.",
-				order: 1,
-			},
-			{
-				id: "b-6",
-				blockKey: "k-exp1-b2",
-				type: "bullet",
-				content:
-					"Revamped the order page from a multi-input form to a visual grid, converting 55% of users from phone orders to in-app orders.",
-				order: 2,
-			},
-			{
-				id: "b-7",
-				blockKey: "k-exp1-b3",
-				type: "bullet",
-				content:
-					"Integrated payment and inventory systems into a single app, saving the team 6+ hours per week.",
-				order: 3,
-			},
-			{
-				id: "b-8",
-				blockKey: "k-exp1-b4",
-				type: "bullet",
-				content:
-					"Built automated order reminders via cron job, reducing missed orders by 88%.",
-				order: 4,
-			},
-		],
-	},
-	{
-		id: "sec-4",
-		sectionKey: "key-exp-2",
-		type: "experience_entry",
-		title: "Trade and Track — Intern Full Stack Developer",
-		order: 3,
-		issueCount: 1,
-		blocks: [
-			{
-				id: "b-9",
-				blockKey: "k-exp2-date",
-				type: "date_range",
-				content: "December 2023 - February 2024",
-				order: 0,
-			},
-			{
-				id: "b-10",
-				blockKey: "k-exp2-b1",
-				type: "bullet",
-				content:
-					"Designed dark/light theme mode using MUI theme config with React.js.",
-				order: 1,
-			},
-			{
-				id: "b-11",
-				blockKey: "k-exp2-b2",
-				type: "bullet",
-				content:
-					"Built a month-view calendar using the full-calendar library, integrated with a custom trade-results API.",
-				order: 2,
-			},
-			{
-				id: "b-12",
-				blockKey: "k-exp2-b3",
-				type: "bullet",
-				content:
-					"Optimized and restructured API code with Next.js and Prisma.",
-				order: 3,
-			},
-		],
-	},
-	{
-		id: "sec-5",
-		sectionKey: "key-skills",
-		type: "skills",
-		title: "Skills",
-		order: 4,
-		blocks: [
-			{
-				id: "b-13",
-				blockKey: "k-skills",
-				type: "text",
-				content:
-					"React, TypeScript, Node.js, Next.js, Prisma, PostgreSQL, Supabase, PocketBase",
-				order: 0,
-			},
-		],
-	},
-]
-
 const mockScores = {
 	original: 61,
 	tailored: 84,
@@ -246,19 +75,15 @@ const mockJobMatch = {
 	keywordsMissing: ["GraphQL", "AWS", "CI/CD"],
 }
 
-function sortSections(sections: MockSection[]) {
-	return [...sections].sort((a, b) => a.order - b.order)
-}
-
-function sectionIcon(type: MockSection["type"]) {
+function sectionIcon(type: AppResumeSectionType) {
 	switch (type) {
 		case "header":
 			return UserRound
 		case "summary":
 			return FileText
-		case "experience_entry":
+		case "experience":
 			return Briefcase
-		case "education_entry":
+		case "education":
 			return GraduationCap
 		case "skills":
 			return Wrench
@@ -268,6 +93,9 @@ function sectionIcon(type: MockSection["type"]) {
 }
 
 interface ResumeTabProps {
+	appResume: AppResume | null
+	appResumeSections: AppResumeSection[]
+	appResumeBlocks: AppResumeBlock[]
 	form: ApplicationDetailForm
 	status: ApplicationStatus
 	createdAt: string
@@ -286,6 +114,9 @@ interface ResumeTabProps {
 }
 
 export function ResumeTab({
+	appResume,
+	appResumeSections,
+	appResumeBlocks,
 	form,
 	status,
 	createdAt,
@@ -299,12 +130,26 @@ export function ResumeTab({
 	onGenerate,
 	hasGenerated,
 }: ResumeTabProps) {
+	void appResumeBlocks
+	const seedSections =
+		appResume?.sections?.length
+			? appResume.sections
+			: appResumeSections.length > 0
+				? appResumeSections
+				: mockAppResume.sections
+
 	const [sections, setSections] = useState(() =>
-		sortSections(structuredClone(mockOriginalResume)),
+		sortSections(structuredClone(seedSections)),
 	)
-	const [expandedId, setExpandedId] = useState<string | null>("sec-1")
-	const [activeSectionId, setActiveSectionId] = useState("sec-1")
+	const [expandedId, setExpandedId] = useState<string | null>(
+		seedSections[0]?.id ?? null,
+	)
+	const [activeSectionId, setActiveSectionId] = useState(
+		seedSections[0]?.id ?? "",
+	)
 	const [editingBlockId, setEditingBlockId] = useState<string | null>(null)
+	const [editingDraft, setEditingDraft] = useState("")
+	const [editingFormData, setEditingFormData] = useState<Record<string, unknown> | null>(null)
 	const [keywordsOpen, setKeywordsOpen] = useState(true)
 	const [contentOpen, setContentOpen] = useState(true)
 	const [isEditingJob, setIsEditingJob] = useState(
@@ -332,15 +177,92 @@ export function ResumeTab({
 		}
 	}
 
-	function updateBlockContent(blockId: string, content: string) {
+	function updateBlock(nextBlock: AppResumeBlock) {
 		setSections((prev) =>
 			prev.map((section) => ({
 				...section,
 				blocks: section.blocks.map((block) =>
-					block.id === blockId ? { ...block, content } : block,
+					block.id === nextBlock.id ? nextBlock : block,
 				),
 			})),
 		)
+	}
+
+	function handleStartEditBlock(block: AppResumeBlock) {
+		setEditingBlockId(block.id)
+		setEditingDraft(getEditableText(block))
+		setEditingFormData(
+			typeof block.content_json === "object" && block.content_json
+				? structuredClone(block.content_json as Record<string, unknown>)
+				: null,
+		)
+	}
+
+	function handleCancelEditBlock() {
+		setEditingBlockId(null)
+		setEditingDraft("")
+		setEditingFormData(null)
+	}
+
+	function updateEditingField(field: string, value: unknown) {
+		setEditingFormData((prev) => ({
+			...(prev ?? {}),
+			[field]: value,
+		}))
+	}
+
+	function handleApplyEditBlock(block: AppResumeBlock) {
+		if (
+			(block.block_type === "job_entry" ||
+				block.block_type === "education_entry" ||
+				block.block_type === "skill_entry" ||
+				block.block_type === "project_entry") &&
+			editingFormData
+		) {
+			const nextContent =
+				block.block_type === "job_entry"
+					? {
+							title: stringValue(editingFormData.title),
+							company: stringValue(editingFormData.company),
+							start_date: nullableStringValue(editingFormData.start_date),
+							end_date: nullableStringValue(editingFormData.end_date),
+							description: stringListValue(editingFormData.description),
+						}
+					: block.block_type === "education_entry"
+						? {
+								school: stringValue(editingFormData.school),
+								degree: stringValue(editingFormData.degree),
+								start_date: nullableStringValue(editingFormData.start_date),
+								end_date: nullableStringValue(editingFormData.end_date),
+							}
+						: block.block_type === "skill_entry"
+							? {
+									name: stringValue(editingFormData.name),
+									categoryId: numberValue(editingFormData.categoryId),
+									categoryName: stringValue(editingFormData.categoryName),
+								}
+							: {
+									name: stringValue(editingFormData.name),
+									description: stringListValue(editingFormData.description),
+								}
+
+			updateBlock({
+				...block,
+				content_json: nextContent,
+			})
+			setEditingBlockId(null)
+			setEditingDraft("")
+			setEditingFormData(null)
+			return
+		}
+
+		updateBlock({
+			...block,
+			content_json: applyEditableText(block, editingDraft),
+		})
+		setEditingBlockId(null)
+		setEditingDraft("")
+		setEditingFormData(null)
 	}
 
 	function handleSectionClick(sectionId: string) {
@@ -367,25 +289,25 @@ export function ResumeTab({
 			const next = [...ordered]
 			const [moved] = next.splice(from, 1)
 			next.splice(to, 0, moved)
-			return next.map((section, index) => ({ ...section, order: index }))
+			return next.map((section, index) => ({ ...section, sort_key: index }))
 		})
 		setDragId(null)
 	}
 
 	return (
-		<div className="flex min-h-0 flex-1 flex-col xl:grid xl:grid-cols-[minmax(0,240px)_minmax(0,1fr)_minmax(0,260px)]">
-			<aside className="max-h-52 shrink-0 overflow-y-auto border-b border-neutral-200 bg-white xl:max-h-none xl:overflow-visible xl:border-b-0 xl:border-r">
+		<div className="flex min-h-0 flex-1 flex-col xl:grid xl:grid-cols-[minmax(0,460px)_minmax(0,1fr)_minmax(0,260px)]">
+			<aside className="max-h-72 shrink-0 overflow-y-auto border-b border-neutral-200 bg-white xl:max-h-none xl:overflow-y-auto xl:border-b-0 xl:border-r">
 				<div className="border-b border-neutral-100 px-4 py-3">
 					<p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
 						Sections
 					</p>
 				</div>
-				<div className="space-y-1 p-2">
+				<div className="space-y-2 p-3">
 					{sortSections(sections).map((section) => {
-						const Icon = sectionIcon(section.type)
+						const Icon = sectionIcon(section.section_type)
 						const expanded = expandedId === section.id
 						return (
-							<div key={section.id}>
+							<div key={section.id} className="rounded-xl border border-neutral-200/80">
 								<div
 									draggable
 									onDragStart={() => handleDragStart(section.id)}
@@ -415,7 +337,7 @@ export function ResumeTab({
 											aria-hidden
 										/>
 										<span className="truncate text-sm font-medium text-neutral-800">
-											{section.title}
+											{section.display_name}
 										</span>
 										{section.issueCount ? (
 											<span className="inline-flex items-center gap-0.5 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
@@ -431,17 +353,191 @@ export function ResumeTab({
 									)}
 								</div>
 								{expanded ? (
-									<div className="ml-8 space-y-1 py-1 pr-2">
-										{section.blocks
-											.sort((a, b) => a.order - b.order)
-											.map((block) => (
-												<p
+									<div className="space-y-2 border-t border-neutral-100 px-3 pb-3 pt-2">
+										{sortBlocks(section.blocks).map((block) => {
+											const isEditing = editingBlockId === block.id
+											const formData = editingFormData ?? {}
+											return (
+												<div
 													key={block.id}
-													className="truncate text-xs text-neutral-500"
+													className={cn(
+														"rounded-lg border p-2 transition-colors",
+														isEditing
+															? "border-primary/40 bg-primary/5"
+															: "border-neutral-200 bg-white",
+													)}
 												>
-													{block.content || `(empty ${block.type})`}
-												</p>
-											))}
+													<div className="mb-1 flex items-center justify-between gap-2">
+														<p className="truncate text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+															{block.block_type.replaceAll("_", " ")}
+														</p>
+														<Button
+															type="button"
+															size="sm"
+															variant={isEditing ? "default" : "ghost"}
+															className="h-7 gap-1.5 px-2 text-xs"
+															onClick={() => handleStartEditBlock(block)}
+														>
+															<Pencil className="size-3.5" aria-hidden />
+															Edit
+														</Button>
+													</div>
+													{isEditing ? (
+														<div className="space-y-2">
+															{block.block_type === "job_entry" ? (
+																<div className="space-y-2">
+																	<Input
+																		value={stringValue(formData.title)}
+																		onChange={(event) => updateEditingField("title", event.target.value)}
+																		placeholder="Job title"
+																		className="h-9"
+																	/>
+																	<Input
+																		value={stringValue(formData.company)}
+																		onChange={(event) => updateEditingField("company", event.target.value)}
+																		placeholder="Company"
+																		className="h-9"
+																	/>
+																	<div className="grid grid-cols-2 gap-2">
+																		<Input
+																			type="date"
+																			value={stringValue(formData.start_date)}
+																			onChange={(event) =>
+																				updateEditingField("start_date", event.target.value)
+																			}
+																			className="h-9"
+																		/>
+																		<Input
+																			type="date"
+																			value={stringValue(formData.end_date)}
+																			onChange={(event) =>
+																				updateEditingField("end_date", event.target.value)
+																			}
+																			className="h-9"
+																		/>
+																	</div>
+																	<Textarea
+																		value={stringListValue(formData.description).join("\n")}
+																		onChange={(event) =>
+																			updateEditingField("description", event.target.value)
+																		}
+																		placeholder="One bullet per line"
+																		className="min-h-[110px] text-sm text-neutral-900"
+																	/>
+																</div>
+															) : block.block_type === "education_entry" ? (
+																<div className="space-y-2">
+																	<Input
+																		value={stringValue(formData.degree)}
+																		onChange={(event) => updateEditingField("degree", event.target.value)}
+																		placeholder="Degree"
+																		className="h-9"
+																	/>
+																	<Input
+																		value={stringValue(formData.school)}
+																		onChange={(event) => updateEditingField("school", event.target.value)}
+																		placeholder="School"
+																		className="h-9"
+																	/>
+																	<div className="grid grid-cols-2 gap-2">
+																		<Input
+																			type="date"
+																			value={stringValue(formData.start_date)}
+																			onChange={(event) =>
+																				updateEditingField("start_date", event.target.value)
+																			}
+																			className="h-9"
+																		/>
+																		<Input
+																			type="date"
+																			value={stringValue(formData.end_date)}
+																			onChange={(event) =>
+																				updateEditingField("end_date", event.target.value)
+																			}
+																			className="h-9"
+																		/>
+																	</div>
+																</div>
+															) : block.block_type === "skill_entry" ? (
+																<div className="space-y-2">
+																	<Input
+																		value={stringValue(formData.name)}
+																		onChange={(event) => updateEditingField("name", event.target.value)}
+																		placeholder="Skill name"
+																		className="h-9"
+																	/>
+																	<div className="grid grid-cols-2 gap-2">
+																		<Input
+																			type="number"
+																			value={String(numberValue(formData.categoryId))}
+																			onChange={(event) =>
+																				updateEditingField("categoryId", Number(event.target.value))
+																			}
+																			placeholder="Category ID"
+																			className="h-9"
+																		/>
+																		<Input
+																			value={stringValue(formData.categoryName)}
+																			onChange={(event) =>
+																				updateEditingField("categoryName", event.target.value)
+																			}
+																			placeholder="Category name"
+																			className="h-9"
+																		/>
+																	</div>
+																</div>
+															) : block.block_type === "project_entry" ? (
+																<div className="space-y-2">
+																	<Input
+																		value={stringValue(formData.name)}
+																		onChange={(event) => updateEditingField("name", event.target.value)}
+																		placeholder="Project name"
+																		className="h-9"
+																	/>
+																	<Textarea
+																		value={stringListValue(formData.description).join("\n")}
+																		onChange={(event) =>
+																			updateEditingField("description", event.target.value)
+																		}
+																		placeholder="One bullet per line"
+																		className="min-h-[110px] text-sm text-neutral-900"
+																	/>
+																</div>
+															) : (
+																<Textarea
+																	value={editingDraft}
+																	onChange={(event) => setEditingDraft(event.target.value)}
+																	className="min-h-[120px] text-sm text-neutral-900"
+																/>
+															)}
+															<div className="flex items-center gap-2">
+																<Button
+																	type="button"
+																	size="sm"
+																	className="gap-1.5"
+																	onClick={() => handleApplyEditBlock(block)}
+																>
+																	<Save className="size-3.5" aria-hidden />
+																	Apply
+																</Button>
+																<Button
+																	type="button"
+																	size="sm"
+																	variant="outline"
+																	onClick={handleCancelEditBlock}
+																>
+																	Cancel
+																</Button>
+															</div>
+														</div>
+													) : (
+														<p className="line-clamp-2 text-xs leading-relaxed text-neutral-600">
+															{getBlockPreviewText(block)}
+														</p>
+													)}
+												</div>
+											)
+										})}
 									</div>
 								) : null}
 							</div>
@@ -458,8 +554,8 @@ export function ResumeTab({
 			</aside>
 
 			<section className="relative flex min-h-[min(480px,60dvh)] min-w-0 flex-1 flex-col bg-neutral-100/90 xl:min-h-0">
-				<div className="flex-1 overflow-y-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
-					<article className="mx-auto min-h-[640px] w-full max-w-[720px] rounded-sm bg-white px-6 py-8 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_40px_rgba(0,0,0,0.08)] sm:px-8 sm:py-10 lg:px-10">
+				<div className="flex-1 overflow-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
+					<article className="mx-auto h-[1056px] w-[816px] shrink-0 overflow-hidden rounded-sm bg-white px-10 py-10 shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_40px_rgba(0,0,0,0.08)]">
 						{sortSections(sections).map((section) => (
 							<div
 								key={section.id}
@@ -472,27 +568,22 @@ export function ResumeTab({
 										"ring-2 ring-primary/20 ring-offset-2",
 								)}
 							>
-								{section.type !== "header" ? (
+								{section.section_type !== "header" ? (
 									<h2 className="mb-2 border-b border-neutral-300 pb-1 text-[11px] font-bold uppercase tracking-[0.08em] text-neutral-700">
-										{section.title}
+										{section.display_name}
 									</h2>
 								) : null}
-								{section.blocks
-									.sort((a, b) => a.order - b.order)
-									.map((block) => (
-										<EditableBlock
-											key={block.id}
-											block={block}
-											isName={section.type === "header" && block.type === "heading"}
-											editing={editingBlockId === block.id}
-											onStartEdit={() => setEditingBlockId(block.id)}
-											onCommit={(content) => {
-												updateBlockContent(block.id, content)
-												setEditingBlockId(null)
-											}}
-											onCancel={() => setEditingBlockId(null)}
-										/>
-									))}
+								{sortBlocks(section.blocks).map((block) => (
+									<ReadOnlyBlockPreview
+										key={block.id}
+										block={block}
+										isName={
+											section.section_type === "header" &&
+											block.block_type === "rich_text" &&
+											block.sort_key === 0
+										}
+									/>
+								))}
 							</div>
 						))}
 					</article>
@@ -785,6 +876,7 @@ export function ResumeTab({
 									</li>
 								</ul>
 							</AccordionPanel>
+
 						</>
 					)}
 				</div>
@@ -793,168 +885,149 @@ export function ResumeTab({
 	)
 }
 
-function ScoreGauge({ score, issues }: { score: number; issues: number }) {
-	const radius = 54
-	const circumference = 2 * Math.PI * radius
-	const progress = Math.min(100, Math.max(0, score)) / 100
-	const offset = circumference * (1 - progress)
-
-	return (
-		<div className="rounded-xl border border-neutral-200 bg-neutral-50/80 p-4 text-center">
-			<p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-				Resume Score
-			</p>
-			<div className="relative mx-auto mt-3 size-32">
-				<svg viewBox="0 0 128 128" className="size-full -rotate-90">
-					<circle
-						cx="64"
-						cy="64"
-						r={radius}
-						fill="none"
-						stroke="#e5e7eb"
-						strokeWidth="10"
-					/>
-					<circle
-						cx="64"
-						cy="64"
-						r={radius}
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="10"
-						strokeLinecap="round"
-						strokeDasharray={circumference}
-						strokeDashoffset={offset}
-						className="text-primary transition-[stroke-dashoffset] duration-500"
-					/>
-				</svg>
-				<div className="absolute inset-0 flex flex-col items-center justify-center">
-					<p className="font-display text-3xl font-semibold tabular-nums text-neutral-900">
-						{score}
-					</p>
-					<p className="text-[11px] text-neutral-500">/ 100</p>
-				</div>
-			</div>
-			<p className="mt-2 text-sm text-neutral-600">
-				{issues} issue{issues === 1 ? "" : "s"} found
-			</p>
-		</div>
-	)
+function stringValue(value: unknown): string {
+	if (typeof value === "string") return value
+	return ""
 }
 
-function AccordionPanel({
-	title,
-	count,
-	open,
-	onToggle,
-	children,
-}: {
-	title: string
-	count: number
-	open: boolean
-	onToggle: () => void
-	children: ReactNode
-}) {
-	return (
-		<div className="rounded-xl border border-neutral-200">
-			<button
-				type="button"
-				className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left"
-				onClick={onToggle}
-			>
-				<span className="text-sm font-semibold text-neutral-800">{title}</span>
-				<span className="flex items-center gap-2">
-					<span className="rounded-full bg-neutral-100 px-1.5 py-0.5 text-[10px] font-bold text-neutral-600">
-						{count}
-					</span>
-					{open ? (
-						<ChevronDown className="size-4 text-neutral-400" />
-					) : (
-						<ChevronRight className="size-4 text-neutral-400" />
-					)}
-				</span>
-			</button>
-			{open ? <div className="border-t border-neutral-100 px-3 py-3">{children}</div> : null}
-		</div>
-	)
+function nullableStringValue(value: unknown): string | null {
+	const next = stringValue(value).trim()
+	return next.length > 0 ? next : null
 }
 
-function EditableBlock({
+function numberValue(value: unknown): number {
+	if (typeof value === "number" && Number.isFinite(value)) return value
+	const parsed = Number(value)
+	return Number.isFinite(parsed) ? parsed : 0
+}
+
+function stringListValue(value: unknown): string[] {
+	if (Array.isArray(value)) {
+		return value
+			.map((item) => (typeof item === "string" ? item.trim() : ""))
+			.filter(Boolean)
+	}
+	if (typeof value === "string") {
+		return value
+			.split("\n")
+			.map((item) => item.trim())
+			.map((item) => item.replace(/^•\s*/, ""))
+			.filter(Boolean)
+	}
+	return []
+}
+
+function ReadOnlyBlockPreview({
 	block,
 	isName,
-	editing,
-	onStartEdit,
-	onCommit,
-	onCancel,
 }: {
-	block: MockBlock
+	block: AppResumeBlock
 	isName?: boolean
-	editing: boolean
-	onStartEdit: () => void
-	onCommit: (content: string) => void
-	onCancel: () => void
 }) {
-	const [draft, setDraft] = useState(block.content)
+	const content = block.content_json
+	const fontSize = block.style_json.fontSize
+	const isBold = block.style_json.bold
 
-	useEffect(() => {
-		if (editing) {
-			setDraft(block.content)
-		}
-	}, [editing, block.content]) // eslint-disable-line react-hooks/exhaustive-deps
-
-	if (!editing) {
-		if (block.type === "bullet") {
-			return (
-				<button
-					type="button"
-					className="mb-1 flex w-full gap-2 rounded px-1 py-0.5 text-left text-[13px] leading-relaxed text-neutral-800 hover:bg-neutral-50"
-					onClick={onStartEdit}
-				>
-					<span aria-hidden>•</span>
-					<span>{block.content}</span>
-				</button>
-			)
-		}
+	if (block.block_type === "rich_text" && "text" in content) {
 		return (
-			<button
-				type="button"
+			<p
 				className={cn(
-					"mb-1 block w-full rounded px-1 py-0.5 text-left hover:bg-neutral-50",
-					isName
-						? "font-display text-3xl font-semibold tracking-tight text-neutral-900"
-						: block.type === "contact_line" || block.type === "date_range"
-							? "text-sm text-neutral-600"
-							: "text-[13.5px] leading-relaxed text-neutral-800",
+					"mb-1 leading-relaxed text-neutral-800",
+					isName &&
+						"font-display text-3xl font-semibold tracking-tight text-neutral-900",
+					!isName && isBold && "font-semibold",
+					!isName && fontSize && fontSize <= 12 && "text-sm text-neutral-700",
 				)}
-				onClick={onStartEdit}
 			>
-				{block.content}
-			</button>
+				{content.text}
+			</p>
+		)
+	}
+
+	if (block.block_type === "group_text" && "texts" in content) {
+		return (
+			<p className="mb-1 text-sm text-neutral-600">
+				{content.texts.map((item) => item.text).join(" ")}
+			</p>
+		)
+	}
+
+	if (block.block_type === "job_entry" && "title" in content) {
+		return (
+			<div className="mb-2 space-y-1">
+				<div className="flex flex-wrap items-baseline justify-between gap-2">
+					<p className="text-sm font-semibold text-neutral-900">
+						{content.title}
+						<span className="font-normal text-neutral-600">
+							{" "}
+							— {content.company}
+						</span>
+					</p>
+					<p className="text-xs text-neutral-500">
+						{formatDateRange(content.start_date, content.end_date)}
+					</p>
+				</div>
+				<ul className="space-y-0.5">
+					{content.description.map((line) => (
+						<li
+							key={line}
+							className="flex gap-2 text-[13px] leading-relaxed text-neutral-800"
+						>
+							<span aria-hidden>•</span>
+							<span>{line}</span>
+						</li>
+					))}
+				</ul>
+			</div>
+		)
+	}
+
+	if (block.block_type === "education_entry" && "school" in content) {
+		return (
+			<div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+				<div>
+					<p className="text-sm font-semibold text-neutral-900">
+						{content.degree}
+					</p>
+					<p className="text-sm text-neutral-600">{content.school}</p>
+				</div>
+				<p className="text-xs text-neutral-500">
+					{formatDateRange(content.start_date, content.end_date)}
+				</p>
+			</div>
+		)
+	}
+
+	if (block.block_type === "project_entry" && "name" in content) {
+		return (
+			<div className="mb-2 space-y-1">
+				<p className="text-sm font-semibold text-neutral-900">{content.name}</p>
+				{"description" in content ? (
+					<ul className="space-y-0.5">
+						{content.description.map((line) => (
+							<li
+								key={line}
+								className="flex gap-2 text-[13px] leading-relaxed text-neutral-800"
+							>
+								<span aria-hidden>•</span>
+								<span>{line}</span>
+							</li>
+						))}
+					</ul>
+				) : null}
+			</div>
+		)
+	}
+
+	if (block.block_type === "skill_entry" && "name" in content) {
+		return (
+			<span className="mr-1.5 inline-flex rounded-md bg-neutral-100 px-2 py-0.5 text-xs font-medium text-neutral-800">
+				{content.name}
+			</span>
 		)
 	}
 
 	return (
-		<textarea
-			autoFocus
-			value={draft}
-			onChange={(event) => setDraft(event.target.value)}
-			onBlur={() => onCommit(draft)}
-			onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => {
-				if (event.key === "Escape") {
-					event.preventDefault()
-					setDraft(block.content)
-					onCancel()
-				}
-				if (event.key === "Enter" && !event.shiftKey && block.type !== "text") {
-					event.preventDefault()
-					onCommit(draft)
-				}
-			}}
-			className={cn(
-				"mb-1 w-full resize-y rounded border border-primary/40 bg-white px-2 py-1 outline-none ring-2 ring-primary/15",
-				isName
-					? "min-h-12 font-display text-3xl font-semibold"
-					: "min-h-16 text-sm",
-			)}
-		/>
+		<p className="mb-1 text-sm text-neutral-500">{getBlockPreviewText(block)}</p>
 	)
 }

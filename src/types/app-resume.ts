@@ -1,71 +1,102 @@
-export type AppResumeVersion = "original" | "tailored"
+export type AppResumeStatus = "draft" | "downloaded"
 
 export type AppResumeSectionType =
 	| "header"
 	| "summary"
-	| "experience_entry"
-	| "education_entry"
+	| "experience"
+	| "education"
 	| "skills"
 	| "projects"
 	| "custom"
 
 export type AppResumeBlockType =
-	| "heading"
-	| "subheading"
-	| "bullet"
-	| "text"
-	| "date_range"
-	| "contact_line"
+	| "rich_text"
+	| "group_text"
+	| "job_entry"
+	| "project_entry"
+	| "education_entry"
+	| "skill_entry"
+
+export interface AppResumeBlockStyle {
+	bold?: boolean
+	color?: string
+	fontSize?: number
+}
+
+export interface GroupTextItem {
+	text: string
+	style_json?: AppResumeBlockStyle
+}
+
+export type AppResumeBlockContent =
+	| { text: string }
+	| { texts: GroupTextItem[] }
+	| {
+			title: string
+			company: string
+			start_date: string | null
+			end_date: string | null
+			description: string[]
+	  }
+	| {
+			name: string
+			description: string[]
+	  }
+	| {
+			school: string
+			degree: string
+			start_date: string | null
+			end_date: string | null
+	  }
+	| {
+			name: string
+			categoryId: number
+			categoryName: string
+	  }
 
 export interface AppResumeBlock {
 	id: string
-	app_resume_section_id: string
-	block_key: string
-	type: AppResumeBlockType
-	content: string
-	order: number
-	is_new: boolean
-	is_removed: boolean
-	is_hidden: boolean
+	app_resume_id: string
+	section_id: string
+	block_type: AppResumeBlockType
+	sort_key: number
+	content_json: AppResumeBlockContent
+	style_json: AppResumeBlockStyle
 	created_at: string
 	updated_at: string
 }
 
 export interface AppResumeSection {
-	id?: string
+	id: string
 	app_resume_id: string
-	section_type: AppResumeSectionType
+	generated_resume_id: string | null
 	display_name: string
+	section_type: AppResumeSectionType
 	sort_key: number
-	created_at?: string
-	updated_at?: string
-	blocks?: AppResumeBlock[]
+	style_json: Record<string, unknown>
+	created_at: string
+	updated_at: string
+	blocks: AppResumeBlock[]
+	issueCount?: number
 }
 
 export interface AppResume {
 	id: string
 	application_id: string
-	version: AppResumeVersion
-	score: number | null
+	user_id: string
+	status: AppResumeStatus
 	created_at: string
 	updated_at: string
 	sections: AppResumeSection[]
 }
 
 export interface TailoredBlockPayload {
-	block_key: string
-	section_key: string
-	type: AppResumeBlockType
-	content: string
-	order: number
+	id: string
+	section_id: string
+	block_type: AppResumeBlockType
+	sort_key: number
+	content_json: AppResumeBlockContent
+	style_json: AppResumeBlockStyle
 	is_new?: boolean
 	is_removed?: boolean
-	section_type: AppResumeSectionType
-	section_title?: string | null
-	section_order?: number
-}
-
-export interface TailorAppResumeResponse {
-	score: number
-	blocks: TailoredBlockPayload[]
 }
