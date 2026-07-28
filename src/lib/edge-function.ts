@@ -19,7 +19,6 @@ export async function invokeEdgeFunction<T = unknown>(
 		}
 	}
 
-	console.log("body", {body, env: env.xsecretkey})
 	try {
 		const { data } = await supabase.functions.invoke<T>(functionName, {
 			body: body ?? {},
@@ -27,8 +26,6 @@ export async function invokeEdgeFunction<T = unknown>(
 				"X-Secret-Key": env.xsecretkey,
 			}
 		})
-
-		console.log("data", data)
 
 		return { ok: true, data: data as T }
 	} catch (err) {

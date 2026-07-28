@@ -175,7 +175,6 @@ export async function uploadResume(
           },
         });
 
-      console.log("ocrResult", { ocrResult, ocrError });
       if (ocrError) {
         console.error("[Resume] Vision OCR error:", ocrError);
         return { resume: resumeRow, error: ocrError.message };

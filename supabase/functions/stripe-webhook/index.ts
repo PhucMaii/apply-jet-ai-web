@@ -129,9 +129,6 @@ Deno.serve(async (req) => {
             ? session.subscription
             : session.subscription?.id;
 
-        console.log(session, "session");
-        console.log(subId, "subId");
-
         if (!userId || !customerId || !subId) {
           console.error("checkout.session.completed missing ids", {
             userId: !!userId,

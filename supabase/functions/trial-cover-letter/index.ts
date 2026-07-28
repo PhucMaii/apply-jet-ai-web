@@ -5,8 +5,6 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
 
-console.log("Hello from Functions!")
-
 function buildCoverLetterPromptForTrial({resumeText, jdText, companyName, roleTitle, hiringManager}): string {
   return`You are an expert cover letter writer who specializes in ATS-optimized letters that also feel genuinely human and compelling. Your goal is to write a letter that passes ATS screening AND moves a hiring manager — not just a keyword-stuffed document.
 

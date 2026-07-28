@@ -705,9 +705,6 @@ Deno.serve(async (req) => {
 
   const { jdText, resumeText, visitorAnonId } = await req.json();
 
-  console.log("jdText", jdText);
-  console.log("resumeText", resumeText);
-  console.log("visitorAnonId", visitorAnonId);
   if (!jdText || !resumeText || !visitorAnonId) {
     console.error("Missing required fields");
     return jsonResponse({ error: "Missing required fields" }, 400);
@@ -796,7 +793,6 @@ Deno.serve(async (req) => {
   }
 
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-  console.log("text", text);
   if (!text) {
     console.error("Empty response from Gemini");
     return jsonResponse({ error: "Empty response from Gemini" }, 502);
@@ -825,7 +821,6 @@ Deno.serve(async (req) => {
     job_title: string;
   };
 
-  console.log(resume);
   if (!validateResume(resume)) {
     console.error(
       "Invalid resume in response: missing header.name or sections",

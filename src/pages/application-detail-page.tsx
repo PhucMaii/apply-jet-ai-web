@@ -11,6 +11,7 @@ export function ApplicationDetailPage() {
 	const { applicationId } = useParams<{ applicationId: string }>()
 	const {
 		isLoadingApplication,
+		isNotFound,
 		record,
 		form,
 		isRefetchingApplication,
@@ -19,7 +20,6 @@ export function ApplicationDetailPage() {
 		error,
 		notice,
 		appResume,
-
 		refetchApplication,
 		saveApplication,
 		updateStatus,
@@ -28,6 +28,56 @@ export function ApplicationDetailPage() {
 	} = useApplicationDetail(applicationId)
 
 	const { deleteApplication, deletingId } = useApplications()
+
+	if (isLoadingApplication) {
+		return (
+			<div className="flex h-dvh flex-col overflow-hidden bg-neutral-50">
+				<div
+					className="flex flex-1 flex-col items-center justify-center gap-3"
+					aria-busy="true"
+				>
+					<Loader2
+						className="size-8 animate-spin text-primary"
+						aria-hidden
+					/>
+					<span className={APPLICATIONS_THEME.muted}>
+						Loading application…
+					</span>
+				</div>
+			</div>
+		)
+	}
+
+	if (isNotFound || !record || !form) {
+		return (
+			<div className="flex h-dvh flex-col overflow-hidden bg-neutral-50">
+				{error && !isNotFound ? (
+					<div className="shrink-0 border-b border-red-200 bg-red-50 px-4 py-2">
+						<p className="text-sm text-red-700" role="alert">
+							{error}
+						</p>
+					</div>
+				) : null}
+				<div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
+					<p className={APPLICATIONS_THEME.muted}>
+						{isNotFound || !record
+							? "Application not found."
+							: "No data found."}
+					</p>
+					<Link
+						to={ROUTES.applications}
+						className={cn(
+							"inline-flex items-center gap-1.5 text-sm font-medium",
+							APPLICATIONS_THEME.link,
+						)}
+					>
+						<ArrowLeft className="size-4" aria-hidden />
+						Back to applications
+					</Link>
+				</div>
+			</div>
+		)
+	}
 
 	return (
 		<div className="flex h-dvh flex-col overflow-hidden bg-neutral-50">
@@ -46,59 +96,26 @@ export function ApplicationDetailPage() {
 				</div>
 			) : null}
 
-			{isLoadingApplication || !record || !form ? (
-				<div
-					className="flex flex-1 flex-col items-center justify-center gap-3"
-					aria-busy="true"
-				>
-					<Loader2
-						className="size-8 animate-spin text-primary"
-						aria-hidden
-					/>
-					<span className={APPLICATIONS_THEME.muted}>
-						Loading application…
-					</span>
-				</div>
-			) : (
-				<main className="flex min-h-0 flex-1 flex-col">
-					<ApplicationDetailDocuments
-						form={form}
-						status={resolveStatus(record.status)}
-						createdAt={record.created_at}
-						generatedResume={record.generatedResume}
-						generatedCoverLetter={record.generatedCoverLetter}
-						recruiterEmails={record.recruiterEmails}
-						refreshingDocuments={isRefetchingApplication}
-						savingDetails={savingDetails}
-						updatingStatus={updatingStatus}
-						isDeleting={deletingId === record.id}
-						onPatchForm={patchForm}
-						onSaveApplication={() => void saveApplication()}
-						onStatusChange={(next) => void updateStatus(next)}
-						onDelete={deleteApplication}
-						refetchApplication={() => void refetchApplication()}
-						appResume={appResume}
-					/>
-				</main>
-			)}
-
-			{!isLoadingApplication && !record ? (
-				<div className="flex flex-1 flex-col items-center justify-center gap-4 px-4">
-					<p className={APPLICATIONS_THEME.muted}>
-						Application not found.
-					</p>
-					<Link
-						to={ROUTES.applications}
-						className={cn(
-							"inline-flex items-center gap-1.5 text-sm font-medium",
-							APPLICATIONS_THEME.link,
-						)}
-					>
-						<ArrowLeft className="size-4" aria-hidden />
-						Back to applications
-					</Link>
-				</div>
-			) : null}
+			<main className="flex min-h-0 flex-1 flex-col">
+				<ApplicationDetailDocuments
+					form={form}
+					status={resolveStatus(record.status)}
+					createdAt={record.created_at}
+					generatedResume={record.generatedResume}
+					generatedCoverLetter={record.generatedCoverLetter}
+					recruiterEmails={record.recruiterEmails}
+					refreshingDocuments={isRefetchingApplication}
+					savingDetails={savingDetails}
+					updatingStatus={updatingStatus}
+					isDeleting={deletingId === record.id}
+					onPatchForm={patchForm}
+					onSaveApplication={() => void saveApplication()}
+					onStatusChange={(next) => void updateStatus(next)}
+					onDelete={deleteApplication}
+					refetchApplication={() => void refetchApplication()}
+					appResume={appResume}
+				/>
+			</main>
 		</div>
 	)
 }

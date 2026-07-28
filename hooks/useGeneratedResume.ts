@@ -31,7 +31,6 @@ export const useGeneratedResume = () => {
         download: downloadName,
       });
 
-    console.log("data", data);
     if (error) {
       throw new Error(error.message || "Failed to get download URL");
     }

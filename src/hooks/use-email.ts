@@ -21,7 +21,6 @@ const useEmail = () => {
                 "X-Secret-Key": env.xsecretkey!,
             },
         });
-        console.log(response, 'response');
         return response;
     };
 

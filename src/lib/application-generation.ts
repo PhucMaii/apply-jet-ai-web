@@ -133,7 +133,6 @@ export function extractSkillsFromJobDescription(
 }
 
 export async function invokeGenerateResume(payload: GenerateResumePayload) {
-  console.log("invokeGenerateResume", payload);
   if (!payload.jdText) {
     throw new Error("Please enter the job description");
   }

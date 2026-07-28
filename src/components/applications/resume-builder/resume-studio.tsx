@@ -139,6 +139,7 @@ export function ResumeStudio({
 
 			{!isGenerating && view === "editor" ? (
 				<ResumeTab
+					key={appResume?.id ?? "empty-resume"}
 					form={form}
 					status={status}
 					createdAt={createdAt}
@@ -150,12 +151,13 @@ export function ResumeStudio({
 					onStatusChange={onStatusChange}
 					onDelete={onDelete}
 					onGenerate={handleGenerate}
-					hasGenerated={hasGenerated}
 					appResume={appResume}
 				/>
 			) : null}
 			{!isGenerating && view === "tailored" && hasGenerated ? (
 				<TailoredResumeTab
+					key={`tailored-${appResume?.id ?? "empty"}`}
+					appResume={appResume}
 					appliedBlockKeys={appliedBlockKeys}
 					onAppliedKeysChange={setAppliedBlockKeys}
 				/>

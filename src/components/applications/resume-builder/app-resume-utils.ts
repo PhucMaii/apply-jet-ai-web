@@ -149,3 +149,84 @@ function formatMonthYear(value: string | null): string {
 		year: "numeric",
 	})
 }
+
+export function stringValue(value: unknown): string {
+	if (typeof value === "string") return value
+	return ""
+}
+
+export function nullableStringValue(value: unknown): string | null {
+	const next = stringValue(value).trim()
+	return next.length > 0 ? next : null
+}
+
+export function numberValue(value: unknown): number {
+	if (typeof value === "number" && Number.isFinite(value)) return value
+	const parsed = Number(value)
+	return Number.isFinite(parsed) ? parsed : 0
+}
+
+export function stringListValue(value: unknown): string[] {
+	if (Array.isArray(value)) {
+		return value
+			.map((item) => (typeof item === "string" ? item.trim() : ""))
+			.filter(Boolean)
+	}
+	if (typeof value === "string") {
+		return value
+			.split("\n")
+			.map((item) => item.trim())
+			.map((item) => item.replace(/^•\s*/, ""))
+			.filter(Boolean)
+	}
+	return []
+}
+
+export function hasCompleteJobDetails(form: {
+	jobTitle: string
+	companyName: string
+	jobDescription: string
+}): boolean {
+	return (
+		form.jobTitle.trim().length > 0 &&
+		form.companyName.trim().length > 0 &&
+		form.jobDescription.trim().length > 0
+	)
+}
+
+export function buildBlockContentFromForm(
+	block: AppResumeBlock,
+	formData: Record<string, unknown>,
+): AppResumeBlockContent | null {
+	if (block.block_type === "job_entry") {
+		return {
+			title: stringValue(formData.title),
+			company: stringValue(formData.company),
+			start_date: nullableStringValue(formData.start_date),
+			end_date: nullableStringValue(formData.end_date),
+			description: stringListValue(formData.description),
+		}
+	}
+	if (block.block_type === "education_entry") {
+		return {
+			school: stringValue(formData.school),
+			degree: stringValue(formData.degree),
+			start_date: nullableStringValue(formData.start_date),
+			end_date: nullableStringValue(formData.end_date),
+		}
+	}
+	if (block.block_type === "skill_entry") {
+		return {
+			name: stringValue(formData.name),
+			categoryId: numberValue(formData.categoryId),
+			categoryName: stringValue(formData.categoryName),
+		}
+	}
+	if (block.block_type === "project_entry") {
+		return {
+			name: stringValue(formData.name),
+			description: stringListValue(formData.description),
+		}
+	}
+	return null
+}
