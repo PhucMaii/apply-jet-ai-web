@@ -46,8 +46,17 @@ interface ProfileAutofillWorkspaceProps {
 	removeProject: (projectId: string) => Promise<AsyncResultMsg>
 	onSaveAdditionalInfo: (additionalInfo: UserAdditionalInfoRow) => Promise<AsyncResultMsg>
 	deleteLink: (linkId: string) => Promise<AsyncResultMsg>
-	addSkill: (skill: string) => Promise<AsyncResultMsg>
+	addSkill: (
+		name: string,
+		categoryId: string | null,
+	) => Promise<AsyncResultMsg>
 	deleteSkill: (skillId: string) => Promise<AsyncResultMsg>
+	addSkillCategory: (name: string) => Promise<AsyncResultMsg>
+	renameSkillCategory: (
+		categoryId: string,
+		name: string,
+	) => Promise<AsyncResultMsg>
+	deleteSkillCategory: (categoryId: string) => Promise<AsyncResultMsg>
 	onSaveDisclosure: (disclosure: UserDisclosureRow) => Promise<AsyncResultMsg>
 	onAddLink: (link: UserLinkRow) => Promise<AsyncResultMsg>
 	onSaveLink: (link: UserLinkRow) => Promise<AsyncResultMsg>
@@ -71,6 +80,9 @@ export function ProfileAutofillWorkspace({
 	deleteLink,
 	addSkill,
 	deleteSkill,
+	addSkillCategory,
+	renameSkillCategory,
+	deleteSkillCategory,
 	onSaveDisclosure,
 	onAddLink,
 	onSaveLink,
@@ -84,6 +96,7 @@ export function ProfileAutofillWorkspace({
 
 	useEffect(() => {
 		if (!isTourActive || !activeProfileSection) return
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setProfileSection(activeProfileSection as ProfileSection)
 	}, [activeProfileSection, isTourActive])
 
@@ -225,7 +238,11 @@ export function ProfileAutofillWorkspace({
 					className="mt-6 space-y-4 focus-visible:outline-none"
 				>
 					<SkillsEditor
-						items={userProfile.skills}
+						categories={userProfile.skillCategories ?? []}
+						skills={userProfile.skills ?? []}
+						onAddCategory={addSkillCategory}
+						onRenameCategory={renameSkillCategory}
+						onDeleteCategory={deleteSkillCategory}
 						onAddSkill={addSkill}
 						onDeleteSkill={deleteSkill}
 					/>

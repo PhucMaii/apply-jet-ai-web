@@ -1,7 +1,7 @@
 import { pdfFileToBase64Images } from "@/lib/pdf-to-images";
 import { supabase } from "@/lib/supabase";
 import { env } from "./env";
-import type { UserEducationRow, UserLinkRow, UserProfileRow, UserProjectRow, UserSkillRow, UserWorkExperienceRow } from "@/types/database";
+import type { UserEducationRow, UserLinkRow, UserProfileRow, UserProjectRow, UserSkillCategoryRow, UserSkillRow, UserWorkExperienceRow } from "@/types/database";
 import { APP_RESUME_SECTION_TYPE } from "./enums/resume";
 import type { AppResumeSection } from "@/types/app-resume";
 
@@ -258,7 +258,10 @@ export const getUserProfile = async (userId: string) => {
   }
 
   // Get user skills
-  const { data: userSkills, error: userSkillsError } = await supabase.from("user_skills").select("*").eq("user_id", userId);
+  const { data: userSkills, error: userSkillsError } = await supabase
+    .from("user_skills")
+    .select("*")
+    .eq("user_id", userId);
   if (userSkillsError) {
     throw new Error("Failed to get user skills");
   }
@@ -266,7 +269,31 @@ export const getUserProfile = async (userId: string) => {
   if (!userSkillsArray) {
     throw new Error("User skills not found");
   }
+
+  // Get user skill categories
+  const { data: userSkillCategories, error: userSkillCategoriesError } =
+    await supabase
+      .from("user_skill_categories")
+      .select("*")
+      .eq("user_id", userId)
+      .order("name", { ascending: true });
+  if (userSkillCategoriesError) {
+    throw new Error("Failed to get user skill categories");
+  }
+  const userSkillCategoriesArray =
+    (userSkillCategories as UserSkillCategoryRow[] | null) ?? [];
   
+  const formattedUserSkillCategoriesArray = userSkillCategoriesArray.map((category) => ({
+    id: category.id,
+    name: category.name,
+    skills: userSkillsArray
+      .filter((skill) => skill.category_id === category.id)
+      .map((skill) => ({
+        id: skill.id,
+        name: skill.name,
+      })),
+  }));
+
   // Get user education
   const { data: userEducation, error: userEducationError } = await supabase.from("user_educations").select("*").eq("user_id", userId);
   if (userEducationError) {
@@ -283,6 +310,7 @@ export const getUserProfile = async (userId: string) => {
     userExperiencesArray,
     userProjectsArray,
     userSkillsArray,
+    userSkillCategoriesArray: formattedUserSkillCategoriesArray,
     userEducationArray,
   };
 }

@@ -43,6 +43,9 @@ export function ProfilePage() {
 		deleteLink,
 		addSkill,
 		deleteSkill,
+		addSkillCategory,
+		renameSkillCategory,
+		deleteSkillCategory,
 		onSaveDisclosure,
 		onAddLink,
 		onSaveLink,
@@ -115,6 +118,9 @@ export function ProfilePage() {
 								deleteLink={deleteLink}
 								addSkill={addSkill}
 								deleteSkill={deleteSkill}
+								addSkillCategory={addSkillCategory}
+								renameSkillCategory={renameSkillCategory}
+								deleteSkillCategory={deleteSkillCategory}
 								onSaveDisclosure={onSaveDisclosure}
 								onAddLink={onAddLink}
 								onSaveLink={onSaveLink}

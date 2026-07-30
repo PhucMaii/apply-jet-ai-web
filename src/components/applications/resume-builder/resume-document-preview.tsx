@@ -10,6 +10,7 @@ import {
 	getBlockPreviewText,
 	sortBlocks,
 	sortSections,
+	stringListValue,
 } from "@/components/applications/resume-builder/app-resume-utils"
 import type { AppResumeBlock, AppResumeSection } from "@/types/app-resume"
 import { cn } from "@/lib/utils"
@@ -223,12 +224,30 @@ function buildFlowItems(sections: AppResumeSection[]): FlowItem[] {
 		const blocks = sortBlocks(section.blocks)
 
 		if (section.section_type === "skills") {
-			items.push({
-				key: `skills-${section.id}`,
-				kind: "skills",
-				sectionId: section.id,
-				blocks,
-			})
+			const categoryBlocks = blocks.filter(
+				(block) => block.block_type === "skill_category_entry",
+			)
+			const legacySkillBlocks = blocks.filter(
+				(block) => block.block_type === "skill_entry",
+			)
+
+			for (const block of categoryBlocks) {
+				items.push({
+					key: `block-${block.id}`,
+					kind: "block",
+					sectionId: section.id,
+					block,
+				})
+			}
+
+			if (legacySkillBlocks.length > 0) {
+				items.push({
+					key: `skills-${section.id}`,
+					kind: "skills",
+					sectionId: section.id,
+					blocks: legacySkillBlocks,
+				})
+			}
 			continue
 		}
 
@@ -343,7 +362,7 @@ function ReadOnlyBlockPreview({
 					</p>
 				</div>
 				<ul className="space-y-0.5">
-					{content.description.map((line) => (
+					{stringListValue(content.description).map((line) => (
 						<li
 							key={line}
 							className="flex gap-2 text-[13px] leading-relaxed text-neutral-800"
@@ -376,20 +395,49 @@ function ReadOnlyBlockPreview({
 	if (block.block_type === "project_entry" && "name" in content) {
 		return (
 			<div className="mb-3 space-y-1">
-				<p className="text-sm font-semibold text-neutral-900">{content.name}</p>
-				{"description" in content ? (
-					<ul className="space-y-0.5">
-						{content.description.map((line) => (
-							<li
-								key={line}
-								className="flex gap-2 text-[13px] leading-relaxed text-neutral-800"
-							>
-								<span aria-hidden>•</span>
-								<span>{line}</span>
-							</li>
-						))}
-					</ul>
-				) : null}
+				<div className="flex flex-wrap items-baseline justify-between gap-2">
+					<p className="text-sm font-semibold text-neutral-900">
+						{content.name}
+					</p>
+					{"start_date" in content || "end_date" in content ? (
+						<p className="text-xs text-neutral-500">
+							{formatDateRange(
+								content.start_date ?? null,
+								content.end_date ?? null,
+							)}
+						</p>
+					) : null}
+				</div>
+				<ul className="space-y-0.5">
+					{stringListValue(content.description).map((line) => (
+						<li
+							key={line}
+							className="flex gap-2 text-[13px] leading-relaxed text-neutral-800"
+						>
+							<span aria-hidden>•</span>
+							<span>{line}</span>
+						</li>
+					))}
+				</ul>
+			</div>
+		)
+	}
+
+	if (block.block_type === "skill_category_entry" && "skills" in content) {
+		const skills = stringListValue(content.skills)
+		return (
+			<div className="mb-2.5">
+				<p className="text-[13px] leading-relaxed text-neutral-800">
+					<span className="font-semibold text-neutral-900">
+						{content.name}
+					</span>
+					{skills.length > 0 ? (
+						<>
+							<span className="font-semibold text-neutral-900">: </span>
+							<span>{skills.join(", ")}</span>
+						</>
+					) : null}
+				</p>
 			</div>
 		)
 	}

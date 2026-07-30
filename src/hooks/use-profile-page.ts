@@ -17,6 +17,7 @@ import type {
   UserLinkRow,
   UserProfileRow,
   UserProjectRow,
+  UserSkillCategoryRow,
   UserSkillRow,
   UserWorkExperienceRow,
 } from "@/types/database";
@@ -53,6 +54,7 @@ export function useProfilePage() {
       links: [],
       additionalInfo: null,
       skills: [],
+      skillCategories: [],
       resumeText: null,
     };
     try {
@@ -66,6 +68,7 @@ export function useProfilePage() {
         { data: linkRows, error: linkErr },
         { data: additionalRow, error: additionalErr },
         { data: skillRows, error: skillErr },
+        { data: skillCategoryRows, error: skillCategoryErr },
       ] = await Promise.all([
         supabase.from("users").select("*").eq("id", user.id).maybeSingle(),
         supabase
@@ -108,6 +111,11 @@ export function useProfilePage() {
           .select("*")
           .eq("user_id", user.id)
           .order("created_at", { ascending: true }),
+        supabase
+          .from("user_skill_categories")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("name", { ascending: true }),
       ]);
 
       const firstError =
@@ -119,7 +127,8 @@ export function useProfilePage() {
         disclosureErr ??
         linkErr ??
         additionalErr ??
-        skillErr;
+        skillErr ??
+        skillCategoryErr;
 
       if (firstError) {
         console.error("Something went wrong loading profile page:", firstError);
@@ -161,6 +170,8 @@ export function useProfilePage() {
       result.additionalInfo =
         formattedAdditionalInfo as UserAdditionalInfoRow | null;
       result.skills = (skillRows as UserSkillRow[] | null) ?? [];
+      result.skillCategories =
+        (skillCategoryRows as UserSkillCategoryRow[] | null) ?? [];
 
       const { data: resume, error: resumeErr } = await supabase
         .from("resumes")
@@ -574,13 +585,78 @@ export function useProfilePage() {
     [user, refetchProfile],
   );
 
+  const addSkillCategory = useCallback(
+    async (name: string): Promise<AsyncResultMsg> => {
+      if (!user)
+        return { success: false, message: "User is not authenticated" };
+
+      const { error: insErr } = await supabase
+        .from("user_skill_categories")
+        .insert({
+          user_id: user.id,
+          name: name.trim(),
+        });
+
+      if (insErr) {
+        console.error("Something went wrong adding skill category:", insErr);
+        return { success: false, message: insErr.message };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Category added successfully" };
+    },
+    [user, refetchProfile],
+  );
+
+  const renameSkillCategory = useCallback(
+    async (categoryId: string, name: string): Promise<AsyncResultMsg> => {
+      const { error: upErr } = await supabase
+        .from("user_skill_categories")
+        .update({
+          name: name.trim(),
+        })
+        .eq("id", categoryId);
+
+      if (upErr) {
+        console.error("Something went wrong renaming skill category:", upErr);
+        return { success: false, message: upErr.message };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Category renamed successfully" };
+    },
+    [refetchProfile],
+  );
+
+  const deleteSkillCategory = useCallback(
+    async (categoryId: string): Promise<AsyncResultMsg> => {
+      const { error: delErr } = await supabase
+        .from("user_skill_categories")
+        .delete()
+        .eq("id", categoryId);
+
+      if (delErr) {
+        console.error("Something went wrong deleting skill category:", delErr);
+        return { success: false, message: delErr.message };
+      }
+
+      void refetchProfile();
+      return { success: true, message: "Category deleted successfully" };
+    },
+    [refetchProfile],
+  );
+
   const addSkill = useCallback(
-    async (name: string) => {
+    async (
+      name: string,
+      categoryId: string | null,
+    ): Promise<AsyncResultMsg> => {
       if (!user)
         return { success: false, message: "User is not authenticated" };
       const { error: insErr } = await supabase.from("user_skills").insert({
         user_id: user.id,
-        name,
+        name: name.trim(),
+        category_id: categoryId,
         is_from_org_resume: false,
       });
       if (insErr) {
@@ -664,6 +740,9 @@ export function useProfilePage() {
     deleteLink,
     addSkill,
     deleteSkill,
+    addSkillCategory,
+    renameSkillCategory,
+    deleteSkillCategory,
     subscribeToPro,
     buyJobHuntPack,
     openBillingPortal,

@@ -1,9 +1,10 @@
 import { Save } from "lucide-react"
 import {
-	numberValue,
-	stringListValue,
 	stringValue,
+	toEditableStringList,
 } from "@/components/applications/resume-builder/app-resume-utils"
+import { BulletListEditor } from "@/components/applications/resume-builder/bullet-list-editor"
+import { CommaSkillListEditor } from "@/components/applications/resume-builder/comma-skill-list-editor"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -28,6 +29,9 @@ export function ResumeBlockEditor({
 	onApply,
 	onCancel,
 }: ResumeBlockEditorProps) {
+	const descriptionBullets = toEditableStringList(formData.description)
+	const skillBullets = toEditableStringList(formData.skills)
+
 	return (
 		<div className="space-y-2">
 			{block.block_type === "job_entry" ? (
@@ -62,13 +66,12 @@ export function ResumeBlockEditor({
 							className="h-9"
 						/>
 					</div>
-					<Textarea
-						value={stringListValue(formData.description).join("\n")}
-						onChange={(event) =>
-							onFieldChange("description", event.target.value)
-						}
-						placeholder="One bullet per line"
-						className="min-h-[110px] text-sm text-neutral-900"
+					<BulletListEditor
+						key={`${block.id}-job-bullets`}
+						bullets={descriptionBullets}
+						onChange={(bullets) => onFieldChange("description", bullets)}
+						label="Description bullets"
+						placeholder="What did you achieve in this role?"
 					/>
 				</div>
 			) : null}
@@ -108,6 +111,22 @@ export function ResumeBlockEditor({
 				</div>
 			) : null}
 
+			{block.block_type === "skill_category_entry" ? (
+				<div className="space-y-2">
+					<Input
+						value={stringValue(formData.name)}
+						onChange={(event) => onFieldChange("name", event.target.value)}
+						placeholder="Category name"
+						className="h-9"
+					/>
+					<CommaSkillListEditor
+						key={`${block.id}-skills`}
+						skills={skillBullets}
+						onChange={(skills) => onFieldChange("skills", skills)}
+					/>
+				</div>
+			) : null}
+
 			{block.block_type === "skill_entry" ? (
 				<div className="space-y-2">
 					<Input
@@ -116,25 +135,6 @@ export function ResumeBlockEditor({
 						placeholder="Skill name"
 						className="h-9"
 					/>
-					<div className="grid grid-cols-2 gap-2">
-						<Input
-							type="number"
-							value={String(numberValue(formData.categoryId))}
-							onChange={(event) =>
-								onFieldChange("categoryId", Number(event.target.value))
-							}
-							placeholder="Category ID"
-							className="h-9"
-						/>
-						<Input
-							value={stringValue(formData.categoryName)}
-							onChange={(event) =>
-								onFieldChange("categoryName", event.target.value)
-							}
-							placeholder="Category name"
-							className="h-9"
-						/>
-					</div>
 				</div>
 			) : null}
 
@@ -146,13 +146,30 @@ export function ResumeBlockEditor({
 						placeholder="Project name"
 						className="h-9"
 					/>
-					<Textarea
-						value={stringListValue(formData.description).join("\n")}
-						onChange={(event) =>
-							onFieldChange("description", event.target.value)
-						}
-						placeholder="One bullet per line"
-						className="min-h-[110px] text-sm text-neutral-900"
+					<div className="grid grid-cols-2 gap-2">
+						<Input
+							type="date"
+							value={stringValue(formData.start_date)}
+							onChange={(event) =>
+								onFieldChange("start_date", event.target.value)
+							}
+							className="h-9"
+						/>
+						<Input
+							type="date"
+							value={stringValue(formData.end_date)}
+							onChange={(event) =>
+								onFieldChange("end_date", event.target.value)
+							}
+							className="h-9"
+						/>
+					</div>
+					<BulletListEditor
+						key={`${block.id}-project-bullets`}
+						bullets={descriptionBullets}
+						onChange={(bullets) => onFieldChange("description", bullets)}
+						label="Description bullets"
+						placeholder="What did you build or ship?"
 					/>
 				</div>
 			) : null}

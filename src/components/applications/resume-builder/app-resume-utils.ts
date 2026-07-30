@@ -26,6 +26,11 @@ export function getBlockPreviewText(block: AppResumeBlock): string {
 	if ("school" in content && "degree" in content) {
 		return `${content.degree} — ${content.school}`
 	}
+	if (block.block_type === "skill_category_entry" && "skills" in content) {
+		const skills = stringListValue(content.skills)
+		if (skills.length === 0) return content.name
+		return `${content.name}: ${skills.join(", ")}`
+	}
 	if ("name" in content && "categoryId" in content) {
 		return content.name
 	}
@@ -44,17 +49,27 @@ export function getEditableText(block: AppResumeBlock): string {
 		return content.texts.map((item) => item.text).join(" ")
 	}
 	if ("title" in content && "company" in content) {
-		const bullets = content.description.map((line) => `• ${line}`).join("\n")
+		const bullets = stringListValue(content.description)
+			.map((line) => `• ${line}`)
+			.join("\n")
 		return `${content.title} — ${content.company}\n${formatDateRange(content.start_date, content.end_date)}\n${bullets}`
 	}
 	if ("school" in content && "degree" in content) {
 		return `${content.degree}\n${content.school}\n${formatDateRange(content.start_date, content.end_date)}`
 	}
+	if (block.block_type === "skill_category_entry" && "skills" in content) {
+		const bullets = stringListValue(content.skills)
+			.map((line) => `• ${line}`)
+			.join("\n")
+		return `${content.name}\n${bullets}`
+	}
 	if ("name" in content && "categoryId" in content) {
 		return content.name
 	}
 	if ("name" in content && "description" in content) {
-		const bullets = content.description.map((line) => `• ${line}`).join("\n")
+		const bullets = stringListValue(content.description)
+			.map((line) => `• ${line}`)
+			.join("\n")
 		return `${content.name}\n${bullets}`
 	}
 	return ""
@@ -87,6 +102,18 @@ export function applyEditableText(
 		return {
 			...content,
 			name: text.trim(),
+		}
+	}
+
+	if (block.block_type === "skill_category_entry" && "skills" in content) {
+		const lines = text.split("\n").map((line) => line.trim()).filter(Boolean)
+		return {
+			...content,
+			name: lines[0] || content.name,
+			skills: lines
+				.slice(1)
+				.map((line) => line.replace(/^•\s*/, ""))
+				.filter(Boolean),
 		}
 	}
 
@@ -182,6 +209,48 @@ export function stringListValue(value: unknown): string[] {
 	return []
 }
 
+/** Keeps empty strings so editors can hold draft bullets. */
+export function toEditableStringList(value: unknown): string[] {
+	if (Array.isArray(value)) {
+		return value.map((item) => (typeof item === "string" ? item : ""))
+	}
+	if (typeof value === "string") {
+		return descriptionStringToBullets(value)
+	}
+	return []
+}
+
+/** Profile/DB stores description as one string; prefer newlines, then bullets. */
+export function descriptionStringToBullets(
+	value: string | null | undefined,
+): string[] {
+	if (!value) return []
+	const trimmed = value.trim()
+	if (!trimmed) return []
+
+	if (trimmed.includes("\n")) {
+		return trimmed
+			.split("\n")
+			.map((line) => line.replace(/^•\s*/, "").trimEnd())
+	}
+
+	if (trimmed.includes("•")) {
+		return trimmed
+			.split("•")
+			.map((part) => part.trim())
+			.filter(Boolean)
+	}
+
+	return [trimmed]
+}
+
+export function bulletsToDescriptionString(bullets: string[]): string {
+	return bullets
+		.map((bullet) => bullet.trim())
+		.filter(Boolean)
+		.join("\n")
+}
+
 export function hasCompleteJobDetails(form: {
 	jobTitle: string
 	companyName: string
@@ -222,10 +291,19 @@ export function buildBlockContentFromForm(
 			categoryName: stringValue(formData.categoryName),
 		}
 	}
+	if (block.block_type === "skill_category_entry") {
+		return {
+			category_id: stringValue(formData.category_id),
+			name: stringValue(formData.name),
+			skills: stringListValue(formData.skills),
+		}
+	}
 	if (block.block_type === "project_entry") {
 		return {
 			name: stringValue(formData.name),
 			description: stringListValue(formData.description),
+			start_date: nullableStringValue(formData.start_date),
+			end_date: nullableStringValue(formData.end_date),
 		}
 	}
 	return null

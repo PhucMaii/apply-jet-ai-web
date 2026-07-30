@@ -124,6 +124,7 @@ export function useCreateApplication() {
       userExperiencesArray,
       userProjectsArray,
       userSkillsArray,
+      userSkillCategoriesArray,
       userEducationArray,
     } = await getUserProfile(userId);
     const hasUserExperiences = userExperiencesArray.length > 0;
@@ -251,7 +252,14 @@ export function useCreateApplication() {
       block_type: "project_entry",
       content_json: {
         name: project.project_name,
-        description: project.description?.split(".").filter(Boolean) || [],
+        description: project.description
+          ? project.description
+              .split("\n")
+              .map((line) => line.replace(/^•\s*/, "").trim())
+              .filter(Boolean)
+          : [],
+        start_date: project.start_date,
+        end_date: project.end_date,
       },
       sort_key: index,
     }));
@@ -301,16 +309,19 @@ export function useCreateApplication() {
     );
 
     // Skills Block
-    const skillsBlocks = userSkillsArray.map((skill) => ({
-      app_resume_id: appResumeData.id,
-      section_id: idsMap.get(APP_RESUME_SECTION_TYPE.SKILLS)!,
-      block_type: "skill_entry",
-      content_json: {
-        name: skill.name,
-        categoryId: 0,
-        categoryName: ""
-      },
-    }));
+    const skillsBlocks = userSkillCategoriesArray
+      .filter((category) => category.skills.length > 0)
+      .map((category, index) => ({
+        app_resume_id: appResumeData.id,
+        section_id: idsMap.get(APP_RESUME_SECTION_TYPE.SKILLS)!,
+        block_type: "skill_category_entry",
+        sort_key: index,
+        content_json: {
+          category_id: category.id,
+          name: category.name,
+          skills: category.skills.map((skill) => skill.name),
+        },
+      }));
     await Promise.all(
       skillsBlocks.map(async (block) => {
         const { data: appResumeBlockData, error: appResumeBlockError } =

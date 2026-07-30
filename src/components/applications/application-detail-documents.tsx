@@ -20,7 +20,7 @@ import { useUserSubscription } from "@/hooks/use-user-subscription"
 import ProFeatureGuard, { ProFeatureBadge } from "../pro-feature-guard"
 import useUserUsage from "@/hooks/use-user-usage"
 import { useMemo } from "react"
-import type { AppResume } from "@/types/app-resume"
+import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume"
 
 const DOCUMENT_TAB_TRIGGER = cn(
 	"relative h-11 min-w-0 shrink-0 rounded-none border-b-2 border-transparent",
@@ -52,6 +52,18 @@ interface ApplicationDetailDocumentsProps {
 		message: string
 	}>
 	refetchApplication: () => void
+	onSaveAppResumeBlock: (block: AppResumeBlock) => Promise<void>
+	onCreateSkillCategory: (input: {
+		appResumeId: string
+		sectionId: string
+		sortKey: number
+		name?: string
+	}) => Promise<AppResumeBlock>
+	onEnsureSkillsSection: (input: {
+		appResumeId: string
+		sortKey: number
+	}) => Promise<AppResumeSection>
+	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
 }
 
 export function ApplicationDetailDocuments({
@@ -70,6 +82,10 @@ export function ApplicationDetailDocuments({
 	onStatusChange,
 	onDelete,
 	refetchApplication,
+	onSaveAppResumeBlock,
+	onCreateSkillCategory,
+	onEnsureSkillsSection,
+	onDeleteAppResumeBlock,
 }: ApplicationDetailDocumentsProps) {
 	const { resumeText } = useProfilePage()
 	const { plan } = useUserSubscription()
@@ -165,6 +181,10 @@ export function ApplicationDetailDocuments({
 							onStatusChange={onStatusChange}
 							onDelete={onDelete}
 							appResume={appResume}
+							onSaveAppResumeBlock={onSaveAppResumeBlock}
+							onCreateSkillCategory={onCreateSkillCategory}
+							onEnsureSkillsSection={onEnsureSkillsSection}
+							onDeleteAppResumeBlock={onDeleteAppResumeBlock}
 						/>
 					</ProFeatureGuard>
 				</TabsContent>

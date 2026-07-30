@@ -26,6 +26,7 @@ export default function AddProjectModal({
 
 	const {
 		register,
+		control,
 		handleSubmit,
 		reset,
 		formState: { errors, isSubmitting },
@@ -66,7 +67,12 @@ export default function AddProjectModal({
 			>
 				<h3 className="font-bold text-lg">Add project</h3>
 				<Divider />
-				<ProjectForm register={register} errors={errors} />
+				<ProjectForm
+					register={register}
+					control={control}
+					errors={errors}
+					bulletEditorKey="add-project-bullets"
+				/>
 
 				<div className="flex items-center justify-end gap-2">
 					<Button type="button" variant="outline" onClick={onClose}>

@@ -29,6 +29,7 @@ export function ProjectRowEditor({
 
 	const {
 		register,
+		control,
 		handleSubmit,
 		formState: { errors, isSubmitting },
 	} = useForm<UserProjectRow>({
@@ -55,7 +56,12 @@ export function ProjectRowEditor({
 
 	return (
 		<div className={cn("space-y-4", PROFILE_SURFACE.itemPanel)}>
-			<ProjectForm register={register} errors={errors} />
+			<ProjectForm
+				register={register}
+				control={control}
+				errors={errors}
+				bulletEditorKey={`project-${row.id}-bullets`}
+			/>
 
 			<div className="flex gap-2 items-center justify-end">
 				<Button

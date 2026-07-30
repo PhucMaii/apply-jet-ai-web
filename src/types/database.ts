@@ -394,6 +394,7 @@ export interface Database {
           id: string;
           user_id: string;
           name: string;
+          category_id: string | null;
           created_at: string;
           is_from_org_resume: boolean | null;
         },
@@ -401,6 +402,7 @@ export interface Database {
           id?: string;
           user_id: string;
           name: string;
+          category_id?: string | null;
           created_at?: string;
           is_from_org_resume?: boolean | null;
         },
@@ -408,8 +410,26 @@ export interface Database {
           id?: string;
           user_id?: string;
           name?: string;
+          category_id?: string | null;
           created_at?: string;
           is_from_org_resume?: boolean | null;
+        }
+      >;
+      user_skill_categories: BaseTable<
+        {
+          id: string;
+          user_id: string;
+          name: string;
+        },
+        {
+          id?: string;
+          user_id: string;
+          name: string;
+        },
+        {
+          id?: string;
+          user_id?: string;
+          name?: string;
         }
       >;
       users: BaseTable<
@@ -559,4 +579,6 @@ export type UserLinkRow = Database["public"]["Tables"]["user_links"]["Row"];
 export type UserAdditionalInfoRow =
   Database["public"]["Tables"]["user_additional_info"]["Row"];
 export type UserSkillRow = Database["public"]["Tables"]["user_skills"]["Row"];
+export type UserSkillCategoryRow =
+  Database["public"]["Tables"]["user_skill_categories"]["Row"];
 export type UserProjectRow = Database["public"]["Tables"]["user_projects"]["Row"];

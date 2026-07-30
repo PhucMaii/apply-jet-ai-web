@@ -16,6 +16,7 @@ export type AppResumeBlockType =
 	| "project_entry"
 	| "education_entry"
 	| "skill_entry"
+	| "skill_category_entry"
 
 export interface AppResumeBlockStyle {
 	bold?: boolean
@@ -41,6 +42,8 @@ export type AppResumeBlockContent =
 	| {
 			name: string
 			description: string[]
+			start_date?: string | null
+			end_date?: string | null
 	  }
 	| {
 			school: string
@@ -52,6 +55,11 @@ export type AppResumeBlockContent =
 			name: string
 			categoryId: number
 			categoryName: string
+	  }
+	| {
+			category_id: string
+			name: string
+			skills: string[]
 	  }
 
 export interface AppResumeBlock {

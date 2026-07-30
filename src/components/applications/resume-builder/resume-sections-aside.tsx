@@ -1,11 +1,13 @@
-import type { DragEvent } from "react"
+import { useState, type DragEvent } from "react"
 import {
 	AlertCircle,
 	ChevronDown,
 	ChevronRight,
 	GripVertical,
+	Loader2,
 	Pencil,
 	Plus,
+	Trash2,
 } from "lucide-react"
 import {
 	getBlockPreviewText,
@@ -14,9 +16,11 @@ import {
 } from "@/components/applications/resume-builder/app-resume-utils"
 import { ResumeBlockEditor } from "@/components/applications/resume-builder/resume-block-editor"
 import { getSectionIcon } from "@/components/applications/resume-builder/section-icon"
+import ConfirmModal from "@/components/ui/confirm-modal"
 import { Button } from "@/components/ui/button"
 import type { AppResumeBlock, AppResumeSection } from "@/types/app-resume"
 import { cn } from "@/lib/utils"
+import toast from "react-hot-toast"
 
 interface ResumeSectionsAsideProps {
 	sections: AppResumeSection[]
@@ -26,6 +30,7 @@ interface ResumeSectionsAsideProps {
 	editingBlockId: string | null
 	editingDraft: string
 	editingFormData: Record<string, unknown> | null
+	isAddingSkillCategory?: boolean
 	onSectionClick: (sectionId: string) => void
 	onDragStart: (sectionId: string) => void
 	onDrop: (targetId: string) => void
@@ -34,6 +39,8 @@ interface ResumeSectionsAsideProps {
 	onFieldChange: (field: string, value: unknown) => void
 	onApplyEditBlock: (block: AppResumeBlock) => void
 	onCancelEditBlock: () => void
+	onAddSkillCategory: () => Promise<void> | void
+	onDeleteSkillCategory: (block: AppResumeBlock) => Promise<void>
 }
 
 export function ResumeSectionsAside({
@@ -44,6 +51,7 @@ export function ResumeSectionsAside({
 	editingBlockId,
 	editingDraft,
 	editingFormData,
+	isAddingSkillCategory = false,
 	onSectionClick,
 	onDragStart,
 	onDrop,
@@ -52,8 +60,25 @@ export function ResumeSectionsAside({
 	onFieldChange,
 	onApplyEditBlock,
 	onCancelEditBlock,
+	onAddSkillCategory,
+	onDeleteSkillCategory,
 }: ResumeSectionsAsideProps) {
 	const hasSections = sections.length > 0
+	const [pendingDeleteBlock, setPendingDeleteBlock] =
+		useState<AppResumeBlock | null>(null)
+
+	async function handleConfirmDelete() {
+		if (!pendingDeleteBlock) return
+		await onDeleteSkillCategory(pendingDeleteBlock)
+	}
+
+	function getCategoryLabel(block: AppResumeBlock) {
+		const content = block.content_json
+		if ("name" in content && typeof content.name === "string") {
+			return content.name
+		}
+		return "this skill category"
+	}
 
 	return (
 		<aside className="flex max-h-72 min-h-0 shrink-0 flex-col overflow-hidden border-b border-neutral-200 bg-white xl:max-h-none xl:h-full xl:border-b-0 xl:border-r">
@@ -72,12 +97,14 @@ export function ResumeSectionsAside({
 				{sortSections(sections).map((section) => {
 					const Icon = getSectionIcon(section.section_type)
 					const expanded = expandedId === section.id
+					const isSkillsSection = section.section_type === "skills"
 					return (
 						<div
 							key={section.id}
 							className="rounded-xl border border-neutral-200/80"
 						>
 							<div
+								onClick={() => onSectionClick(section.id)}
 								draggable
 								onDragStart={() => onDragStart(section.id)}
 								onDragOver={(event: DragEvent) => event.preventDefault()}
@@ -99,7 +126,6 @@ export function ResumeSectionsAside({
 								<button
 									type="button"
 									className="flex min-w-0 flex-1 items-center gap-2 text-left"
-									onClick={() => onSectionClick(section.id)}
 								>
 									<Icon
 										className="size-3.5 shrink-0 text-neutral-500"
@@ -125,6 +151,8 @@ export function ResumeSectionsAside({
 								<div className="space-y-2 border-t border-neutral-100 px-3 pb-3 pt-2">
 									{sortBlocks(section.blocks).map((block) => {
 										const isEditing = editingBlockId === block.id
+										const canDeleteCategory =
+											block.block_type === "skill_category_entry"
 										return (
 											<div
 												key={block.id}
@@ -137,18 +165,34 @@ export function ResumeSectionsAside({
 											>
 												<div className="mb-1 flex items-center justify-between gap-2">
 													<p className="truncate text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-														{block.block_type.replaceAll("_", " ")}
+														{block.block_type === "skill_category_entry"
+															? "Skill category"
+															: block.block_type.replaceAll("_", " ")}
 													</p>
-													<Button
-														type="button"
-														size="sm"
-														variant={isEditing ? "default" : "ghost"}
-														className="h-7 gap-1.5 px-2 text-xs"
-														onClick={() => onStartEditBlock(block)}
-													>
-														<Pencil className="size-3.5" aria-hidden />
-														Edit
-													</Button>
+													<div className="flex items-center gap-1">
+														{canDeleteCategory ? (
+															<Button
+																type="button"
+																size="sm"
+																variant="ghost"
+																className="h-7 gap-1 px-2 text-xs text-neutral-500 hover:bg-red-50 hover:text-red-600"
+																onClick={() => setPendingDeleteBlock(block)}
+																aria-label="Remove skill category"
+															>
+																<Trash2 className="size-3.5" aria-hidden />
+															</Button>
+														) : null}
+														<Button
+															type="button"
+															size="sm"
+															variant={isEditing ? "default" : "ghost"}
+															className="h-7 gap-1.5 px-2 text-xs"
+															onClick={() => onStartEditBlock(block)}
+														>
+															<Pencil className="size-3.5" aria-hidden />
+															Edit
+														</Button>
+													</div>
 												</div>
 												{isEditing ? (
 													<ResumeBlockEditor
@@ -168,20 +212,87 @@ export function ResumeSectionsAside({
 											</div>
 										)
 									})}
+
+									{isSkillsSection ? (
+										<Button
+											type="button"
+											size="sm"
+											variant="outline"
+											className="h-8 w-full gap-1.5 border-dashed text-xs"
+											disabled={isAddingSkillCategory}
+											onClick={() => {
+												onAddSkillCategory()?.catch((error) => {
+													console.error(
+														"Something went wrong adding skill category:",
+														error,
+													)
+													toast.error(
+														error instanceof Error
+															? error.message
+															: "Failed to add skill category.",
+													)
+												})
+											}}
+										>
+											{isAddingSkillCategory ? (
+												<Loader2
+													className="size-3.5 animate-spin"
+													aria-hidden
+												/>
+											) : (
+												<Plus className="size-3.5" aria-hidden />
+											)}
+											Add skill category
+										</Button>
+									) : null}
 								</div>
 							) : null}
 						</div>
 					)
 				})}
 
-				<button
-					type="button"
-					className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-neutral-300 px-3 py-2.5 text-sm font-medium text-neutral-600 hover:border-neutral-400 hover:bg-neutral-50"
-				>
-					<Plus className="size-4" aria-hidden />
-					Add Custom Section
-				</button>
+				{!sections.some((section) => section.section_type === "skills") ? (
+					<Button
+						type="button"
+						variant="outline"
+						className="mt-2 h-9 w-full gap-2 border-dashed text-sm"
+						disabled={isAddingSkillCategory}
+						onClick={() => {
+							onAddSkillCategory()?.catch((error) => {
+								console.error(
+									"Something went wrong adding skill category:",
+									error,
+								)
+								toast.error(
+									error instanceof Error
+										? error.message
+										: "Failed to add skill category.",
+								)
+							})
+						}}
+					>
+						{isAddingSkillCategory ? (
+							<Loader2 className="size-4 animate-spin" aria-hidden />
+						) : (
+							<Plus className="size-4" aria-hidden />
+						)}
+						Add skill category
+					</Button>
+				) : null}
 			</div>
+
+			<ConfirmModal
+				isOpen={Boolean(pendingDeleteBlock)}
+				onClose={() => setPendingDeleteBlock(null)}
+				onConfirm={handleConfirmDelete}
+				title="Remove skill category"
+				message={
+					pendingDeleteBlock
+						? `Remove "${getCategoryLabel(pendingDeleteBlock)}" from this resume? This cannot be undone.`
+						: "Remove this skill category from the resume?"
+				}
+				successMessage="Skill category removed"
+			/>
 		</aside>
 	)
 }

@@ -3,6 +3,7 @@ import {
 	applyEditableText,
 	formatDateRange,
 	getEditableText,
+	stringListValue,
 } from "@/components/applications/resume-builder/app-resume-utils"
 import type { AppResumeBlock } from "@/types/app-resume"
 import { cn } from "@/lib/utils"
@@ -65,7 +66,8 @@ export function EditableBlock({
 					!event.shiftKey &&
 					block.block_type !== "rich_text" &&
 					block.block_type !== "job_entry" &&
-					block.block_type !== "project_entry"
+					block.block_type !== "project_entry" &&
+					block.block_type !== "skill_category_entry"
 				) {
 					event.preventDefault()
 					onCommit({
@@ -180,6 +182,25 @@ function BlockPreview({
 						</li>
 					))}
 				</ul>
+			</div>
+		)
+	}
+
+	if (block.block_type === "skill_category_entry" && "skills" in content) {
+		const skills = stringListValue(content.skills)
+		return (
+			<div className="mb-2">
+				<p className="text-[13px] leading-relaxed text-neutral-800">
+					<span className="font-semibold text-neutral-900">
+						{content.name}
+					</span>
+					{skills.length > 0 ? (
+						<>
+							<span className="font-semibold text-neutral-900">: </span>
+							<span>{skills.join(", ")}</span>
+						</>
+					) : null}
+				</p>
 			</div>
 		)
 	}

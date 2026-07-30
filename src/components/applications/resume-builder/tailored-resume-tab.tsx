@@ -5,6 +5,7 @@ import {
 	getBlockPreviewText,
 	sortBlocks,
 	sortSections,
+	stringListValue,
 } from "@/components/applications/resume-builder/app-resume-utils"
 import { ResumeEmptyState } from "@/components/applications/resume-builder/resume-empty-state"
 import { Button } from "@/components/ui/button"
@@ -184,6 +185,21 @@ function TailoredBlockPreview({ block }: { block: AppResumeBlock }) {
 					{formatDateRange(content.start_date, content.end_date)}
 				</p>
 			</div>
+		)
+	}
+
+	if (block.block_type === "skill_category_entry" && "skills" in content) {
+		const skills = stringListValue(content.skills)
+		return (
+			<p className="text-[13px] leading-relaxed text-neutral-800">
+				<span className="font-semibold text-neutral-900">{content.name}</span>
+				{skills.length > 0 ? (
+					<>
+						<span className="font-semibold text-neutral-900">: </span>
+						<span>{skills.join(", ")}</span>
+					</>
+				) : null}
+			</p>
 		)
 	}
 

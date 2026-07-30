@@ -11,7 +11,7 @@ import type { ApplicationStatus } from "@/lib/application-status"
 import { ROUTES } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import type { ApplicationDetailForm } from "@/types/application-detail"
-import type { AppResume } from "@/types/app-resume"
+import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume"
 import { ResumeTab } from "./resume-tab"
 
 type StudioView = "editor" | "tailored"
@@ -31,6 +31,18 @@ interface ResumeStudioProps {
 		success: boolean
 		message: string
 	}>
+	onSaveAppResumeBlock: (block: AppResumeBlock) => Promise<void>
+	onCreateSkillCategory: (input: {
+		appResumeId: string
+		sectionId: string
+		sortKey: number
+		name?: string
+	}) => Promise<AppResumeBlock>
+	onEnsureSkillsSection: (input: {
+		appResumeId: string
+		sortKey: number
+	}) => Promise<AppResumeSection>
+	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
 }
 
 export function ResumeStudio({
@@ -45,6 +57,10 @@ export function ResumeStudio({
 	onSaveApplication,
 	onStatusChange,
 	onDelete,
+	onSaveAppResumeBlock,
+	onCreateSkillCategory,
+	onEnsureSkillsSection,
+	onDeleteAppResumeBlock,
 }: ResumeStudioProps) {
 	const [view, setView] = useState<StudioView>("editor")
 	const [hasGenerated, setHasGenerated] = useState(false)
@@ -152,6 +168,10 @@ export function ResumeStudio({
 					onDelete={onDelete}
 					onGenerate={handleGenerate}
 					appResume={appResume}
+					onSaveAppResumeBlock={onSaveAppResumeBlock}
+					onCreateSkillCategory={onCreateSkillCategory}
+					onEnsureSkillsSection={onEnsureSkillsSection}
+					onDeleteAppResumeBlock={onDeleteAppResumeBlock}
 				/>
 			) : null}
 			{!isGenerating && view === "tailored" && hasGenerated ? (

@@ -16,6 +16,7 @@ import type {
 	AppResumeSection,
 } from "@/types/app-resume"
 import type { ApplicationDetailForm } from "@/types/application-detail"
+import toast from "react-hot-toast"
 
 interface ResumeTabProps {
 	appResume: AppResume | null
@@ -33,6 +34,18 @@ interface ResumeTabProps {
 		message: string
 	}>
 	onGenerate: () => void
+	onSaveAppResumeBlock: (block: AppResumeBlock) => Promise<void>
+	onCreateSkillCategory: (input: {
+		appResumeId: string
+		sectionId: string
+		sortKey: number
+		name?: string
+	}) => Promise<AppResumeBlock>
+	onEnsureSkillsSection: (input: {
+		appResumeId: string
+		sortKey: number
+	}) => Promise<AppResumeSection>
+	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
 }
 
 function cloneSections(sections: AppResumeSection[]): AppResumeSection[] {
@@ -52,6 +65,10 @@ export function ResumeTab({
 	onStatusChange,
 	onDelete,
 	onGenerate,
+	onSaveAppResumeBlock,
+	onCreateSkillCategory,
+	onEnsureSkillsSection,
+	onDeleteAppResumeBlock,
 }: ResumeTabProps) {
 	const seedSections = appResume?.sections ?? []
 	const [sections, setSections] = useState(() => cloneSections(seedSections))
@@ -74,6 +91,7 @@ export function ResumeTab({
 	)
 	const [dragId, setDragId] = useState<string | null>(null)
 	const [pageCount, setPageCount] = useState(1)
+	const [isAddingSkillCategory, setIsAddingSkillCategory] = useState(false)
 	const previewRefs = useRef<Record<string, HTMLElement | null>>({})
 
 	const issueTotal = sections.reduce(
@@ -90,9 +108,18 @@ export function ResumeTab({
 		}
 	}
 
-	function updateBlock(nextBlock: AppResumeBlock) {
-		setSections((prev) =>
-			prev.map((section) => ({
+	async function updateBlock(nextBlock: AppResumeBlock) {
+		try {
+			await onSaveAppResumeBlock(nextBlock)
+		} catch (err) {
+			console.error("Something went wrong updating block:", err)
+			toast.error(
+				err instanceof Error ? err.message : "Failed to save block.",
+			)
+			return
+		}
+		setSections((prevSections) =>
+			prevSections.map((section) => ({
 				...section,
 				blocks: section.blocks.map((block) =>
 					block.id === nextBlock.id ? nextBlock : block,
@@ -124,7 +151,7 @@ export function ResumeTab({
 				editingFormData,
 			)
 			if (structuredContent) {
-				updateBlock({
+				void updateBlock({
 					...block,
 					content_json: structuredContent,
 				})
@@ -133,7 +160,7 @@ export function ResumeTab({
 			}
 		}
 
-		updateBlock({
+		void updateBlock({
 			...block,
 			content_json: applyEditableText(block, editingDraft),
 		})
@@ -171,6 +198,68 @@ export function ResumeTab({
 		setDragId(null)
 	}
 
+	async function handleAddSkillCategory() {
+		if (!appResume) {
+			toast.error("No resume found for this application.")
+			return
+		}
+
+		setIsAddingSkillCategory(true)
+		try {
+			let skillsSection = sections.find(
+				(section) => section.section_type === "skills",
+			)
+
+			if (!skillsSection) {
+				const nextSortKey =
+					sections.length === 0
+						? 0
+						: Math.max(...sections.map((section) => section.sort_key)) + 1
+				skillsSection = await onEnsureSkillsSection({
+					appResumeId: appResume.id,
+					sortKey: nextSortKey,
+				})
+				setSections((prev) => sortSections([...prev, skillsSection!]))
+			}
+
+			const createdBlock = await onCreateSkillCategory({
+				appResumeId: appResume.id,
+				sectionId: skillsSection.id,
+				sortKey: skillsSection.blocks.length,
+			})
+
+			setSections((prev) =>
+				prev.map((section) =>
+					section.id === skillsSection!.id
+						? {
+								...section,
+								blocks: [...section.blocks, createdBlock],
+							}
+						: section,
+				),
+			)
+			setExpandedId(skillsSection.id)
+			setActiveSectionId(skillsSection.id)
+			handleStartEditBlock(createdBlock)
+			toast.success("Skill category added")
+		} finally {
+			setIsAddingSkillCategory(false)
+		}
+	}
+
+	async function handleDeleteSkillCategory(block: AppResumeBlock) {
+		await onDeleteAppResumeBlock(block.id)
+		setSections((prev) =>
+			prev.map((section) => ({
+				...section,
+				blocks: section.blocks.filter((item) => item.id !== block.id),
+			})),
+		)
+		if (editingBlockId === block.id) {
+			handleCancelEditBlock()
+		}
+	}
+
 	return (
 		<div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden xl:grid xl:grid-cols-[minmax(0,400px)_minmax(0,1fr)_minmax(0,260px)]">
 			<ResumeSectionsAside
@@ -181,6 +270,7 @@ export function ResumeTab({
 				editingBlockId={editingBlockId}
 				editingDraft={editingDraft}
 				editingFormData={editingFormData}
+				isAddingSkillCategory={isAddingSkillCategory}
 				onSectionClick={handleSectionClick}
 				onDragStart={handleDragStart}
 				onDrop={handleDrop}
@@ -194,6 +284,8 @@ export function ResumeTab({
 				}
 				onApplyEditBlock={handleApplyEditBlock}
 				onCancelEditBlock={handleCancelEditBlock}
+				onAddSkillCategory={handleAddSkillCategory}
+				onDeleteSkillCategory={handleDeleteSkillCategory}
 			/>
 
 			<ResumePreviewPanel

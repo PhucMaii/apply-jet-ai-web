@@ -11,6 +11,7 @@ import {
 } from "@/lib/application-detail"
 import { supabase } from "@/lib/supabase"
 import type { ApplicationDetailForm } from "@/types/application-detail"
+import type { AppResumeBlock, AppResumeSection } from "@/types/app-resume"
 
 export function useApplicationDetail(applicationId: string | undefined) {
 	const { user, isLoading: isAuthLoading } = useAuth()
@@ -138,6 +139,136 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		setForm((prev) => (prev ? { ...prev, ...patch } : prev))
 	}
 
+	const saveAppResumeBlock = useCallback(async (block: AppResumeBlock) => {
+		if (!user || !applicationId) return
+
+		const { error: upErr } = await supabase
+			.from("app_resume_blocks")
+			.update({
+				content_json: block.content_json,
+				updated_at: new Date().toISOString(),
+			})
+			.eq("id", block.id)
+
+		if (upErr) {
+			console.error("Something went wrong saving app resume block:", upErr)
+			throw new Error(upErr.message)
+		}
+	}, [user, applicationId])
+
+	const createAppResumeSkillCategory = useCallback(
+		async (input: {
+			appResumeId: string
+			sectionId: string
+			sortKey: number
+			name?: string
+		}): Promise<AppResumeBlock> => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const now = new Date().toISOString()
+			const contentJson = {
+				category_id: crypto.randomUUID(),
+				name: input.name?.trim() || "New category",
+				skills: [] as string[],
+			}
+
+			const { data, error: insertError } = await supabase
+				.from("app_resume_blocks")
+				.insert({
+					app_resume_id: input.appResumeId,
+					section_id: input.sectionId,
+					block_type: "skill_category_entry",
+					sort_key: input.sortKey,
+					content_json: contentJson,
+					style_json: {},
+					created_at: now,
+					updated_at: now,
+				})
+				.select("*")
+				.single()
+
+			if (insertError || !data) {
+				console.error(
+					"Something went wrong creating skill category block:",
+					insertError,
+				)
+				throw new Error(
+					insertError?.message ?? "Failed to create skill category.",
+				)
+			}
+
+			return data as AppResumeBlock
+		},
+		[user, applicationId],
+	)
+
+	const ensureAppResumeSkillsSection = useCallback(
+		async (input: {
+			appResumeId: string
+			sortKey: number
+		}): Promise<AppResumeSection> => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const now = new Date().toISOString()
+			const { data, error: insertError } = await supabase
+				.from("app_resume_sections")
+				.insert({
+					app_resume_id: input.appResumeId,
+					section_type: "skills",
+					display_name: "Skills",
+					sort_key: input.sortKey,
+					style_json: {},
+					generated_resume_id: null,
+					created_at: now,
+					updated_at: now,
+				})
+				.select("*")
+				.single()
+
+			if (insertError || !data) {
+				console.error(
+					"Something went wrong creating skills section:",
+					insertError,
+				)
+				throw new Error(
+					insertError?.message ?? "Failed to create skills section.",
+				)
+			}
+
+			return {
+				...(data as Omit<AppResumeSection, "blocks">),
+				blocks: [],
+			}
+		},
+		[user, applicationId],
+	)
+
+	const deleteAppResumeBlock = useCallback(
+		async (blockId: string) => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const { error: deleteError } = await supabase
+				.from("app_resume_blocks")
+				.delete()
+				.eq("id", blockId)
+
+			if (deleteError) {
+				console.error(
+					"Something went wrong deleting app resume block:",
+					deleteError,
+				)
+				throw new Error(deleteError.message)
+			}
+		},
+		[user, applicationId],
+	)
+
 	return {
 		record,
 		form,
@@ -155,6 +286,10 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		updateStatus,
 		resolveStatus,
 		patchForm,
+		saveAppResumeBlock,
+		createAppResumeSkillCategory,
+		ensureAppResumeSkillsSection,
+		deleteAppResumeBlock,
 		toForm: toApplicationDetailForm,
 	}
 }

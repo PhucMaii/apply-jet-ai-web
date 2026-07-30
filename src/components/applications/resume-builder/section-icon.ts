@@ -1,4 +1,5 @@
 import {
+	FolderKanban,
 	Briefcase,
 	FileText,
 	GraduationCap,
@@ -19,6 +20,8 @@ export function getSectionIcon(type: AppResumeSectionType) {
 			return GraduationCap
 		case "skills":
 			return Wrench
+		case "projects":
+			return FolderKanban
 		default:
 			return FileText
 	}
