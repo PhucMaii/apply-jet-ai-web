@@ -185,6 +185,7 @@ export function ApplicationDetailDocuments({
 							onCreateSkillCategory={onCreateSkillCategory}
 							onEnsureSkillsSection={onEnsureSkillsSection}
 							onDeleteAppResumeBlock={onDeleteAppResumeBlock}
+							refetchApplication={refetchApplication}
 						/>
 					</ProFeatureGuard>
 				</TabsContent>

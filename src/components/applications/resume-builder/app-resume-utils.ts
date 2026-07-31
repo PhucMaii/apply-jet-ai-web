@@ -40,6 +40,66 @@ export function getBlockPreviewText(block: AppResumeBlock): string {
 	return `(empty ${block.block_type})`
 }
 
+/** Flatten structured resume sections into plain text for ATS scoring. */
+export function flattenResumeSectionsText(
+	sections: AppResumeSection[],
+): string {
+	return sortSections(sections)
+		.flatMap((section) => {
+			const heading =
+				section.section_type === "header"
+					? []
+					: [section.display_name]
+			const blockLines = sortBlocks(section.blocks).flatMap((block) => {
+				const content = block.content_json
+				if (block.block_type === "job_entry" && "title" in content) {
+					return [
+						`${content.title} — ${content.company}`,
+						formatDateRange(content.start_date, content.end_date),
+						...stringListValue(content.description),
+					]
+				}
+				if (
+					block.block_type === "project_entry" &&
+					"name" in content &&
+					"description" in content
+				) {
+					return [
+						content.name,
+						formatDateRange(
+							"start_date" in content
+								? (content.start_date ?? null)
+								: null,
+							"end_date" in content ? (content.end_date ?? null) : null,
+						),
+						...stringListValue(content.description),
+					]
+				}
+				if (
+					block.block_type === "education_entry" &&
+					"school" in content
+				) {
+					return [
+						`${content.degree} — ${content.school}`,
+						formatDateRange(content.start_date, content.end_date),
+					]
+				}
+				if (
+					block.block_type === "skill_category_entry" &&
+					"skills" in content
+				) {
+					return [
+						`${content.name}: ${stringListValue(content.skills).join(", ")}`,
+					]
+				}
+				return [getBlockPreviewText(block)]
+			})
+			return [...heading, ...blockLines]
+		})
+		.filter(Boolean)
+		.join("\n")
+}
+
 export function getEditableText(block: AppResumeBlock): string {
 	const content = block.content_json
 	if ("text" in content && typeof content.text === "string") {
@@ -220,6 +280,26 @@ export function toEditableStringList(value: unknown): string[] {
 	return []
 }
 
+/**
+ * Split prose into sentences without breaking abbreviations like Node.js,
+ * U.S., e.g., or initials.
+ */
+function splitIntoSentences(text: string): string[] {
+	const protectedText = text
+		.replace(/\b(e\.g|i\.e|vs|etc|mr|mrs|ms|dr|prof|inc|ltd|jr|sr)\./gi, (
+			match,
+		) => match.replace(/\./g, "\u0000"))
+		.replace(/([A-Za-z])\.([A-Za-z])/g, "$1\u0000$2")
+
+	const parts = protectedText
+		.split(/(?<=[.!?])\s+(?=[A-Z0-9"“(])/)
+		// eslint-disable-next-line no-control-regex
+		.map((part) => part.replace(/\u0000/g, ".").trim())
+		.filter(Boolean)
+
+	return parts.length > 0 ? parts : [text.trim()].filter(Boolean)
+}
+
 /** Profile/DB stores description as one string; prefer newlines, then bullets. */
 export function descriptionStringToBullets(
 	value: string | null | undefined,
@@ -232,6 +312,7 @@ export function descriptionStringToBullets(
 		return trimmed
 			.split("\n")
 			.map((line) => line.replace(/^•\s*/, "").trimEnd())
+			.filter(Boolean)
 	}
 
 	if (trimmed.includes("•")) {
@@ -241,7 +322,7 @@ export function descriptionStringToBullets(
 			.filter(Boolean)
 	}
 
-	return [trimmed]
+	return splitIntoSentences(trimmed)
 }
 
 export function bulletsToDescriptionString(bullets: string[]): string {

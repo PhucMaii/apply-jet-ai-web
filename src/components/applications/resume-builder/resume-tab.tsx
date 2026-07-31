@@ -1,15 +1,21 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState, type CSSProperties } from "react"
 import {
 	applyEditableText,
 	buildBlockContentFromForm,
+	flattenResumeSectionsText,
 	getEditableText,
 	hasCompleteJobDetails,
 	sortSections,
 } from "@/components/applications/resume-builder/app-resume-utils"
+import { PanelResizeHandle } from "@/components/applications/resume-builder/panel-resize-handle"
 import { ResumeJobAside } from "@/components/applications/resume-builder/resume-job-aside"
 import { ResumePreviewPanel } from "@/components/applications/resume-builder/resume-preview-panel"
 import { ResumeSectionsAside } from "@/components/applications/resume-builder/resume-sections-aside"
 import type { ApplicationStatus } from "@/lib/application-status"
+import {
+	calculateATSScore,
+	type ATSScoreResult,
+} from "@/lib/atsScoring"
 import type {
 	AppResume,
 	AppResumeBlock,
@@ -17,6 +23,18 @@ import type {
 } from "@/types/app-resume"
 import type { ApplicationDetailForm } from "@/types/application-detail"
 import toast from "react-hot-toast"
+
+const LEFT_PANEL_DEFAULT = 400
+const LEFT_PANEL_MIN = 260
+const LEFT_PANEL_MAX = 560
+const RIGHT_PANEL_DEFAULT = 280
+const RIGHT_PANEL_MIN = 220
+const RIGHT_PANEL_MAX = 480
+const PREVIEW_PANEL_MIN = 320
+
+function clamp(value: number, min: number, max: number) {
+	return Math.min(max, Math.max(min, value))
+}
 
 interface ResumeTabProps {
 	appResume: AppResume | null
@@ -46,6 +64,7 @@ interface ResumeTabProps {
 		sortKey: number
 	}) => Promise<AppResumeSection>
 	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
+	refetchApplication: () => void
 }
 
 function cloneSections(sections: AppResumeSection[]): AppResumeSection[] {
@@ -64,11 +83,12 @@ export function ResumeTab({
 	onSaveApplication,
 	onStatusChange,
 	onDelete,
-	onGenerate,
+	// onGenerate,
 	onSaveAppResumeBlock,
 	onCreateSkillCategory,
 	onEnsureSkillsSection,
 	onDeleteAppResumeBlock,
+	refetchApplication,
 }: ResumeTabProps) {
 	const seedSections = appResume?.sections ?? []
 	const [sections, setSections] = useState(() => cloneSections(seedSections))
@@ -91,8 +111,14 @@ export function ResumeTab({
 	)
 	const [dragId, setDragId] = useState<string | null>(null)
 	const [pageCount, setPageCount] = useState(1)
+	const [leftPanelWidth, setLeftPanelWidth] = useState(LEFT_PANEL_DEFAULT)
+	const [rightPanelWidth, setRightPanelWidth] = useState(RIGHT_PANEL_DEFAULT)
+	const layoutRef = useRef<HTMLDivElement | null>(null)
 	const [isAddingSkillCategory, setIsAddingSkillCategory] = useState(false)
+	const [atsResult, setAtsResult] = useState<ATSScoreResult | null>(null)
+	const [isScoringAts, setIsScoringAts] = useState(false)
 	const previewRefs = useRef<Record<string, HTMLElement | null>>({})
+	const lastScoreKeyRef = useRef<string | null>(null)
 
 	const issueTotal = sections.reduce(
 		(sum, section) => sum + (section.issueCount ?? 0),
@@ -100,11 +126,84 @@ export function ResumeTab({
 	)
 	const jobDetailsComplete = hasCompleteJobDetails(form)
 	const showJobForm = isEditingJob || !jobDetailsComplete
+	const resumeText = flattenResumeSectionsText(sections)
+	const jdText = form.jobDescription.trim()
+
+	async function runAtsScore(force = false) {
+		if (!jdText || !resumeText.trim() || !appResume) {
+			setAtsResult(null)
+			return
+		}
+
+		const scoreKey = `${jdText}::${resumeText}`
+		if (!force && lastScoreKeyRef.current === scoreKey && atsResult) {
+			return
+		}
+
+		lastScoreKeyRef.current = scoreKey
+		setIsScoringAts(true)
+		try {
+			const result = await calculateATSScore(jdText, appResume, {
+				hasTables: false,
+				hasImages: false,
+				fileFormat: "pdf-text",
+			})
+			console.log("result", result)
+			setAtsResult(result)
+		} catch (error) {
+			console.error("Something went wrong calculating ATS score:", error)
+			toast.error("Could not calculate ATS score.")
+		} finally {
+			setIsScoringAts(false)
+		}
+	}
+
+	// useEffect(() => {
+	// 	if (showJobForm) return
+	// 	if (!jdText || !resumeText.trim() || !appResume) return
+
+	// 	const scoreKey = `${jdText}::${resumeText}`
+	// 	if (lastScoreKeyRef.current === scoreKey) return
+
+	// 	let cancelled = false
+	// 	lastScoreKeyRef.current = scoreKey
+	// 	setIsScoringAts(true)
+
+	// 	void calculateATSScore(jdText, appResume, {
+	// 		hasTables: false,
+	// 		hasImages: false,
+	// 		fileFormat: "pdf-text",
+	// 	})
+	// 		.then((result) => {
+	// 			if (!cancelled) setAtsResult(result)
+	// 		})
+	// 		.catch((error) => {
+	// 			console.error("Something went wrong calculating ATS score:", error)
+	// 			if (!cancelled) {
+	// 				toast.error("Could not calculate ATS score.")
+	// 			}
+	// 		})
+	// 		.finally(() => {
+	// 			if (!cancelled) setIsScoringAts(false)
+	// 		})
+
+	// 	return () => {
+	// 		cancelled = true
+	// 	}
+	// }, [showJobForm, jdText, resumeText, appResume])
+
+	useEffect(() => {
+		if (showJobForm) return
+		if (!jdText || !resumeText.trim() || !appResume) return
+
+		runAtsScore(true)
+	}, [showJobForm, jdText, resumeText, appResume])
 
 	function handleSaveJobDetails() {
 		onSaveApplication()
 		if (hasCompleteJobDetails(form)) {
 			setIsEditingJob(false)
+			void runAtsScore(true)
 		}
 	}
 
@@ -126,6 +225,7 @@ export function ResumeTab({
 				),
 			})),
 		)
+		void refetchApplication()
 	}
 
 	function handleStartEditBlock(block: AppResumeBlock) {
@@ -260,32 +360,84 @@ export function ResumeTab({
 		}
 	}
 
+	function getLayoutWidth() {
+		return layoutRef.current?.clientWidth ?? 0
+	}
+
+	function handleResizeLeft(deltaX: number) {
+		const layoutWidth = getLayoutWidth()
+		setLeftPanelWidth((current) => {
+			const maxForPreview =
+				layoutWidth > 0
+					? layoutWidth - rightPanelWidth - PREVIEW_PANEL_MIN
+					: LEFT_PANEL_MAX
+			return clamp(
+				current + deltaX,
+				LEFT_PANEL_MIN,
+				Math.min(LEFT_PANEL_MAX, maxForPreview),
+			)
+		})
+	}
+
+	function handleResizeRight(deltaX: number) {
+		const layoutWidth = getLayoutWidth()
+		setRightPanelWidth((current) => {
+			const maxForPreview =
+				layoutWidth > 0
+					? layoutWidth - leftPanelWidth - PREVIEW_PANEL_MIN
+					: RIGHT_PANEL_MAX
+			// Dragging the handle right shrinks the right panel.
+			return clamp(
+				current - deltaX,
+				RIGHT_PANEL_MIN,
+				Math.min(RIGHT_PANEL_MAX, maxForPreview),
+			)
+		})
+	}
+
 	return (
-		<div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden xl:grid xl:grid-cols-[minmax(0,400px)_minmax(0,1fr)_minmax(0,260px)]">
-			<ResumeSectionsAside
-				sections={sections}
-				expandedId={expandedId}
-				activeSectionId={activeSectionId}
-				dragId={dragId}
-				editingBlockId={editingBlockId}
-				editingDraft={editingDraft}
-				editingFormData={editingFormData}
-				isAddingSkillCategory={isAddingSkillCategory}
-				onSectionClick={handleSectionClick}
-				onDragStart={handleDragStart}
-				onDrop={handleDrop}
-				onStartEditBlock={handleStartEditBlock}
-				onDraftTextChange={setEditingDraft}
-				onFieldChange={(field, value) =>
-					setEditingFormData((prev) => ({
-						...(prev ?? {}),
-						[field]: value,
-					}))
+		<div
+			ref={layoutRef}
+			className="flex h-full min-h-0 flex-1 flex-col overflow-hidden xl:flex-row"
+		>
+			<div
+				className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--left-panel-width)]"
+				style={
+					{
+						"--left-panel-width": `${leftPanelWidth}px`,
+					} as CSSProperties
 				}
-				onApplyEditBlock={handleApplyEditBlock}
-				onCancelEditBlock={handleCancelEditBlock}
-				onAddSkillCategory={handleAddSkillCategory}
-				onDeleteSkillCategory={handleDeleteSkillCategory}
+			>
+				<ResumeSectionsAside
+					sections={sections}
+					expandedId={expandedId}
+					activeSectionId={activeSectionId}
+					dragId={dragId}
+					editingBlockId={editingBlockId}
+					editingDraft={editingDraft}
+					editingFormData={editingFormData}
+					isAddingSkillCategory={isAddingSkillCategory}
+					onSectionClick={handleSectionClick}
+					onDragStart={handleDragStart}
+					onDrop={handleDrop}
+					onStartEditBlock={handleStartEditBlock}
+					onDraftTextChange={setEditingDraft}
+					onFieldChange={(field, value) =>
+						setEditingFormData((prev) => ({
+							...(prev ?? {}),
+							[field]: value,
+						}))
+					}
+					onApplyEditBlock={handleApplyEditBlock}
+					onCancelEditBlock={handleCancelEditBlock}
+					onAddSkillCategory={handleAddSkillCategory}
+					onDeleteSkillCategory={handleDeleteSkillCategory}
+				/>
+			</div>
+
+			<PanelResizeHandle
+				label="Resize sections panel"
+				onResize={handleResizeLeft}
 			/>
 
 			<ResumePreviewPanel
@@ -296,27 +448,49 @@ export function ResumeTab({
 				onPageCountChange={setPageCount}
 			/>
 
-			<ResumeJobAside
-				form={form}
-				status={status}
-				createdAt={createdAt}
-				savingDetails={savingDetails}
-				updatingStatus={updatingStatus}
-				isDeleting={isDeleting}
-				showJobForm={showJobForm}
-				issueTotal={issueTotal}
-				keywordsOpen={keywordsOpen}
-				contentOpen={contentOpen}
-				onToggleKeywords={() => setKeywordsOpen((prev) => !prev)}
-				onToggleContent={() => setContentOpen((prev) => !prev)}
-				onEditJob={() => setIsEditingJob(true)}
-				onDoneEditingJob={() => setIsEditingJob(false)}
-				onSaveJobDetails={handleSaveJobDetails}
-				onPatchForm={onPatchForm}
-				onStatusChange={onStatusChange}
-				onDelete={onDelete}
-				onGenerate={onGenerate}
+			<PanelResizeHandle
+				label="Resize job panel"
+				onResize={handleResizeRight}
 			/>
+
+			<div
+				className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--right-panel-width)]"
+				style={
+					{
+						"--right-panel-width": `${rightPanelWidth}px`,
+					} as CSSProperties
+				}
+			>
+				<ResumeJobAside
+					form={form}
+					status={status}
+					createdAt={createdAt}
+					savingDetails={savingDetails}
+					updatingStatus={updatingStatus}
+					isDeleting={isDeleting}
+					showJobForm={showJobForm}
+					issueTotal={issueTotal}
+					keywordsOpen={keywordsOpen}
+					contentOpen={contentOpen}
+					atsResult={atsResult}
+					isScoringAts={isScoringAts}
+					onToggleKeywords={() => setKeywordsOpen((prev) => !prev)}
+					onToggleContent={() => setContentOpen((prev) => !prev)}
+					onEditJob={() => setIsEditingJob(true)}
+					onDoneEditingJob={() => {
+						setIsEditingJob(false)
+						void runAtsScore(true)
+					}}
+					onSaveJobDetails={handleSaveJobDetails}
+					onPatchForm={onPatchForm}
+					onStatusChange={onStatusChange}
+					onDelete={onDelete}
+					// onGenerate={() => {
+					// 	void runAtsScore(true)
+					// 	onGenerate()
+					// }}
+				/>
+			</div>
 		</div>
 	)
 }

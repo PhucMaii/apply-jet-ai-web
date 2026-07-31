@@ -3,7 +3,6 @@ import {
 	Loader2,
 	Pencil,
 	Save,
-	Sparkles,
 } from "lucide-react"
 import { ApplicationsStatusBadge } from "@/components/applications/applications-status-badge"
 import { DeleteApplicationControl } from "@/components/applications/delete-application-control"
@@ -19,6 +18,7 @@ import {
 	isApplicationStatus,
 } from "@/lib/application-status"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
+import type { ATSScoreResult } from "@/lib/atsScoring"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type { ApplicationDetailForm } from "@/types/application-detail"
@@ -36,6 +36,8 @@ interface ResumeJobAsideProps {
 	issueTotal: number
 	keywordsOpen: boolean
 	contentOpen: boolean
+	atsResult: ATSScoreResult | null
+	isScoringAts: boolean
 	onToggleKeywords: () => void
 	onToggleContent: () => void
 	onEditJob: () => void
@@ -47,7 +49,6 @@ interface ResumeJobAsideProps {
 		success: boolean
 		message: string
 	}>
-	onGenerate: () => void
 }
 
 export function ResumeJobAside({
@@ -61,6 +62,8 @@ export function ResumeJobAside({
 	issueTotal,
 	keywordsOpen,
 	contentOpen,
+	atsResult,
+	isScoringAts,
 	onToggleKeywords,
 	onToggleContent,
 	onEditJob,
@@ -69,16 +72,17 @@ export function ResumeJobAside({
 	onPatchForm,
 	onStatusChange,
 	onDelete,
-	onGenerate,
 }: ResumeJobAsideProps) {
 	const jobDetailsComplete = hasCompleteJobDetails(form)
 	const addedLabel = new Date(createdAt).toLocaleString(undefined, {
 		dateStyle: "medium",
 		timeStyle: "short",
 	})
+	const displayScore = atsResult?.overallScore ?? 0
+	const missingKeywordCount = atsResult?.missingKeywords.length ?? 0
 
 	return (
-		<aside className="flex max-h-72 min-h-0 shrink-0 flex-col overflow-hidden border-t border-neutral-200 bg-white xl:max-h-none xl:h-full xl:border-t-0 xl:border-l">
+		<aside className="flex h-full max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden border-t border-neutral-200 bg-white xl:max-h-none xl:border-t-0">
 			<div className="min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain p-4">
 				{showJobForm ? (
 					<div className="space-y-4">
@@ -290,41 +294,121 @@ export function ResumeJobAside({
 							</div>
 						</div>
 
-						<ScoreGauge score={0} issues={issueTotal} />
-						<Button
-							type="button"
-							className="w-full gap-2"
-							onClick={onGenerate}
-						>
-							<Sparkles className="size-4" aria-hidden />
-							Generate Tailored Resume
-						</Button>
+						{isScoringAts && !atsResult ? (
+							<div
+								className="flex flex-col items-center justify-center gap-2 rounded-xl border border-neutral-200 bg-neutral-50/80 px-4 py-8"
+								aria-busy="true"
+							>
+								<Loader2
+									className="size-6 animate-spin text-primary"
+									aria-hidden
+								/>
+								<p className="text-sm text-neutral-600">
+									Calculating ATS score…
+								</p>
+							</div>
+						) : (
+							<>
+								<div className="relative">
+									<ScoreGauge
+										score={displayScore}
+										issues={missingKeywordCount || issueTotal}
+									/>
+									{isScoringAts ? (
+										<div className="absolute inset-0 flex items-start justify-end p-3">
+											<span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white/95 px-2 py-1 text-[11px] font-medium text-neutral-600 shadow-sm">
+												<Loader2
+													className="size-3 animate-spin text-primary"
+													aria-hidden
+												/>
+												Updating
+											</span>
+										</div>
+									) : null}
+								</div>
+
+								{atsResult ? (
+									<div className="grid grid-cols-2 gap-2">
+										{(
+											[
+												["keywordMatch", "Keywords"],
+												// ["semanticSimilarity", "Semantic"],
+												["parseability", "Parseability"],
+												["qualifications", "Qualifications"],
+											] as const
+										).map(([key, label]) => (
+											<div
+												key={key}
+												className="rounded-lg border border-neutral-200 bg-neutral-50 px-2.5 py-2"
+											>
+												<p className="text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+													{label}
+												</p>
+												<p className="mt-1 text-sm font-semibold tabular-nums text-neutral-900">
+													{Math.round(atsResult.breakdown[key])}
+												</p>
+											</div>
+										))}
+									</div>
+								) : null}
+							</>
+						)}
+
+						<div style={{marginTop: "30px"}}>
+							<h1 className="text-sm font-semibold text-neutral-900">Resume Suggestions</h1>
+							<p className="text-xs text-neutral-600">
+								Here are some suggestions for your resume based on the job description.
+							</p>
+						</div>
 						<AccordionPanel
 							title="Keywords Match"
-							count={0}
+							count={missingKeywordCount}
 							open={keywordsOpen}
 							onToggle={onToggleKeywords}
 						>
-							<p className="text-sm text-neutral-500">
-								Keyword insights will appear after you generate a tailored
-								resume.
-							</p>
+							{atsResult && atsResult.missingKeywords.length > 0 ? (
+								<div className="space-y-2">
+									<p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
+										Missing ({atsResult.missingKeywords.length})
+									</p>
+									<div className="flex flex-wrap gap-1.5">
+										{atsResult.missingKeywords.slice(0, 12).map((keyword) => (
+											<span
+												key={`${keyword.term}-${keyword.category}`}
+												className="rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-900"
+											>
+												{keyword.term}
+											</span>
+										))}
+									</div>
+								</div>
+							) : (
+								<p className="text-sm text-neutral-500">
+									{atsResult
+										? "Strong keyword coverage for this job description."
+										: "Keyword insights appear once scoring finishes."}
+								</p>
+							)}
 						</AccordionPanel>
 						<AccordionPanel
-							title="Content Strength"
-							count={issueTotal}
+							title="Suggestions"
+							count={atsResult?.suggestions.length ?? 0}
 							open={contentOpen}
 							onToggle={onToggleContent}
 						>
-							{issueTotal > 0 ? (
+							{atsResult && atsResult.suggestions.length > 0 ? (
 								<ul className="space-y-2 text-sm text-neutral-600">
-									<li>
-										Review highlighted sections for content improvements.
-									</li>
+									{atsResult.suggestions.map((suggestion) => (
+										<li key={suggestion} className="leading-relaxed">
+											{suggestion}
+										</li>
+									))}
 								</ul>
 							) : (
 								<p className="text-sm text-neutral-500">
-									No content issues detected yet.
+									{atsResult
+										? "No high-priority suggestions right now."
+										: "Suggestions will appear after ATS scoring."}
 								</p>
 							)}
 						</AccordionPanel>

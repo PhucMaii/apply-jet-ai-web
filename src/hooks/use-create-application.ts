@@ -13,6 +13,7 @@ import {
 import useEmail from "./use-email";
 import { APP_RESUME_SECTION_TYPE, APP_RESUME_STATUS } from "@/lib/enums/resume";
 import { buildAppResumeSections, buildHeaderBlock, getUserProfile } from "@/lib/resume";
+import { descriptionStringToBullets } from "@/components/applications/resume-builder/app-resume-utils";
 
 export function useCreateApplication() {
   const { user } = useAuth();
@@ -225,7 +226,7 @@ export function useCreateApplication() {
         title: experience.title,
         start_date: experience.start_date,
         end_date: experience.end_date,
-        description: experience.description?.split(".").filter(Boolean) || [],
+        description: descriptionStringToBullets(experience.description),
       },
       sort_key: index,
     }));
@@ -252,12 +253,7 @@ export function useCreateApplication() {
       block_type: "project_entry",
       content_json: {
         name: project.project_name,
-        description: project.description
-          ? project.description
-              .split("\n")
-              .map((line) => line.replace(/^•\s*/, "").trim())
-              .filter(Boolean)
-          : [],
+        description: descriptionStringToBullets(project.description),
         start_date: project.start_date,
         end_date: project.end_date,
       },

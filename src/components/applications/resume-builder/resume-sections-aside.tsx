@@ -81,7 +81,7 @@ export function ResumeSectionsAside({
 	}
 
 	return (
-		<aside className="flex max-h-72 min-h-0 shrink-0 flex-col overflow-hidden border-b border-neutral-200 bg-white xl:max-h-none xl:h-full xl:border-b-0 xl:border-r">
+		<aside className="flex h-full max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden border-b border-neutral-200 bg-white xl:max-h-none xl:border-b-0">
 			<div className="shrink-0 border-b border-neutral-100 px-4 py-3">
 				<p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
 					Sections

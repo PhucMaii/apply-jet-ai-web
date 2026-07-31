@@ -43,6 +43,7 @@ interface ResumeStudioProps {
 		sortKey: number
 	}) => Promise<AppResumeSection>
 	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
+	refetchApplication: () => void
 }
 
 export function ResumeStudio({
@@ -61,6 +62,7 @@ export function ResumeStudio({
 	onCreateSkillCategory,
 	onEnsureSkillsSection,
 	onDeleteAppResumeBlock,
+	refetchApplication,
 }: ResumeStudioProps) {
 	const [view, setView] = useState<StudioView>("editor")
 	const [hasGenerated, setHasGenerated] = useState(false)
@@ -172,6 +174,7 @@ export function ResumeStudio({
 					onCreateSkillCategory={onCreateSkillCategory}
 					onEnsureSkillsSection={onEnsureSkillsSection}
 					onDeleteAppResumeBlock={onDeleteAppResumeBlock}
+					refetchApplication={refetchApplication}
 				/>
 			) : null}
 			{!isGenerating && view === "tailored" && hasGenerated ? (
