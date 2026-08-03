@@ -20,8 +20,11 @@ export type AppResumeBlockType =
 
 export interface AppResumeBlockStyle {
 	bold?: boolean
+	italic?: boolean
 	color?: string
 	fontSize?: number
+	/** Unitless line-height multiplier, e.g. 1.35 */
+	lineHeight?: number
 }
 
 export interface GroupTextItem {

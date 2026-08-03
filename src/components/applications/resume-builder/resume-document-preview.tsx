@@ -3,6 +3,7 @@ import {
 	useMemo,
 	useRef,
 	useState,
+	type CSSProperties,
 	type MutableRefObject,
 } from "react"
 import {
@@ -18,7 +19,11 @@ import type {
 	RewriteDiffStatus,
 	RewriteTextSegment,
 } from "@/lib/rewrite-diff"
-import type { AppResumeBlock, AppResumeSection } from "@/types/app-resume"
+import type {
+	AppResumeBlock,
+	AppResumeBlockStyle,
+	AppResumeSection,
+} from "@/types/app-resume"
 import { cn } from "@/lib/utils"
 
 /** US Letter at 96dpi — keep print/export ratio stable. */
@@ -39,12 +44,42 @@ const PAGE_CONTENT_HEIGHT =
 
 const CONTENT_WIDTH = RESUME_PAGE.width - RESUME_PAGE.paddingX * 2
 
-/** Body copy size shared by summary, experience, education, skills. */
-const BODY_TEXT = {
-	sizePx: 12,
-	className: "text-[12px] leading-snug",
-	lineHeight: "1.35",
-} as const
+/** Fallback when a block has no style_json.fontSize. */
+const DEFAULT_FONT_SIZE_PX = 12
+const DEFAULT_LINE_HEIGHT = 1.35
+
+function resolveStyleColor(
+	color: string | undefined,
+	tone: "default" | "muted" | "subtle" = "default",
+): string {
+	if (tone === "subtle") return "#737373"
+	if (tone === "muted") {
+		if (!color || color === "black") return "#525252"
+	}
+	if (!color || color === "black") return "#171717"
+	if (color === "white") return "#ffffff"
+	return color
+}
+
+/** Map block style_json onto inline CSS used by the preview. */
+function blockTextStyle(
+	style?: AppResumeBlockStyle | null,
+	tone: "default" | "muted" | "subtle" = "default",
+): CSSProperties {
+	const fontSize = style?.fontSize ?? DEFAULT_FONT_SIZE_PX
+	const lineHeight = style?.lineHeight ?? DEFAULT_LINE_HEIGHT
+	return {
+		fontSize: `${fontSize}px`,
+		lineHeight,
+		fontWeight: style?.bold ? 600 : undefined,
+		fontStyle: style?.italic ? "italic" : undefined,
+		color: resolveStyleColor(style?.color, tone),
+	}
+}
+
+function isDisplayNameStyle(style?: AppResumeBlockStyle | null): boolean {
+	return Boolean(style?.fontSize && style.fontSize >= 16)
+}
 
 /** Minimum space needed before we try to keep a few lines on the current page. */
 const MIN_SPLIT_HEIGHT = 18
@@ -89,6 +124,7 @@ type FlowItem =
 			text: string
 			status: RewriteDiffStatus
 			isLastInEntry: boolean
+			style: AppResumeBlockStyle
 	  }
 	| {
 			key: string
@@ -97,7 +133,7 @@ type FlowItem =
 			blockId: string
 			segments: RewriteTextSegment[]
 			plainText: string
-			isName?: boolean
+			style: AppResumeBlockStyle
 			isReviewing: boolean
 			isFirstChunk: boolean
 			isLastChunk: boolean
@@ -483,6 +519,7 @@ function buildEntryFlowItems(
 			text: bullet.text,
 			status: bullet.status,
 			isLastInEntry: index === bullets.length - 1,
+			style: block.style_json ?? {},
 		})
 	})
 
@@ -492,13 +529,14 @@ function buildEntryFlowItems(
 function buildRichTextFlowItems(
 	sectionId: string,
 	block: AppResumeBlock,
-	isName: boolean,
+	_isName: boolean,
 	rewriteDiff: BlockRewriteDiff | null,
 ): FlowItem[] {
 	const isReviewing = rewriteDiff?.blockId === block.id
 	const content = block.content_json
 	const plainText =
 		"text" in content && typeof content.text === "string" ? content.text : ""
+	const style = block.style_json ?? {}
 
 	if (isReviewing && rewriteDiff?.kind === "text") {
 		const chunks = chunkTextSegments(rewriteDiff.textSegments)
@@ -511,7 +549,7 @@ function buildRichTextFlowItems(
 					blockId: block.id,
 					segments: [],
 					plainText: "",
-					isName,
+					style,
 					isReviewing,
 					isFirstChunk: true,
 					isLastChunk: true,
@@ -525,7 +563,7 @@ function buildRichTextFlowItems(
 			blockId: block.id,
 			segments,
 			plainText: segments.map((segment) => segment.text).join(""),
-			isName,
+			style,
 			isReviewing,
 			isFirstChunk: index === 0,
 			isLastChunk: index === chunks.length - 1,
@@ -546,7 +584,7 @@ function buildRichTextFlowItems(
 			},
 		],
 		plainText: paragraph,
-		isName,
+		style,
 		isReviewing: false,
 		isFirstChunk: index === 0,
 		isLastChunk: index === paragraphs.length - 1,
@@ -838,8 +876,7 @@ function fillMeasureProbe(probe: HTMLElement, item: FlowItem) {
 		row.style.display = "flex"
 		row.style.gap = "6px"
 		row.style.padding = "0"
-		row.style.fontSize = `${BODY_TEXT.sizePx}px`
-		row.style.lineHeight = BODY_TEXT.lineHeight
+		Object.assign(row.style, blockTextStyle(item.style))
 
 		const marker = document.createElement("span")
 		marker.textContent = "•"
@@ -858,12 +895,12 @@ function fillMeasureProbe(probe: HTMLElement, item: FlowItem) {
 	if (item.kind === "text_chunk") {
 		const paragraph = document.createElement("p")
 		paragraph.style.margin = "0 0 2px"
-		paragraph.style.lineHeight = BODY_TEXT.lineHeight
-		if (item.isName) {
-			paragraph.style.fontSize = "30px"
+		Object.assign(paragraph.style, blockTextStyle(item.style))
+		if (item.style.bold || isDisplayNameStyle(item.style)) {
 			paragraph.style.fontWeight = "600"
-		} else {
-			paragraph.style.fontSize = `${BODY_TEXT.sizePx}px`
+		}
+		if (item.style.italic) {
+			paragraph.style.fontStyle = "italic"
 		}
 		paragraph.textContent = item.plainText
 		probe.appendChild(paragraph)
@@ -920,11 +957,14 @@ function FlowItemView({ item }: { item: FlowItem }) {
 				text={item.text}
 				status={item.status}
 				isLastInEntry={item.isLastInEntry}
+				style={item.style}
 			/>
 		)
 	}
 
 	if (item.kind === "text_chunk") {
+		const textStyle = blockTextStyle(item.style)
+		const isName = isDisplayNameStyle(item.style)
 		return (
 			<div
 				id={item.isFirstChunk ? `resume-block-${item.blockId}` : undefined}
@@ -939,20 +979,20 @@ function FlowItemView({ item }: { item: FlowItem }) {
 					<RewriteDiffText
 						segments={item.segments}
 						className={cn(
-							"text-neutral-800",
-							item.isName &&
-								"font-display text-3xl font-semibold tracking-tight text-neutral-900",
-							!item.isName && cn(BODY_TEXT.className, "text-neutral-700"),
+							isName && "font-display tracking-tight",
+							item.style.bold && "font-semibold",
+							item.style.italic && "italic",
 						)}
+						style={textStyle}
 					/>
 				) : (
 					<p
 						className={cn(
-							"text-neutral-800",
-							item.isName &&
-								"font-display text-3xl font-semibold tracking-tight text-neutral-900",
-							!item.isName && cn(BODY_TEXT.className, "text-neutral-700"),
+							isName && "font-display tracking-tight",
+							item.style.bold && "font-semibold",
+							item.style.italic && "italic",
 						)}
+						style={textStyle}
 					>
 						{item.plainText}
 					</p>
@@ -972,6 +1012,9 @@ function EntryHeaderView({
 	isReviewing: boolean
 }) {
 	const content = block.content_json
+	const style = block.style_json
+	const titleStyle = blockTextStyle(style)
+	const metaStyle = blockTextStyle(style, "subtle")
 
 	if (block.block_type === "job_entry" && "title" in content) {
 		return (
@@ -984,14 +1027,16 @@ function EntryHeaderView({
 				)}
 			>
 				<div className="mb-0.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0">
-					<p className={cn(BODY_TEXT.className, "font-semibold text-neutral-900")}>
+					<p style={titleStyle}>
 						{content.title}
-						<span className="font-normal text-neutral-600">
+						<span
+							style={blockTextStyle({ ...style, bold: false }, "muted")}
+						>
 							{" "}
 							— {content.company}
 						</span>
 					</p>
-					<p className={cn(BODY_TEXT.className, "text-neutral-500")}>
+					<p style={metaStyle}>
 						{formatDateRange(content.start_date, content.end_date)}
 					</p>
 				</div>
@@ -1010,11 +1055,9 @@ function EntryHeaderView({
 				)}
 			>
 				<div className="mb-0.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0">
-					<p className={cn(BODY_TEXT.className, "font-semibold text-neutral-900")}>
-						{content.name}
-					</p>
+					<p style={titleStyle}>{content.name}</p>
 					{"start_date" in content || "end_date" in content ? (
-						<p className={cn(BODY_TEXT.className, "text-neutral-500")}>
+						<p style={metaStyle}>
 							{formatDateRange(
 								"start_date" in content
 									? (content.start_date ?? null)
@@ -1034,7 +1077,7 @@ function EntryHeaderView({
 }
 
 const BULLET_STATUS_CLASS: Record<RewriteDiffStatus, string> = {
-	unchanged: "text-neutral-800",
+	unchanged: "",
 	added:
 		"rounded-md bg-emerald-500/10 text-emerald-950 ring-1 ring-inset ring-emerald-500/20",
 	removed:
@@ -1045,22 +1088,22 @@ function EntryBulletView({
 	text,
 	status,
 	isLastInEntry,
+	style,
 }: {
 	text: string
 	status: RewriteDiffStatus
 	isLastInEntry: boolean
+	style: AppResumeBlockStyle
 }) {
 	const marker =
 		status === "added" ? "+" : status === "removed" ? "−" : "•"
+	const textStyle = blockTextStyle(style)
 
 	return (
 		<div className={cn(isLastInEntry && "mb-1.5")}>
 			<div
-				className={cn(
-					"flex gap-1.5",
-					BODY_TEXT.className,
-					BULLET_STATUS_CLASS[status],
-				)}
+				className={cn("flex gap-1.5", BULLET_STATUS_CLASS[status])}
+				style={status === "unchanged" ? textStyle : { ...textStyle, color: undefined }}
 			>
 				<span
 					aria-hidden
@@ -1087,11 +1130,15 @@ function ReadOnlyBlockPreview({
 	isName?: boolean
 }) {
 	const content = block.content_json
-	const isBold = block.style_json.bold
+	const style = block.style_json
+	const textStyle = blockTextStyle(style)
+	const mutedStyle = blockTextStyle(style, "muted")
+	const subtleStyle = blockTextStyle(style, "subtle")
+	const titleStyle = blockTextStyle(style)
 
 	if (block.block_type === "group_text" && "texts" in content) {
 		return (
-			<p className={cn("mb-0.5 text-neutral-600", BODY_TEXT.className)}>
+			<p className="mb-0.5" style={mutedStyle}>
 				{content.texts.map((textItem) => textItem.text).join(" ")}
 			</p>
 		)
@@ -1101,14 +1148,10 @@ function ReadOnlyBlockPreview({
 		return (
 			<div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0">
 				<div>
-					<p className={cn(BODY_TEXT.className, "font-semibold text-neutral-900")}>
-						{content.degree}
-					</p>
-					<p className={cn(BODY_TEXT.className, "text-neutral-600")}>
-						{content.school}
-					</p>
+					<p style={titleStyle}>{content.degree}</p>
+					<p style={mutedStyle}>{content.school}</p>
 				</div>
-				<p className={cn(BODY_TEXT.className, "text-neutral-500")}>
+				<p style={subtleStyle}>
 					{formatDateRange(content.start_date, content.end_date)}
 				</p>
 			</div>
@@ -1119,13 +1162,13 @@ function ReadOnlyBlockPreview({
 		const skills = stringListValue(content.skills)
 		return (
 			<div className="mb-1">
-				<p className={cn(BODY_TEXT.className, "text-neutral-800")}>
-					<span className="font-semibold text-neutral-900">
+				<p style={textStyle}>
+					<span style={{ fontWeight: 600 }}>
 						{content.name}
 					</span>
 					{skills.length > 0 ? (
 						<>
-							<span className="font-semibold text-neutral-900">: </span>
+							<span style={{ fontWeight: 600 }}>: </span>
 							<span>{skills.join(", ")}</span>
 						</>
 					) : null}
@@ -1136,22 +1179,25 @@ function ReadOnlyBlockPreview({
 
 	if (block.block_type === "skill_entry" && "name" in content) {
 		return (
-			<span className="mr-1 inline-flex rounded-md bg-neutral-100 px-1.5 py-0.5 text-[12px] font-medium leading-snug text-neutral-800">
+			<span
+				className="mr-1 inline-flex rounded-md bg-neutral-100 px-1.5 py-0.5 font-medium"
+				style={textStyle}
+			>
 				{content.name}
 			</span>
 		)
 	}
 
 	if (block.block_type === "rich_text" && "text" in content) {
+		const displayName = isName || isDisplayNameStyle(style)
 		return (
 			<p
 				className={cn(
-					"mb-0.5 text-neutral-800",
-					isName &&
-						"font-display text-3xl font-semibold tracking-tight text-neutral-900",
-					!isName && cn(BODY_TEXT.className, "text-neutral-700"),
-					!isName && isBold && "font-semibold",
+					"mb-0.5",
+					displayName && "font-display tracking-tight",
+					style?.bold && "font-semibold",
 				)}
+				style={textStyle}
 			>
 				{content.text}
 			</p>
@@ -1159,7 +1205,7 @@ function ReadOnlyBlockPreview({
 	}
 
 	return (
-		<p className={cn("mb-0.5 text-neutral-500", BODY_TEXT.className)}>
+		<p className="mb-0.5" style={subtleStyle}>
 			{getBlockPreviewText(block)}
 		</p>
 	)

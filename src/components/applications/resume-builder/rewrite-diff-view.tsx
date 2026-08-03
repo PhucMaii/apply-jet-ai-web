@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react"
 import type {
 	RewriteBulletLine,
 	RewriteDiffStatus,
@@ -22,20 +23,25 @@ const BULLET_ROW_CLASS: Record<RewriteDiffStatus, string> = {
 export function RewriteDiffText({
 	segments,
 	className,
+	style,
 }: {
 	segments: RewriteTextSegment[]
 	className?: string
+	style?: CSSProperties
 }) {
 	if (segments.length === 0) {
 		return (
-			<p className={cn("text-sm italic text-neutral-400", className)}>
+			<p
+				className={cn("text-sm italic text-neutral-400", className)}
+				style={style}
+			>
 				No summary yet.
 			</p>
 		)
 	}
 
 	return (
-		<p className={cn("leading-relaxed", className)}>
+		<p className={cn("leading-snug", className)} style={style}>
 			{segments.map((segment) => (
 				<span
 					key={segment.id}

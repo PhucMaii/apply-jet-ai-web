@@ -1,0 +1,254 @@
+import type { ReactNode } from "react"
+import { ChevronDown, ChevronRight, Minus, Plus, Type } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import {
+	RESUME_FONT_SIZE_OPTIONS,
+	RESUME_LINE_HEIGHT_OPTIONS,
+	fontStylePatch,
+	getFontStyleMode,
+	type ResumeFontStyleMode,
+	type ResumeStyleGroup,
+} from "@/lib/resume-block-style"
+import type { AppResumeBlockStyle } from "@/types/app-resume"
+import { cn } from "@/lib/utils"
+
+interface SectionStyleEditorProps {
+	group: ResumeStyleGroup
+	isOpen: boolean
+	isActive: boolean
+	isSaving?: boolean
+	onToggle: () => void
+	onChange: (patch: Partial<AppResumeBlockStyle>) => void
+}
+
+export function SectionStyleEditor({
+	group,
+	isOpen,
+	isActive,
+	isSaving = false,
+	onToggle,
+	onChange,
+}: SectionStyleEditorProps) {
+	const fontSize = group.style.fontSize ?? 12
+	const lineHeight = group.style.lineHeight ?? 1.35
+	const fontMode = getFontStyleMode(group.style)
+
+	const canDecrease = fontSize > RESUME_FONT_SIZE_OPTIONS[0]
+	const canIncrease =
+		fontSize < RESUME_FONT_SIZE_OPTIONS[RESUME_FONT_SIZE_OPTIONS.length - 1]
+
+	function handleFontSizeStep(delta: -1 | 1) {
+		const currentIndex = RESUME_FONT_SIZE_OPTIONS.indexOf(
+			fontSize as (typeof RESUME_FONT_SIZE_OPTIONS)[number],
+		)
+		const fallbackIndex = RESUME_FONT_SIZE_OPTIONS.reduce(
+			(closest, size, index) =>
+				Math.abs(size - fontSize) <
+				Math.abs(RESUME_FONT_SIZE_OPTIONS[closest]! - fontSize)
+					? index
+					: closest,
+			0,
+		)
+		const index = currentIndex >= 0 ? currentIndex : fallbackIndex
+		const next = RESUME_FONT_SIZE_OPTIONS[index + delta]
+		if (next == null) return
+		onChange({ fontSize: next })
+	}
+
+	function handleFontMode(mode: ResumeFontStyleMode) {
+		onChange(fontStylePatch(mode))
+	}
+
+	return (
+		<section
+			className={cn(
+				"overflow-hidden rounded-xl border bg-white transition-shadow",
+				isActive
+					? "border-primary/35 shadow-[0_0_0_3px_rgba(79,70,229,0.08)]"
+					: "border-neutral-200/90",
+			)}
+		>
+			<button
+				type="button"
+				onClick={onToggle}
+				aria-expanded={isOpen}
+				className={cn(
+					"flex w-full items-center gap-2 px-3 py-2.5 text-left transition-colors",
+					isOpen ? "bg-neutral-50/80" : "hover:bg-neutral-50",
+				)}
+			>
+				<span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-neutral-100 text-neutral-600">
+					<Type className="size-3.5" aria-hidden />
+				</span>
+				<span className="min-w-0 flex-1">
+					<span className="flex items-center gap-2">
+						<span className="truncate text-sm font-semibold text-neutral-900">
+							{group.label}
+						</span>
+						{isSaving ? (
+							<span className="text-[10px] font-medium uppercase tracking-wide text-neutral-400">
+								Saving
+							</span>
+						) : null}
+					</span>
+					<span className="mt-0.5 block truncate text-xs text-neutral-500">
+						{isOpen
+							? group.description
+							: `${fontSize}px · ${fontModeLabel(fontMode)} · ${lineHeight}`}
+					</span>
+				</span>
+				{isOpen ? (
+					<ChevronDown className="size-4 shrink-0 text-neutral-400" />
+				) : (
+					<ChevronRight className="size-4 shrink-0 text-neutral-400" />
+				)}
+			</button>
+
+			{isOpen ? (
+				<div className="space-y-3 border-t border-neutral-100 px-3 py-3">
+					<StyleField label="Font size">
+						<div className="flex items-center gap-1.5">
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								className="size-8 shrink-0 p-0"
+								disabled={!canDecrease}
+								aria-label={`Decrease ${group.label} font size`}
+								onClick={() => handleFontSizeStep(-1)}
+							>
+								<Minus className="size-3.5" aria-hidden />
+							</Button>
+							<label className="sr-only" htmlFor={`font-size-${group.id}`}>
+								Font size for {group.label}
+							</label>
+							<select
+								id={`font-size-${group.id}`}
+								value={fontSize}
+								onChange={(event) =>
+									onChange({ fontSize: Number(event.target.value) })
+								}
+								className="h-8 min-w-0 flex-1 rounded-md border border-neutral-200 bg-white px-2 text-sm font-medium text-neutral-800 outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+							>
+								{RESUME_FONT_SIZE_OPTIONS.map((size) => (
+									<option key={size} value={size}>
+										{size}px
+									</option>
+								))}
+								{!RESUME_FONT_SIZE_OPTIONS.includes(
+									fontSize as (typeof RESUME_FONT_SIZE_OPTIONS)[number],
+								) ? (
+									<option value={fontSize}>{fontSize}px</option>
+								) : null}
+							</select>
+							<Button
+								type="button"
+								size="sm"
+								variant="outline"
+								className="size-8 shrink-0 p-0"
+								disabled={!canIncrease}
+								aria-label={`Increase ${group.label} font size`}
+								onClick={() => handleFontSizeStep(1)}
+							>
+								<Plus className="size-3.5" aria-hidden />
+							</Button>
+						</div>
+					</StyleField>
+
+					<StyleField label="Font style">
+						<div
+							className="grid grid-cols-3 gap-1 rounded-lg bg-neutral-100 p-1"
+							role="radiogroup"
+							aria-label={`Font style for ${group.label}`}
+						>
+							{(
+								[
+									{ mode: "regular", label: "Regular", sampleClass: "" },
+									{
+										mode: "bold",
+										label: "Bold",
+										sampleClass: "font-semibold",
+									},
+									{ mode: "italic", label: "Italic", sampleClass: "italic" },
+								] as const
+							).map((option) => {
+								const selected = fontMode === option.mode
+								return (
+									<button
+										key={option.mode}
+										type="button"
+										role="radio"
+										aria-checked={selected}
+										onClick={() => handleFontMode(option.mode)}
+										className={cn(
+											"rounded-md px-2 py-1.5 text-xs transition-colors",
+											option.sampleClass,
+											selected
+												? "bg-white text-neutral-900 shadow-sm"
+												: "text-neutral-600 hover:text-neutral-900",
+										)}
+									>
+										{option.label}
+									</button>
+								)
+							})}
+						</div>
+					</StyleField>
+
+					<StyleField label="Line height">
+						<label className="sr-only" htmlFor={`line-height-${group.id}`}>
+							Line height for {group.label}
+						</label>
+						<select
+							id={`line-height-${group.id}`}
+							value={String(lineHeight)}
+							onChange={(event) =>
+								onChange({ lineHeight: Number(event.target.value) })
+							}
+							className="h-8 w-full rounded-md border border-neutral-200 bg-white px-2 text-sm font-medium text-neutral-800 outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+						>
+							{RESUME_LINE_HEIGHT_OPTIONS.map((option) => (
+								<option key={option.value} value={option.value}>
+									{option.label} ({option.value})
+								</option>
+							))}
+							{!RESUME_LINE_HEIGHT_OPTIONS.some(
+								(option) => option.value === lineHeight,
+							) ? (
+								<option value={lineHeight}>Custom ({lineHeight})</option>
+							) : null}
+						</select>
+					</StyleField>
+				</div>
+			) : null}
+		</section>
+	)
+}
+
+function fontModeLabel(mode: ResumeFontStyleMode) {
+	switch (mode) {
+		case "bold":
+			return "Bold"
+		case "italic":
+			return "Italic"
+		default:
+			return "Regular"
+	}
+}
+
+function StyleField({
+	label,
+	children,
+}: {
+	label: string
+	children: ReactNode
+}) {
+	return (
+		<div className="space-y-1.5">
+			<p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+				{label}
+			</p>
+			{children}
+		</div>
+	)
+}

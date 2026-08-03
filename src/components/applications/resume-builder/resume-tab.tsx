@@ -22,10 +22,12 @@ import type {
 	AppResume,
 	AppResumeBlock,
 	AppResumeBlockContent,
+	AppResumeBlockStyle,
 	AppResumeSection,
 } from "@/types/app-resume"
 import type { ApplicationDetailForm } from "@/types/application-detail"
 import { isRewriteSupportedBlockType } from "@/types/rewrite-resume-block"
+import { applyStylePatchToBlocks } from "@/lib/resume-block-style"
 import toast from "react-hot-toast"
 
 const LEFT_PANEL_DEFAULT = 400
@@ -130,6 +132,9 @@ export function ResumeTab({
 	const [rewritingBlockId, setRewritingBlockId] = useState<string | null>(null)
 	const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
 	const [isApplyingRewrite, setIsApplyingRewrite] = useState(false)
+	const [savingStyleGroupId, setSavingStyleGroupId] = useState<string | null>(
+		null,
+	)
 	const [rewriteMode, setRewriteMode] = useState<"rewrite" | "generate">(
 		"rewrite",
 	)
@@ -249,6 +254,47 @@ export function ResumeTab({
 		void refetchApplication()
 	}
 
+	async function handleStyleChange(
+		groupId: string,
+		blockIds: string[],
+		patch: Partial<AppResumeBlockStyle>,
+	) {
+		const previousSections = sections
+		const { nextSections, updatedBlocks } = applyStylePatchToBlocks(
+			sections,
+			blockIds,
+			patch,
+		)
+
+		// Optimistic preview update so style changes feel instant.
+		setSections(nextSections)
+		const sectionId =
+			previousSections.find((section) =>
+				section.blocks.some((block) => blockIds.includes(block.id)),
+			)?.id ?? activeSectionId
+		setActiveSectionId(sectionId)
+		previewRefs.current[sectionId]?.scrollIntoView({
+			behavior: "smooth",
+			block: "nearest",
+		})
+		setSavingStyleGroupId(groupId)
+
+		try {
+			await Promise.all(
+				updatedBlocks.map((block) => onSaveAppResumeBlock(block)),
+			)
+			void refetchApplication()
+		} catch (err) {
+			console.error("Something went wrong saving section style:", err)
+			toast.error(
+				err instanceof Error ? err.message : "Failed to save style.",
+			)
+			setSections(previousSections)
+		} finally {
+			setSavingStyleGroupId(null)
+		}
+	}
+
 	function handleStartEditBlock(block: AppResumeBlock) {
 		setEditingBlockId(block.id)
 		setEditingDraft(getEditableText(block))
@@ -290,6 +336,14 @@ export function ResumeTab({
 
 	function handleSectionClick(sectionId: string) {
 		setExpandedId((prev) => (prev === sectionId ? null : sectionId))
+		setActiveSectionId(sectionId)
+		previewRefs.current[sectionId]?.scrollIntoView({
+			behavior: "smooth",
+			block: "start",
+		})
+	}
+
+	function handleStyleSectionFocus(sectionId: string) {
 		setActiveSectionId(sectionId)
 		previewRefs.current[sectionId]?.scrollIntoView({
 			behavior: "smooth",
@@ -585,7 +639,9 @@ export function ResumeTab({
 						isAddingSkillCategory={isAddingSkillCategory}
 						rewritingBlockId={rewritingBlockId}
 						isGeneratingSummary={isGeneratingSummary}
+						savingStyleGroupId={savingStyleGroupId}
 						onSectionClick={handleSectionClick}
+						onStyleSectionFocus={handleStyleSectionFocus}
 						onDragStart={handleDragStart}
 						onDrop={handleDrop}
 						onStartEditBlock={handleStartEditBlock}
@@ -602,6 +658,9 @@ export function ResumeTab({
 						onDeleteSkillCategory={handleDeleteSkillCategory}
 						onRewriteBlock={handleRewriteBlock}
 						onGenerateSummary={handleGenerateSummary}
+						onStyleChange={(groupId, blockIds, patch) => {
+							void handleStyleChange(groupId, blockIds, patch)
+						}}
 					/>
 				</div>
 

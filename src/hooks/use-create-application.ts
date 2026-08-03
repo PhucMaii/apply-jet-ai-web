@@ -202,7 +202,7 @@ export function useCreateApplication() {
       sort_key: 0,
       style_json: {
         color: "black",
-        fontSize: 6,
+        fontSize: 12,
       },
     }
     const { error: appResumeBlockError } =
@@ -229,6 +229,10 @@ export function useCreateApplication() {
         description: descriptionStringToBullets(experience.description),
       },
       sort_key: index,
+      style_json: {
+        color: "black",
+        fontSize: 12,
+      }
     }));
     await Promise.all(
       experienceBlocks.map(async (block) => {
@@ -258,6 +262,10 @@ export function useCreateApplication() {
         end_date: project.end_date,
       },
       sort_key: index,
+      style_json: {
+        color: "black",
+        fontSize: 12,
+      }
     }));
     await Promise.all(
       projectsBlocks.map(async (block) => {
@@ -287,6 +295,10 @@ export function useCreateApplication() {
         end_date: education.end_date,
       },
       sort_key: index,
+      style_json: {
+        color: "black",
+        fontSize: 12,
+      },
     }));
     await Promise.all(
       educationBlocks.map(async (block) => {
@@ -316,6 +328,10 @@ export function useCreateApplication() {
           category_id: category.id,
           name: category.name,
           skills: category.skills.map((skill) => skill.name),
+        },
+        style_json: {
+          color: "black",
+          fontSize: 12,
         },
       }));
     await Promise.all(

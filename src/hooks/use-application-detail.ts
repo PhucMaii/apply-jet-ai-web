@@ -146,6 +146,7 @@ export function useApplicationDetail(applicationId: string | undefined) {
 			.from("app_resume_blocks")
 			.update({
 				content_json: block.content_json,
+				style_json: block.style_json,
 				updated_at: new Date().toISOString(),
 			})
 			.eq("id", block.id)

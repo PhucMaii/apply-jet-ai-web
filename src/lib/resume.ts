@@ -371,7 +371,7 @@ export const buildHeaderBlock = (appResumeId: string,appResumeSectionId: string,
       style_json: {
         bold: true,
         color: "black",
-        fontSize: 16,
+        fontSize: 24,
       },
     },
     {
@@ -385,7 +385,7 @@ export const buildHeaderBlock = (appResumeId: string,appResumeSectionId: string,
       style_json: {
         bold: true,
         color: "black",
-        fontSize: 12,
+        fontSize: 16,
       },
     },
     {
@@ -398,35 +398,23 @@ export const buildHeaderBlock = (appResumeId: string,appResumeSectionId: string,
           userData?.city &&
             userData?.province && {
               text: `${userData.city}, ${userData.province}`,
-              style_json: {
-                color: "black",
-                fontSize: 6,
-              },
             },
           userData?.phone && {
             text: `| ${userData.phone}`,
-            style_json: {
-              color: "black",
-              fontSize: 6,
-            },
           },
           userData?.email && {
             text: `| ${userData.email}`,
-            style_json: {
-              color: "black",
-              fontSize: 6,
-            },
           },
           ...userLinksArray
             .filter((link) => link.url)
             .map((link) => ({
               text: `| ${link.url}`,
-              style_json: {
-                color: "black",
-                fontSize: 6,
-              },
             })),
         ].filter(Boolean),
+      },
+      style_json: {
+        color: "black",
+        fontSize: 12,
       },
     },
   ];
