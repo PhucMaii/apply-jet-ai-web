@@ -400,21 +400,21 @@ export const buildHeaderBlock = (appResumeId: string,appResumeSectionId: string,
               text: `${userData.city}, ${userData.province}`,
               style_json: {
                 color: "black",
-                fontSize: 8,
+                fontSize: 6,
               },
             },
           userData?.phone && {
             text: `| ${userData.phone}`,
             style_json: {
               color: "black",
-              fontSize: 8,
+              fontSize: 6,
             },
           },
           userData?.email && {
             text: `| ${userData.email}`,
             style_json: {
               color: "black",
-              fontSize: 8,
+              fontSize: 6,
             },
           },
           ...userLinksArray
@@ -423,7 +423,7 @@ export const buildHeaderBlock = (appResumeId: string,appResumeSectionId: string,
               text: `| ${link.url}`,
               style_json: {
                 color: "black",
-                fontSize: 8,
+                fontSize: 6,
               },
             })),
         ].filter(Boolean),

@@ -27,6 +27,7 @@ export function ApplicationDetailPage() {
 		patchForm,
 		saveAppResumeBlock,
 		createAppResumeSkillCategory,
+		createAppResumeSummaryBlock,
 		ensureAppResumeSkillsSection,
 		deleteAppResumeBlock,
 	} = useApplicationDetail(applicationId)
@@ -120,6 +121,7 @@ export function ApplicationDetailPage() {
 					appResume={appResume}
 					onSaveAppResumeBlock={saveAppResumeBlock}
 					onCreateSkillCategory={createAppResumeSkillCategory}
+					onCreateSummaryBlock={createAppResumeSummaryBlock}
 					onEnsureSkillsSection={ensureAppResumeSkillsSection}
 					onDeleteAppResumeBlock={deleteAppResumeBlock}
 				/>

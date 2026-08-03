@@ -59,6 +59,11 @@ interface ApplicationDetailDocumentsProps {
 		sortKey: number
 		name?: string
 	}) => Promise<AppResumeBlock>
+	onCreateSummaryBlock: (input: {
+		appResumeId: string
+		sectionId: string
+		sortKey?: number
+	}) => Promise<AppResumeBlock>
 	onEnsureSkillsSection: (input: {
 		appResumeId: string
 		sortKey: number
@@ -84,6 +89,7 @@ export function ApplicationDetailDocuments({
 	refetchApplication,
 	onSaveAppResumeBlock,
 	onCreateSkillCategory,
+	onCreateSummaryBlock,
 	onEnsureSkillsSection,
 	onDeleteAppResumeBlock,
 }: ApplicationDetailDocumentsProps) {
@@ -183,6 +189,7 @@ export function ApplicationDetailDocuments({
 							appResume={appResume}
 							onSaveAppResumeBlock={onSaveAppResumeBlock}
 							onCreateSkillCategory={onCreateSkillCategory}
+							onCreateSummaryBlock={onCreateSummaryBlock}
 							onEnsureSkillsSection={onEnsureSkillsSection}
 							onDeleteAppResumeBlock={onDeleteAppResumeBlock}
 							refetchApplication={refetchApplication}

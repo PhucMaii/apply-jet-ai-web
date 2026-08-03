@@ -38,6 +38,11 @@ interface ResumeStudioProps {
 		sortKey: number
 		name?: string
 	}) => Promise<AppResumeBlock>
+	onCreateSummaryBlock: (input: {
+		appResumeId: string
+		sectionId: string
+		sortKey?: number
+	}) => Promise<AppResumeBlock>
 	onEnsureSkillsSection: (input: {
 		appResumeId: string
 		sortKey: number
@@ -60,6 +65,7 @@ export function ResumeStudio({
 	onDelete,
 	onSaveAppResumeBlock,
 	onCreateSkillCategory,
+	onCreateSummaryBlock,
 	onEnsureSkillsSection,
 	onDeleteAppResumeBlock,
 	refetchApplication,
@@ -172,6 +178,7 @@ export function ResumeStudio({
 					appResume={appResume}
 					onSaveAppResumeBlock={onSaveAppResumeBlock}
 					onCreateSkillCategory={onCreateSkillCategory}
+					onCreateSummaryBlock={onCreateSummaryBlock}
 					onEnsureSkillsSection={onEnsureSkillsSection}
 					onDeleteAppResumeBlock={onDeleteAppResumeBlock}
 					refetchApplication={refetchApplication}

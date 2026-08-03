@@ -202,7 +202,7 @@ export function useCreateApplication() {
       sort_key: 0,
       style_json: {
         color: "black",
-        fontSize: 12,
+        fontSize: 6,
       },
     }
     const { error: appResumeBlockError } =

@@ -16,12 +16,16 @@ import {
 	calculateATSScore,
 	type ATSScoreResult,
 } from "@/lib/atsScoring"
+import { buildBlockRewriteDiff, type BlockRewriteDiff } from "@/lib/rewrite-diff"
+import { invokeRewriteResumeBlock } from "@/lib/rewrite-resume-block"
 import type {
 	AppResume,
 	AppResumeBlock,
+	AppResumeBlockContent,
 	AppResumeSection,
 } from "@/types/app-resume"
 import type { ApplicationDetailForm } from "@/types/application-detail"
+import { isRewriteSupportedBlockType } from "@/types/rewrite-resume-block"
 import toast from "react-hot-toast"
 
 const LEFT_PANEL_DEFAULT = 400
@@ -59,6 +63,11 @@ interface ResumeTabProps {
 		sortKey: number
 		name?: string
 	}) => Promise<AppResumeBlock>
+	onCreateSummaryBlock: (input: {
+		appResumeId: string
+		sectionId: string
+		sortKey?: number
+	}) => Promise<AppResumeBlock>
 	onEnsureSkillsSection: (input: {
 		appResumeId: string
 		sortKey: number
@@ -86,6 +95,7 @@ export function ResumeTab({
 	// onGenerate,
 	onSaveAppResumeBlock,
 	onCreateSkillCategory,
+	onCreateSummaryBlock,
 	onEnsureSkillsSection,
 	onDeleteAppResumeBlock,
 	refetchApplication,
@@ -117,6 +127,17 @@ export function ResumeTab({
 	const [isAddingSkillCategory, setIsAddingSkillCategory] = useState(false)
 	const [atsResult, setAtsResult] = useState<ATSScoreResult | null>(null)
 	const [isScoringAts, setIsScoringAts] = useState(false)
+	const [rewritingBlockId, setRewritingBlockId] = useState<string | null>(null)
+	const [isGeneratingSummary, setIsGeneratingSummary] = useState(false)
+	const [isApplyingRewrite, setIsApplyingRewrite] = useState(false)
+	const [rewriteMode, setRewriteMode] = useState<"rewrite" | "generate">(
+		"rewrite",
+	)
+	const [rewriteOriginalBlock, setRewriteOriginalBlock] =
+		useState<AppResumeBlock | null>(null)
+	const [rewriteDiff, setRewriteDiff] = useState<BlockRewriteDiff | null>(null)
+	const [pendingRewriteContent, setPendingRewriteContent] =
+		useState<AppResumeBlockContent | null>(null)
 	const previewRefs = useRef<Record<string, HTMLElement | null>>({})
 	const lastScoreKeyRef = useRef<string | null>(null)
 
@@ -360,6 +381,151 @@ export function ResumeTab({
 		}
 	}
 
+	function requireJobDescription() {
+		if (!jdText) {
+			toast.error("Add a job description before using AI rewrite.")
+			return false
+		}
+		return true
+	}
+
+	function clearRewriteReview() {
+		setRewriteDiff(null)
+		setPendingRewriteContent(null)
+		setRewriteOriginalBlock(null)
+		setRewriteMode("rewrite")
+	}
+
+	async function requestRewriteForBlock(
+		block: AppResumeBlock,
+		mode: "rewrite" | "generate" = "rewrite",
+	) {
+		if (!appResume?.id) {
+			toast.error("No resume found for this application.")
+			return
+		}
+		if (!requireJobDescription()) return
+		if (!isRewriteSupportedBlockType(block.block_type)) {
+			toast.error("AI rewrite is only available for summary and experience.")
+			return
+		}
+
+		setRewritingBlockId(block.id)
+		try {
+			const suggestion = await invokeRewriteResumeBlock({
+				blockId: block.id,
+				appResumeId: appResume.id,
+				jdText,
+			})
+			const diff = buildBlockRewriteDiff({
+				originalBlock: block,
+				suggestion,
+				mode,
+			})
+			setRewriteMode(mode)
+			setRewriteOriginalBlock(block)
+			setPendingRewriteContent(
+				suggestion.content_json as AppResumeBlockContent,
+			)
+			setRewriteDiff(diff)
+			setActiveSectionId(block.section_id)
+			setExpandedId(block.section_id)
+		} catch (error) {
+			console.error("Something went wrong requesting AI rewrite:", error)
+			toast.error(
+				error instanceof Error ? error.message : "Failed to rewrite with AI.",
+			)
+		} finally {
+			setRewritingBlockId(null)
+		}
+	}
+
+	async function handleRewriteBlock(block: AppResumeBlock) {
+		await requestRewriteForBlock(block, "rewrite")
+	}
+
+	async function handleGenerateSummary() {
+		if (!appResume?.id) {
+			toast.error("No resume found for this application.")
+			return
+		}
+		if (!requireJobDescription()) return
+
+		const summarySection = sections.find(
+			(section) => section.section_type === "summary",
+		)
+		if (!summarySection) {
+			toast.error("Summary section is missing from this resume.")
+			return
+		}
+
+		setIsGeneratingSummary(true)
+		try {
+			let targetBlock = summarySection.blocks.find(
+				(block) => block.block_type === "rich_text",
+			)
+
+			if (!targetBlock) {
+				targetBlock = await onCreateSummaryBlock({
+					appResumeId: appResume.id,
+					sectionId: summarySection.id,
+					sortKey: summarySection.blocks.length,
+				})
+				setSections((prev) =>
+					prev.map((section) =>
+						section.id === summarySection.id
+							? {
+									...section,
+									blocks: [...section.blocks, targetBlock!],
+								}
+							: section,
+					),
+				)
+			}
+
+			setExpandedId(summarySection.id)
+			setActiveSectionId(summarySection.id)
+			await requestRewriteForBlock(targetBlock, "generate")
+		} catch (error) {
+			console.error("Something went wrong generating summary:", error)
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to generate summary.",
+			)
+		} finally {
+			setIsGeneratingSummary(false)
+		}
+	}
+
+	async function handleApplyRewriteSuggestion() {
+		if (!rewriteOriginalBlock || !pendingRewriteContent) return
+
+		setIsApplyingRewrite(true)
+		try {
+			const nextBlock: AppResumeBlock = {
+				...rewriteOriginalBlock,
+				content_json: pendingRewriteContent,
+			}
+			await updateBlock(nextBlock)
+			clearRewriteReview()
+			toast.success(
+				rewriteMode === "generate"
+					? "Summary added"
+					: "AI changes applied",
+			)
+		} catch (error) {
+			console.error("Something went wrong applying AI rewrite:", error)
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to apply AI changes.",
+			)
+		} finally {
+			setIsApplyingRewrite(false)
+		}
+	}
+
 	function getLayoutWidth() {
 		return layoutRef.current?.clientWidth ?? 0
 	}
@@ -400,97 +566,103 @@ export function ResumeTab({
 			ref={layoutRef}
 			className="flex h-full min-h-0 flex-1 flex-col overflow-hidden xl:flex-row"
 		>
-			<div
-				className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--left-panel-width)]"
-				style={
-					{
-						"--left-panel-width": `${leftPanelWidth}px`,
-					} as CSSProperties
-				}
-			>
-				<ResumeSectionsAside
-					sections={sections}
-					expandedId={expandedId}
-					activeSectionId={activeSectionId}
-					dragId={dragId}
-					editingBlockId={editingBlockId}
-					editingDraft={editingDraft}
-					editingFormData={editingFormData}
-					isAddingSkillCategory={isAddingSkillCategory}
-					onSectionClick={handleSectionClick}
-					onDragStart={handleDragStart}
-					onDrop={handleDrop}
-					onStartEditBlock={handleStartEditBlock}
-					onDraftTextChange={setEditingDraft}
-					onFieldChange={(field, value) =>
-						setEditingFormData((prev) => ({
-							...(prev ?? {}),
-							[field]: value,
-						}))
+				<div
+					className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--left-panel-width)]"
+					style={
+						{
+							"--left-panel-width": `${leftPanelWidth}px`,
+						} as CSSProperties
 					}
-					onApplyEditBlock={handleApplyEditBlock}
-					onCancelEditBlock={handleCancelEditBlock}
-					onAddSkillCategory={handleAddSkillCategory}
-					onDeleteSkillCategory={handleDeleteSkillCategory}
+				>
+					<ResumeSectionsAside
+						sections={sections}
+						expandedId={expandedId}
+						activeSectionId={activeSectionId}
+						dragId={dragId}
+						editingBlockId={editingBlockId}
+						editingDraft={editingDraft}
+						editingFormData={editingFormData}
+						isAddingSkillCategory={isAddingSkillCategory}
+						rewritingBlockId={rewritingBlockId}
+						isGeneratingSummary={isGeneratingSummary}
+						onSectionClick={handleSectionClick}
+						onDragStart={handleDragStart}
+						onDrop={handleDrop}
+						onStartEditBlock={handleStartEditBlock}
+						onDraftTextChange={setEditingDraft}
+						onFieldChange={(field, value) =>
+							setEditingFormData((prev) => ({
+								...(prev ?? {}),
+								[field]: value,
+							}))
+						}
+						onApplyEditBlock={handleApplyEditBlock}
+						onCancelEditBlock={handleCancelEditBlock}
+						onAddSkillCategory={handleAddSkillCategory}
+						onDeleteSkillCategory={handleDeleteSkillCategory}
+						onRewriteBlock={handleRewriteBlock}
+						onGenerateSummary={handleGenerateSummary}
+					/>
+				</div>
+
+				<PanelResizeHandle
+					label="Resize sections panel"
+					onResize={handleResizeLeft}
 				/>
-			</div>
 
-			<PanelResizeHandle
-				label="Resize sections panel"
-				onResize={handleResizeLeft}
-			/>
-
-			<ResumePreviewPanel
-				sections={sections}
-				activeSectionId={activeSectionId}
-				sectionRefs={previewRefs}
-				pageCount={pageCount}
-				onPageCountChange={setPageCount}
-			/>
-
-			<PanelResizeHandle
-				label="Resize job panel"
-				onResize={handleResizeRight}
-			/>
-
-			<div
-				className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--right-panel-width)]"
-				style={
-					{
-						"--right-panel-width": `${rightPanelWidth}px`,
-					} as CSSProperties
-				}
-			>
-				<ResumeJobAside
-					form={form}
-					status={status}
-					createdAt={createdAt}
-					savingDetails={savingDetails}
-					updatingStatus={updatingStatus}
-					isDeleting={isDeleting}
-					showJobForm={showJobForm}
-					issueTotal={issueTotal}
-					keywordsOpen={keywordsOpen}
-					contentOpen={contentOpen}
-					atsResult={atsResult}
-					isScoringAts={isScoringAts}
-					onToggleKeywords={() => setKeywordsOpen((prev) => !prev)}
-					onToggleContent={() => setContentOpen((prev) => !prev)}
-					onEditJob={() => setIsEditingJob(true)}
-					onDoneEditingJob={() => {
-						setIsEditingJob(false)
-						void runAtsScore(true)
+				<ResumePreviewPanel
+					sections={sections}
+					activeSectionId={activeSectionId}
+					sectionRefs={previewRefs}
+					pageCount={pageCount}
+					onPageCountChange={setPageCount}
+					rewriteDiff={rewriteDiff}
+					isApplyingRewrite={isApplyingRewrite}
+					onAcceptRewrite={() => {
+						void handleApplyRewriteSuggestion()
 					}}
-					onSaveJobDetails={handleSaveJobDetails}
-					onPatchForm={onPatchForm}
-					onStatusChange={onStatusChange}
-					onDelete={onDelete}
-					// onGenerate={() => {
-					// 	void runAtsScore(true)
-					// 	onGenerate()
-					// }}
+					onRejectRewrite={clearRewriteReview}
 				/>
-			</div>
+
+				<PanelResizeHandle
+					label="Resize job panel"
+					onResize={handleResizeRight}
+				/>
+
+				<div
+					className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--right-panel-width)]"
+					style={
+						{
+							"--right-panel-width": `${rightPanelWidth}px`,
+						} as CSSProperties
+					}
+				>
+					<ResumeJobAside
+						form={form}
+						status={status}
+						createdAt={createdAt}
+						savingDetails={savingDetails}
+						updatingStatus={updatingStatus}
+						isDeleting={isDeleting}
+						showJobForm={showJobForm}
+						issueTotal={issueTotal}
+						keywordsOpen={keywordsOpen}
+						contentOpen={contentOpen}
+						atsResult={atsResult}
+						isScoringAts={isScoringAts}
+						onToggleKeywords={() => setKeywordsOpen((prev) => !prev)}
+						onToggleContent={() => setContentOpen((prev) => !prev)}
+						onEditJob={() => setIsEditingJob(true)}
+						onDoneEditingJob={() => {
+							setIsEditingJob(false)
+							void runAtsScore(true)
+						}}
+						onSaveJobDetails={handleSaveJobDetails}
+						onPatchForm={onPatchForm}
+						onStatusChange={onStatusChange}
+						onDelete={onDelete}
+					/>
+				</div>
 		</div>
 	)
 }

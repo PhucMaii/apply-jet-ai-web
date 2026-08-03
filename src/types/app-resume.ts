@@ -75,7 +75,7 @@ export interface AppResumeBlock {
 	sort_key: number
 	content_json: AppResumeBlockContent
 	style_json: AppResumeBlockStyle
-	created_at: string
+	created_at: string 
 	updated_at: string
 }
 

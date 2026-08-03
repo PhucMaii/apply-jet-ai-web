@@ -7,6 +7,7 @@ import {
 	Loader2,
 	Pencil,
 	Plus,
+	Sparkles,
 	Trash2,
 } from "lucide-react"
 import {
@@ -19,6 +20,7 @@ import { getSectionIcon } from "@/components/applications/resume-builder/section
 import ConfirmModal from "@/components/ui/confirm-modal"
 import { Button } from "@/components/ui/button"
 import type { AppResumeBlock, AppResumeSection } from "@/types/app-resume"
+import { isRewriteSupportedBlockType } from "@/types/rewrite-resume-block"
 import { cn } from "@/lib/utils"
 import toast from "react-hot-toast"
 
@@ -31,6 +33,8 @@ interface ResumeSectionsAsideProps {
 	editingDraft: string
 	editingFormData: Record<string, unknown> | null
 	isAddingSkillCategory?: boolean
+	rewritingBlockId?: string | null
+	isGeneratingSummary?: boolean
 	onSectionClick: (sectionId: string) => void
 	onDragStart: (sectionId: string) => void
 	onDrop: (targetId: string) => void
@@ -41,6 +45,15 @@ interface ResumeSectionsAsideProps {
 	onCancelEditBlock: () => void
 	onAddSkillCategory: () => Promise<void> | void
 	onDeleteSkillCategory: (block: AppResumeBlock) => Promise<void>
+	onRewriteBlock: (block: AppResumeBlock) => Promise<void> | void
+	onGenerateSummary: () => Promise<void> | void
+}
+
+function isEmptySummaryBlock(block: AppResumeBlock) {
+	if (block.block_type !== "rich_text") return false
+	const content = block.content_json
+	if (!("text" in content) || typeof content.text !== "string") return true
+	return content.text.trim().length === 0
 }
 
 export function ResumeSectionsAside({
@@ -52,6 +65,8 @@ export function ResumeSectionsAside({
 	editingDraft,
 	editingFormData,
 	isAddingSkillCategory = false,
+	rewritingBlockId = null,
+	isGeneratingSummary = false,
 	onSectionClick,
 	onDragStart,
 	onDrop,
@@ -62,10 +77,25 @@ export function ResumeSectionsAside({
 	onCancelEditBlock,
 	onAddSkillCategory,
 	onDeleteSkillCategory,
+	onRewriteBlock,
+	onGenerateSummary,
 }: ResumeSectionsAsideProps) {
 	const hasSections = sections.length > 0
 	const [pendingDeleteBlock, setPendingDeleteBlock] =
 		useState<AppResumeBlock | null>(null)
+
+	const summarySection = sections.find(
+		(section) => section.section_type === "summary",
+	)
+	const summaryBlocks = summarySection
+		? sortBlocks(summarySection.blocks).filter(
+				(block) => block.block_type === "rich_text",
+			)
+		: []
+	const hasUsableSummary = summaryBlocks.some(
+		(block) => !isEmptySummaryBlock(block),
+	)
+	const showGenerateSummaryCta = Boolean(summarySection) && !hasUsableSummary
 
 	async function handleConfirmDelete() {
 		if (!pendingDeleteBlock) return
@@ -92,6 +122,43 @@ export function ResumeSectionsAside({
 					<p className="px-1 py-6 text-center text-sm text-neutral-500">
 						No sections available.
 					</p>
+				) : null}
+
+				{showGenerateSummaryCta ? (
+					<div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3">
+						<p className="text-sm font-medium text-neutral-800">
+							No professional summary yet
+						</p>
+						<p className="mt-1 text-xs leading-relaxed text-neutral-500">
+							Generate one from your resume and this job description.
+						</p>
+						<Button
+							type="button"
+							size="sm"
+							className="mt-3 h-8 gap-1.5"
+							disabled={isGeneratingSummary}
+							onClick={() => {
+								onGenerateSummary()?.catch((error) => {
+									console.error(
+										"Something went wrong generating summary:",
+										error,
+									)
+									toast.error(
+										error instanceof Error
+											? error.message
+											: "Failed to generate summary.",
+									)
+								})
+							}}
+						>
+							{isGeneratingSummary ? (
+								<Loader2 className="size-3.5 animate-spin" aria-hidden />
+							) : (
+								<Sparkles className="size-3.5" aria-hidden />
+							)}
+							{isGeneratingSummary ? "Generating…" : "Generate with AI"}
+						</Button>
+					</div>
 				) : null}
 
 				{sortSections(sections).map((section) => {
@@ -153,6 +220,17 @@ export function ResumeSectionsAside({
 										const isEditing = editingBlockId === block.id
 										const canDeleteCategory =
 											block.block_type === "skill_category_entry"
+										const canRewrite =
+											isRewriteSupportedBlockType(block.block_type) &&
+											!(
+												section.section_type === "summary" &&
+												isEmptySummaryBlock(block)
+											) &&
+											!(
+												block.block_type === "rich_text" &&
+												section.section_type !== "summary"
+											)
+										const isRewriting = rewritingBlockId === block.id
 										return (
 											<div
 												key={block.id}
@@ -180,6 +258,38 @@ export function ResumeSectionsAside({
 																aria-label="Remove skill category"
 															>
 																<Trash2 className="size-3.5" aria-hidden />
+															</Button>
+														) : null}
+														{canRewrite ? (
+															<Button
+																type="button"
+																size="sm"
+																variant="ghost"
+																className="h-7 gap-1 px-2 text-xs text-primary hover:bg-primary/10"
+																disabled={isRewriting || isGeneratingSummary}
+																onClick={() => {
+																	onRewriteBlock(block)?.catch((error) => {
+																		console.error(
+																			"Something went wrong rewriting block:",
+																			error,
+																		)
+																		toast.error(
+																			error instanceof Error
+																				? error.message
+																				: "Failed to rewrite with AI.",
+																		)
+																	})
+																}}
+															>
+																{isRewriting ? (
+																	<Loader2
+																		className="size-3.5 animate-spin"
+																		aria-hidden
+																	/>
+																) : (
+																	<Sparkles className="size-3.5" aria-hidden />
+																)}
+																AI
 															</Button>
 														) : null}
 														<Button

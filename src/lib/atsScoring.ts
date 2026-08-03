@@ -23,10 +23,26 @@ export interface ExtractedKeyword {
   weight: number;
 }
 
+export type KeywordPlacement =
+  | "skills_or_summary"
+  | "projects"
+  | "experience";
+
+export interface KeywordEvidence {
+  placement: KeywordPlacement;
+  experienceMonths: number;
+  roleCount: number;
+  mentionCount: number;
+  multiplier: number;
+}
+
 export interface KeywordMatchResult {
   /** 0-100 */
   subscore: number;
-  matchedKeywords: (ExtractedKeyword & { found: true })[];
+  matchedKeywords: (ExtractedKeyword & {
+    found: true;
+    evidence?: KeywordEvidence;
+  })[];
   missingKeywords: (ExtractedKeyword & { found: false })[];
 }
 
@@ -935,12 +951,273 @@ function keywordFoundInResume(
   return false;
 }
 
+interface KeywordEvidenceAccumulator {
+  inExperience: boolean;
+  inProjects: boolean;
+  inSkills: boolean;
+  experienceMonths: number;
+  roleIds: Set<string>;
+  mentionCount: number;
+}
+
+const UNDATED_JOB_MONTHS_DEFAULT = 6;
+const EVIDENCE_MULTIPLIER_MIN = 1.0;
+const EVIDENCE_MULTIPLIER_MAX = 1.8;
+const EXPERIENCE_BASE_MULTIPLIER = 1.35;
+const PROJECT_BASE_MULTIPLIER = 1.15;
+const TENURE_MONTHS_CAP = 60;
+const TENURE_BOOST_MAX = 0.4;
+const ROLE_BOOST_PER_EXTRA = 0.05;
+const ROLE_BOOST_MAX = 0.15;
+const DENSITY_BOOST_MAX = 0.1;
+
+function emptyEvidenceAccumulator(): KeywordEvidenceAccumulator {
+  return {
+    inExperience: false,
+    inProjects: false,
+    inSkills: false,
+    experienceMonths: 0,
+    roleIds: new Set<string>(),
+    mentionCount: 0,
+  };
+}
+
+function jobTenureMonths(
+  startDate: string | null | undefined,
+  endDate: string | null | undefined,
+): number {
+  if (!startDate && !endDate) return UNDATED_JOB_MONTHS_DEFAULT;
+  const start = startDate ? new Date(startDate) : new Date();
+  const end = endDate ? new Date(endDate) : new Date();
+  if (
+    !Number.isFinite(start.getTime()) ||
+    !Number.isFinite(end.getTime()) ||
+    end < start
+  ) {
+    return UNDATED_JOB_MONTHS_DEFAULT;
+  }
+  const months = differenceInMonths(end, start);
+  return months > 0 ? months : UNDATED_JOB_MONTHS_DEFAULT;
+}
+
+function findTaxonomyTermsInText(text: string): Map<string, number> {
+  const counts = new Map<string, number>();
+  if (!text.trim()) return counts;
+
+  const candidates = extractNounPhraseCandidates(text);
+  for (const candidate of candidates) {
+    const entry = TAXONOMY_INDEX.get(normalizeTerm(candidate));
+    if (!entry) continue;
+    const key = normalizeTerm(entry.term);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  // Also catch bare skill tokens that phrase extraction may miss in short lists.
+  const normalized = normalizeTerm(text);
+  for (const [alias, entry] of TAXONOMY_INDEX) {
+    if (!alias || alias.length < 2) continue;
+    if (!normalized.includes(alias)) continue;
+    const key = normalizeTerm(entry.term);
+    if (!counts.has(key)) counts.set(key, 1);
+  }
+
+  return counts;
+}
+
+function ensureEvidence(
+  index: Map<string, KeywordEvidenceAccumulator>,
+  key: string,
+): KeywordEvidenceAccumulator {
+  const existing = index.get(key);
+  if (existing) return existing;
+  const created = emptyEvidenceAccumulator();
+  index.set(key, created);
+  return created;
+}
+
 /**
- * Fuzzy-match JD keywords against flattened resume text and score coverage.
+ * Index where taxonomy keywords appear in the structured resume, including
+ * experience tenure months for job hits.
+ */
+export function buildKeywordEvidenceIndex(
+  appResume: AppResume,
+): Map<string, KeywordEvidenceAccumulator> {
+  const index = new Map<string, KeywordEvidenceAccumulator>();
+
+  for (const section of appResume.sections) {
+    for (const block of section.blocks) {
+      const content = block.content_json;
+
+      if (block.block_type === "job_entry" && "title" in content) {
+        const jobText = [
+          content.title,
+          content.company,
+          ...("description" in content
+            ? Array.isArray(content.description)
+              ? content.description
+              : []
+            : []),
+        ]
+          .filter((part): part is string => typeof part === "string")
+          .join(" ");
+        const terms = findTaxonomyTermsInText(jobText);
+        const months = jobTenureMonths(content.start_date, content.end_date);
+        for (const [key, mentions] of terms) {
+          const evidence = ensureEvidence(index, key);
+          evidence.inExperience = true;
+          evidence.mentionCount += mentions;
+          if (!evidence.roleIds.has(block.id)) {
+            evidence.roleIds.add(block.id);
+            evidence.experienceMonths += months;
+          }
+        }
+        continue;
+      }
+
+      if (
+        block.block_type === "project_entry" &&
+        "name" in content &&
+        "description" in content
+      ) {
+        const projectText = [
+          content.name,
+          ...(Array.isArray(content.description) ? content.description : []),
+        ]
+          .filter((part): part is string => typeof part === "string")
+          .join(" ");
+        const terms = findTaxonomyTermsInText(projectText);
+        for (const [key, mentions] of terms) {
+          const evidence = ensureEvidence(index, key);
+          evidence.inProjects = true;
+          evidence.mentionCount += mentions;
+        }
+        continue;
+      }
+
+      if (block.block_type === "skill_category_entry" && "skills" in content) {
+        const skillsText = [
+          typeof content.name === "string" ? content.name : "",
+          ...(Array.isArray(content.skills) ? content.skills : []),
+        ].join(" ");
+        const terms = findTaxonomyTermsInText(skillsText);
+        for (const [key, mentions] of terms) {
+          const evidence = ensureEvidence(index, key);
+          evidence.inSkills = true;
+          evidence.mentionCount += mentions;
+        }
+        continue;
+      }
+
+      if (block.block_type === "skill_entry" && "name" in content) {
+        const terms = findTaxonomyTermsInText(
+          typeof content.name === "string" ? content.name : "",
+        );
+        for (const [key, mentions] of terms) {
+          const evidence = ensureEvidence(index, key);
+          evidence.inSkills = true;
+          evidence.mentionCount += mentions;
+        }
+        continue;
+      }
+
+      if (block.block_type === "rich_text" && "text" in content) {
+        const terms = findTaxonomyTermsInText(
+          typeof content.text === "string" ? content.text : "",
+        );
+        for (const [key, mentions] of terms) {
+          const evidence = ensureEvidence(index, key);
+          // Summary / other prose: skills_or_summary placement only.
+          evidence.mentionCount += mentions;
+        }
+      }
+    }
+  }
+
+  return index;
+}
+
+function lookupEvidence(
+  index: Map<string, KeywordEvidenceAccumulator>,
+  keyword: ExtractedKeyword,
+): KeywordEvidenceAccumulator | null {
+  for (const variant of expandVariants(keyword.term)) {
+    const entry = TAXONOMY_INDEX.get(variant);
+    const key = entry ? normalizeTerm(entry.term) : variant;
+    const hit = index.get(key);
+    if (hit) return hit;
+  }
+  return index.get(normalizeTerm(keyword.term)) ?? null;
+}
+
+function computeEvidenceMultiplier(
+  evidence: KeywordEvidenceAccumulator | null,
+): KeywordEvidence {
+  const mentionCount = evidence?.mentionCount ?? 1;
+  const roleCount = evidence?.roleIds.size ?? 0;
+  const experienceMonths = evidence?.experienceMonths ?? 0;
+  const densityBoost = Math.min(
+    DENSITY_BOOST_MAX,
+    Math.log(1 + mentionCount) * 0.03,
+  );
+
+  if (evidence?.inExperience) {
+    const tenureBoost =
+      (Math.min(experienceMonths, TENURE_MONTHS_CAP) / TENURE_MONTHS_CAP) *
+      TENURE_BOOST_MAX;
+    const roleBoost = Math.min(
+      ROLE_BOOST_MAX,
+      Math.max(0, roleCount - 1) * ROLE_BOOST_PER_EXTRA,
+    );
+    const multiplier = Math.min(
+      EVIDENCE_MULTIPLIER_MAX,
+      Math.max(
+        EVIDENCE_MULTIPLIER_MIN,
+        EXPERIENCE_BASE_MULTIPLIER + tenureBoost + roleBoost + densityBoost,
+      ),
+    );
+    return {
+      placement: "experience",
+      experienceMonths,
+      roleCount,
+      mentionCount,
+      multiplier,
+    };
+  }
+
+  if (evidence?.inProjects) {
+    const multiplier = Math.min(
+      EVIDENCE_MULTIPLIER_MAX,
+      Math.max(
+        EVIDENCE_MULTIPLIER_MIN,
+        PROJECT_BASE_MULTIPLIER + densityBoost,
+      ),
+    );
+    return {
+      placement: "projects",
+      experienceMonths: 0,
+      roleCount: 0,
+      mentionCount,
+      multiplier,
+    };
+  }
+
+  return {
+    placement: "skills_or_summary",
+    experienceMonths: 0,
+    roleCount: 0,
+    mentionCount,
+    multiplier: EVIDENCE_MULTIPLIER_MIN + Math.min(0.05, densityBoost),
+  };
+}
+
+/**
+ * Fuzzy-match JD keywords against the structured resume, weighting hits by
+ * placement (experience > projects > skills) and experience tenure.
  */
 export function matchKeywords(
   jdKeywords: ExtractedKeyword[],
   resumeText: string,
+  appResume?: AppResume | null,
 ): KeywordMatchResult {
   const resumeNormalized = normalizeTerm(resumeText);
   const resumeStemmedTokens = new Set(
@@ -949,21 +1226,41 @@ export function matchKeywords(
       .filter(Boolean)
       .map((token) => simpleStem(token)),
   );
+  const evidenceIndex = appResume
+    ? buildKeywordEvidenceIndex(appResume)
+    : new Map<string, KeywordEvidenceAccumulator>();
 
-  const matchedKeywords: (ExtractedKeyword & { found: true })[] = [];
+  const matchedKeywords: (ExtractedKeyword & {
+    found: true;
+    evidence?: KeywordEvidence;
+  })[] = [];
   const missingKeywords: (ExtractedKeyword & { found: false })[] = [];
 
   for (const keyword of jdKeywords) {
-    if (keywordFoundInResume(keyword, resumeNormalized, resumeStemmedTokens)) {
-      matchedKeywords.push({ ...keyword, found: true });
-    } else {
+    const structuredEvidence = lookupEvidence(evidenceIndex, keyword);
+    const foundInText = keywordFoundInResume(
+      keyword,
+      resumeNormalized,
+      resumeStemmedTokens,
+    );
+    const found = Boolean(structuredEvidence) || foundInText;
+
+    if (!found) {
       missingKeywords.push({ ...keyword, found: false });
+      continue;
     }
+
+    const evidence = computeEvidenceMultiplier(structuredEvidence);
+    matchedKeywords.push({
+      ...keyword,
+      found: true,
+      evidence,
+    });
   }
 
   const totalWeight = jdKeywords.reduce((sum, item) => sum + item.weight, 0);
   const matchedWeight = matchedKeywords.reduce(
-    (sum, item) => sum + item.weight,
+    (sum, item) => sum + item.weight * (item.evidence?.multiplier ?? 1),
     0,
   );
   const subscore =
@@ -1517,15 +1814,10 @@ export async function calculateATSScore(
 ): Promise<ATSScoreResult> {
 	const resumeText = flattenResumeSectionsText(appResume.sections);
   const jdKeywords = extractJDKeywords(jdText);
-  console.log("jdKeywords", jdKeywords);
   const qualifications = scoreQualifications(jdText, appResume);
-  console.log("qualifications", qualifications);
-  const keywordResult = matchKeywords(jdKeywords, resumeText);
-  console.log("keywordResult", keywordResult);
+  const keywordResult = matchKeywords(jdKeywords, resumeText, appResume);
   const parseabilityChecks = scoreParseability(resumeText, resumeMetadata);
-  console.log("parseabilityChecks", parseabilityChecks);
   const parseability = structuralScore(parseabilityChecks);
-  console.log("parseability", parseability);
 
   const score = computeOverallScore(
     keywordResult.subscore,
@@ -1533,7 +1825,6 @@ export async function calculateATSScore(
     qualifications.score,
     keywordResult.missingKeywords,
   );
-  console.log("score", score);
 
   return score
 }

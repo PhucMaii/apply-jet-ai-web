@@ -204,6 +204,50 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		[user, applicationId],
 	)
 
+	const createAppResumeSummaryBlock = useCallback(
+		async (input: {
+			appResumeId: string
+			sectionId: string
+			sortKey?: number
+		}): Promise<AppResumeBlock> => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const now = new Date().toISOString()
+			const { data, error: insertError } = await supabase
+				.from("app_resume_blocks")
+				.insert({
+					app_resume_id: input.appResumeId,
+					section_id: input.sectionId,
+					block_type: "rich_text",
+					sort_key: input.sortKey ?? 0,
+					content_json: { text: "" },
+					style_json: {
+						color: "black",
+						fontSize: 12,
+					},
+					created_at: now,
+					updated_at: now,
+				})
+				.select("*")
+				.single()
+
+			if (insertError || !data) {
+				console.error(
+					"Something went wrong creating summary block:",
+					insertError,
+				)
+				throw new Error(
+					insertError?.message ?? "Failed to create summary block.",
+				)
+			}
+
+			return data as AppResumeBlock
+		},
+		[user, applicationId],
+	)
+
 	const ensureAppResumeSkillsSection = useCallback(
 		async (input: {
 			appResumeId: string
@@ -288,6 +332,7 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		patchForm,
 		saveAppResumeBlock,
 		createAppResumeSkillCategory,
+		createAppResumeSummaryBlock,
 		ensureAppResumeSkillsSection,
 		deleteAppResumeBlock,
 		toForm: toApplicationDetailForm,
