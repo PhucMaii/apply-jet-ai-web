@@ -232,6 +232,7 @@ export function useCreateApplication() {
       style_json: {
         color: "black",
         fontSize: 12,
+        headerLayout: "inline",
       }
     }));
     await Promise.all(
@@ -265,6 +266,7 @@ export function useCreateApplication() {
       style_json: {
         color: "black",
         fontSize: 12,
+        headerLayout: "inline",
       }
     }));
     await Promise.all(
@@ -298,6 +300,7 @@ export function useCreateApplication() {
       style_json: {
         color: "black",
         fontSize: 12,
+        headerLayout: "stacked",
       },
     }));
     await Promise.all(

@@ -5,6 +5,7 @@ import {
 	useState,
 	type CSSProperties,
 	type MutableRefObject,
+	type ReactNode,
 } from "react"
 import {
 	formatDateRange,
@@ -19,6 +20,13 @@ import type {
 	RewriteDiffStatus,
 	RewriteTextSegment,
 } from "@/lib/rewrite-diff"
+import {
+	getEntryHeadlineParts,
+	getHeaderLayout,
+	orderHeadlineFields,
+	type EntryHeadlineParts,
+	type ResumeHeaderLayout,
+} from "@/lib/resume-block-style"
 import type {
 	AppResumeBlock,
 	AppResumeBlockStyle,
@@ -61,6 +69,16 @@ function resolveStyleColor(
 	return color
 }
 
+function resolveTextAlign(
+	style?: AppResumeBlockStyle | null,
+): NonNullable<AppResumeBlockStyle["textAlign"]> {
+	const align = style?.textAlign
+	if (align === "center" || align === "right" || align === "left") {
+		return align
+	}
+	return "left"
+}
+
 /** Map block style_json onto inline CSS used by the preview. */
 function blockTextStyle(
 	style?: AppResumeBlockStyle | null,
@@ -73,8 +91,16 @@ function blockTextStyle(
 		lineHeight,
 		fontWeight: style?.bold ? 600 : undefined,
 		fontStyle: style?.italic ? "italic" : undefined,
+		textAlign: resolveTextAlign(style),
 		color: resolveStyleColor(style?.color, tone),
 	}
+}
+
+function sectionTextAlign(
+	blocks: AppResumeBlock[],
+): NonNullable<AppResumeBlockStyle["textAlign"]> {
+	const first = blocks[0]
+	return resolveTextAlign(first?.style_json)
 }
 
 function isDisplayNameStyle(style?: AppResumeBlockStyle | null): boolean {
@@ -101,6 +127,7 @@ type FlowItem =
 			kind: "heading"
 			sectionId: string
 			title: string
+			textAlign: NonNullable<AppResumeBlockStyle["textAlign"]>
 	  }
 	| {
 			key: string
@@ -143,6 +170,7 @@ type FlowItem =
 			kind: "skills"
 			sectionId: string
 			blocks: AppResumeBlock[]
+			textAlign: NonNullable<AppResumeBlockStyle["textAlign"]>
 	  }
 
 interface ResumeDocumentPreviewProps {
@@ -409,16 +437,18 @@ function buildFlowItems(
 	const items: FlowItem[] = []
 
 	for (const section of sections) {
+		const blocks = sortBlocks(section.blocks)
+		const textAlign = sectionTextAlign(blocks)
+
 		if (section.section_type !== "header") {
 			items.push({
 				key: `heading-${section.id}`,
 				kind: "heading",
 				sectionId: section.id,
 				title: section.display_name,
+				textAlign,
 			})
 		}
-
-		const blocks = sortBlocks(section.blocks)
 
 		if (section.section_type === "skills") {
 			const categoryBlocks = blocks.filter(
@@ -443,6 +473,7 @@ function buildFlowItems(
 					kind: "skills",
 					sectionId: section.id,
 					blocks: legacySkillBlocks,
+					textAlign,
 				})
 			}
 			continue
@@ -929,7 +960,10 @@ function firstPageIndexForSection(pages: FlowItem[][], sectionId: string) {
 function FlowItemView({ item }: { item: FlowItem }) {
 	if (item.kind === "heading") {
 		return (
-			<h2 className="mt-4 mb-1.5 border-b border-neutral-300 pb-0.5 text-[12px] font-bold uppercase tracking-[0.08em] text-neutral-700">
+			<h2
+				className="mt-4 mb-1.5 border-b border-neutral-300 pb-0.5 text-[12px] font-bold uppercase tracking-[0.08em] text-neutral-700"
+				style={{ textAlign: item.textAlign }}
+			>
 				{item.title}
 			</h2>
 		)
@@ -937,7 +971,13 @@ function FlowItemView({ item }: { item: FlowItem }) {
 
 	if (item.kind === "skills") {
 		return (
-			<div className="mb-2 flex flex-wrap gap-1">
+			<div
+				className={cn(
+					"mb-2 flex flex-wrap gap-1",
+					item.textAlign === "center" && "justify-center",
+					item.textAlign === "right" && "justify-end",
+				)}
+			>
 				{item.blocks.map((block) => (
 					<ReadOnlyBlockPreview key={block.id} block={block} />
 				))}
@@ -1015,8 +1055,19 @@ function EntryHeaderView({
 	const style = block.style_json
 	const titleStyle = blockTextStyle(style)
 	const metaStyle = blockTextStyle(style, "subtle")
+	const mutedStyle = blockTextStyle({ ...style, bold: false }, "muted")
+	const align = resolveTextAlign(style)
+	const sectionType =
+		block.block_type === "job_entry"
+			? "experience"
+			: block.block_type === "project_entry"
+				? "projects"
+				: "education"
+	const layout = getHeaderLayout(style, sectionType)
 
 	if (block.block_type === "job_entry" && "title" in content) {
+		const parts = getEntryHeadlineParts(block)
+		if (!parts) return null
 		return (
 			<div
 				id={`resume-block-${block.id}`}
@@ -1026,25 +1077,31 @@ function EntryHeaderView({
 						"rounded-t-md px-1 pt-1 ring-2 ring-primary/25 ring-offset-2 ring-offset-white",
 				)}
 			>
-				<div className="mb-0.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0">
-					<p style={titleStyle}>
-						{content.title}
-						<span
-							style={blockTextStyle({ ...style, bold: false }, "muted")}
-						>
-							{" "}
-							— {content.company}
-						</span>
-					</p>
-					<p style={metaStyle}>
-						{formatDateRange(content.start_date, content.end_date)}
-					</p>
-				</div>
+				<AlignedTitleDateRow
+					align={align}
+					primary={
+						<EntryHeadline
+							parts={parts}
+							layout={layout}
+							titleStyle={titleStyle}
+							mutedStyle={mutedStyle}
+						/>
+					}
+					date={
+						<p style={metaStyle}>
+							{formatDateRange(content.start_date, content.end_date)}
+						</p>
+					}
+				/>
 			</div>
 		)
 	}
 
 	if (block.block_type === "project_entry" && "name" in content) {
+		const parts = getEntryHeadlineParts(block)
+		if (!parts) return null
+		const hasDates =
+			"start_date" in content || "end_date" in content
 		return (
 			<div
 				id={`resume-block-${block.id}`}
@@ -1054,26 +1111,111 @@ function EntryHeaderView({
 						"rounded-t-md px-1 pt-1 ring-2 ring-primary/25 ring-offset-2 ring-offset-white",
 				)}
 			>
-				<div className="mb-0.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0">
-					<p style={titleStyle}>{content.name}</p>
-					{"start_date" in content || "end_date" in content ? (
-						<p style={metaStyle}>
-							{formatDateRange(
-								"start_date" in content
-									? (content.start_date ?? null)
-									: null,
-								"end_date" in content
-									? (content.end_date ?? null)
-									: null,
-							)}
-						</p>
-					) : null}
-				</div>
+				<AlignedTitleDateRow
+					align={align}
+					primary={
+						<EntryHeadline
+							parts={parts}
+							layout={layout}
+							titleStyle={titleStyle}
+							mutedStyle={mutedStyle}
+						/>
+					}
+					date={
+						hasDates ? (
+							<p style={metaStyle}>
+								{formatDateRange(
+									"start_date" in content
+										? (content.start_date ?? null)
+										: null,
+									"end_date" in content
+										? (content.end_date ?? null)
+										: null,
+								)}
+							</p>
+						) : null
+					}
+				/>
 			</div>
 		)
 	}
 
 	return null
+}
+
+function EntryHeadline({
+	parts,
+	layout,
+	titleStyle,
+	mutedStyle,
+}: {
+	parts: EntryHeadlineParts
+	layout: ResumeHeaderLayout
+	titleStyle: CSSProperties
+	mutedStyle: CSSProperties
+}) {
+	const ordered = orderHeadlineFields(parts, layout)
+
+	if (ordered.inline) {
+		return (
+			<p style={titleStyle}>
+				{ordered.first}
+				{ordered.second ? (
+					<span style={mutedStyle}>
+						{" "}
+						— {ordered.second}
+					</span>
+				) : null}
+			</p>
+		)
+	}
+
+	return (
+		<div>
+			<p style={titleStyle}>{ordered.first}</p>
+			{ordered.second ? <p style={mutedStyle}>{ordered.second}</p> : null}
+		</div>
+	)
+}
+
+/**
+ * Left: title … date
+ * Center: title above date (stacked)
+ * Right: date … title (reversed from left)
+ */
+function AlignedTitleDateRow({
+	align,
+	primary,
+	date,
+}: {
+	align: NonNullable<AppResumeBlockStyle["textAlign"]>
+	primary: ReactNode
+	date: ReactNode
+}) {
+	if (align === "center") {
+		return (
+			<div className="mb-0.5 flex flex-col items-center gap-0.5 text-center">
+				{primary}
+				{date}
+			</div>
+		)
+	}
+
+	if (align === "right") {
+		return (
+			<div className="mb-0.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0 text-right">
+				{date}
+				{primary}
+			</div>
+		)
+	}
+
+	return (
+		<div className="mb-0.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0">
+			{primary}
+			{date}
+		</div>
+	)
 }
 
 const BULLET_STATUS_CLASS: Record<RewriteDiffStatus, string> = {
@@ -1098,12 +1240,22 @@ function EntryBulletView({
 	const marker =
 		status === "added" ? "+" : status === "removed" ? "−" : "•"
 	const textStyle = blockTextStyle(style)
+	const align = resolveTextAlign(style)
 
 	return (
 		<div className={cn(isLastInEntry && "mb-1.5")}>
 			<div
-				className={cn("flex gap-1.5", BULLET_STATUS_CLASS[status])}
-				style={status === "unchanged" ? textStyle : { ...textStyle, color: undefined }}
+				className={cn(
+					"flex gap-1.5",
+					align === "center" && "justify-center",
+					align === "right" && "justify-end",
+					BULLET_STATUS_CLASS[status],
+				)}
+				style={
+					status === "unchanged"
+						? textStyle
+						: { ...textStyle, color: undefined }
+				}
 			>
 				<span
 					aria-hidden
@@ -1145,15 +1297,28 @@ function ReadOnlyBlockPreview({
 	}
 
 	if (block.block_type === "education_entry" && "school" in content) {
+		const align = resolveTextAlign(style)
+		const layout = getHeaderLayout(style, "education")
+		const parts = getEntryHeadlineParts(block)
+		if (!parts) return null
 		return (
-			<div className="mb-1.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0">
-				<div>
-					<p style={titleStyle}>{content.degree}</p>
-					<p style={mutedStyle}>{content.school}</p>
-				</div>
-				<p style={subtleStyle}>
-					{formatDateRange(content.start_date, content.end_date)}
-				</p>
+			<div className="mb-1.5">
+				<AlignedTitleDateRow
+					align={align}
+					primary={
+						<EntryHeadline
+							parts={parts}
+							layout={layout}
+							titleStyle={titleStyle}
+							mutedStyle={mutedStyle}
+						/>
+					}
+					date={
+						<p style={subtleStyle}>
+							{formatDateRange(content.start_date, content.end_date)}
+						</p>
+					}
+				/>
 			</div>
 		)
 	}

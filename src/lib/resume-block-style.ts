@@ -6,6 +6,10 @@ import type {
 } from "@/types/app-resume"
 
 export type ResumeFontStyleMode = "regular" | "bold" | "italic"
+export type ResumeTextAlign = NonNullable<AppResumeBlockStyle["textAlign"]>
+export type ResumeHeaderLayout = NonNullable<
+	AppResumeBlockStyle["headerLayout"]
+>
 
 export const RESUME_FONT_SIZE_OPTIONS = [
 	8, 9, 10, 11, 12, 13, 14, 16, 18, 20, 24,
@@ -19,15 +23,206 @@ export const RESUME_LINE_HEIGHT_OPTIONS = [
 	{ value: 1.75, label: "Loose" },
 ] as const
 
+export const RESUME_TEXT_ALIGN_OPTIONS: Array<{
+	value: ResumeTextAlign
+	label: string
+}> = [
+	{ value: "left", label: "Left" },
+	{ value: "center", label: "Center" },
+	{ value: "right", label: "Right" },
+]
+
 export const DEFAULT_BLOCK_STYLE: Required<
-	Pick<AppResumeBlockStyle, "fontSize" | "lineHeight" | "bold" | "italic">
+	Pick<
+		AppResumeBlockStyle,
+		| "fontSize"
+		| "lineHeight"
+		| "bold"
+		| "italic"
+		| "textAlign"
+		| "headerLayout"
+	>
 > &
 	AppResumeBlockStyle = {
 	fontSize: 12,
 	lineHeight: 1.35,
 	bold: false,
 	italic: false,
+	textAlign: "left",
+	headerLayout: "inline",
 	color: "black",
+}
+
+export function getTextAlign(
+	style?: AppResumeBlockStyle | null,
+): ResumeTextAlign {
+	const align = style?.textAlign
+	if (align === "center" || align === "right" || align === "left") {
+		return align
+	}
+	return "left"
+}
+
+export function getHeaderLayout(
+	style?: AppResumeBlockStyle | null,
+	sectionType?: AppResumeSection["section_type"],
+): ResumeHeaderLayout {
+	const layout = style?.headerLayout
+	if (
+		layout === "inline" ||
+		layout === "stacked" ||
+		layout === "inverted"
+	) {
+		return layout
+	}
+	// Education historically stacks degree over school.
+	if (sectionType === "education") return "stacked"
+	return "inline"
+}
+
+export function sectionSupportsHeaderLayout(
+	sectionType: AppResumeSection["section_type"],
+): boolean {
+	return (
+		sectionType === "experience" ||
+		sectionType === "education" ||
+		sectionType === "projects"
+	)
+}
+
+export function headerLayoutOptions(
+	sectionType: AppResumeSection["section_type"],
+): Array<{ value: ResumeHeaderLayout; label: string; hint: string }> {
+	if (sectionType === "education") {
+		return [
+			{
+				value: "inline",
+				label: "Inline",
+				hint: "Degree — School",
+			},
+			{
+				value: "stacked",
+				label: "Stacked",
+				hint: "Degree above school",
+			},
+			{
+				value: "inverted",
+				label: "Inverted",
+				hint: "School above degree",
+			},
+		]
+	}
+
+	if (sectionType === "projects") {
+		return [
+			{
+				value: "inline",
+				label: "Inline",
+				hint: "Name — Org",
+			},
+			{
+				value: "stacked",
+				label: "Stacked",
+				hint: "Name above org",
+			},
+			{
+				value: "inverted",
+				label: "Inverted",
+				hint: "Org above name",
+			},
+		]
+	}
+
+	return [
+		{
+			value: "inline",
+			label: "Inline",
+			hint: "Title — Company",
+		},
+		{
+			value: "stacked",
+			label: "Stacked",
+			hint: "Title above company",
+		},
+		{
+			value: "inverted",
+			label: "Inverted",
+			hint: "Company above title",
+		},
+	]
+}
+
+export interface EntryHeadlineParts {
+	primary: string
+	secondary: string | null
+}
+
+/** Resolve the two headline strings for a dual-field entry block. */
+export function getEntryHeadlineParts(
+	block: AppResumeBlock,
+): EntryHeadlineParts | null {
+	const content = block.content_json
+
+	if (block.block_type === "job_entry" && "title" in content) {
+		return {
+			primary: content.title,
+			secondary: content.company || null,
+		}
+	}
+
+	if (block.block_type === "education_entry" && "school" in content) {
+		return {
+			primary: content.degree,
+			secondary: content.school || null,
+		}
+	}
+
+	if (block.block_type === "project_entry" && "name" in content) {
+		const organization =
+			"organization" in content &&
+			typeof content.organization === "string"
+				? content.organization.trim()
+				: ""
+		return {
+			primary: content.name,
+			secondary: organization || null,
+		}
+	}
+
+	return null
+}
+
+/**
+ * Order headline fields for rendering based on headerLayout.
+ * inline → same-line primary + secondary
+ * stacked → primary then secondary
+ * inverted → secondary then primary
+ */
+export function orderHeadlineFields(
+	parts: EntryHeadlineParts,
+	layout: ResumeHeaderLayout,
+): { first: string; second: string | null; inline: boolean } {
+	if (layout === "inline") {
+		return {
+			first: parts.primary,
+			second: parts.secondary,
+			inline: true,
+		}
+	}
+
+	if (layout === "inverted" && parts.secondary) {
+		return {
+			first: parts.secondary,
+			second: parts.primary,
+			inline: false,
+		}
+	}
+
+	return {
+		first: parts.primary,
+		second: parts.secondary,
+		inline: false,
+	}
 }
 
 /**

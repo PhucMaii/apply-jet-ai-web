@@ -382,6 +382,7 @@ export function buildBlockContentFromForm(
 	if (block.block_type === "project_entry") {
 		return {
 			name: stringValue(formData.name),
+			organization: stringValue(formData.organization) || undefined,
 			description: stringListValue(formData.description),
 			start_date: nullableStringValue(formData.start_date),
 			end_date: nullableStringValue(formData.end_date),

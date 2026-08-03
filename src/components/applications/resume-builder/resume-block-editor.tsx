@@ -146,6 +146,14 @@ export function ResumeBlockEditor({
 						placeholder="Project name"
 						className="h-9"
 					/>
+					<Input
+						value={stringValue(formData.organization)}
+						onChange={(event) =>
+							onFieldChange("organization", event.target.value)
+						}
+						placeholder="Organization (optional)"
+						className="h-9"
+					/>
 					<div className="grid grid-cols-2 gap-2">
 						<Input
 							type="date"

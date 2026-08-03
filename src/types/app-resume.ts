@@ -25,6 +25,14 @@ export interface AppResumeBlockStyle {
 	fontSize?: number
 	/** Unitless line-height multiplier, e.g. 1.35 */
 	lineHeight?: number
+	textAlign?: "left" | "center" | "right"
+	/**
+	 * How the two headline fields are arranged.
+	 * Experience: title + company
+	 * Education: degree + school
+	 * Projects: name + organization (when present)
+	 */
+	headerLayout?: "inline" | "stacked" | "inverted"
 }
 
 export interface GroupTextItem {
@@ -45,6 +53,8 @@ export type AppResumeBlockContent =
 	  }
 	| {
 			name: string
+			/** Optional org/client shown in header layouts */
+			organization?: string
 			description: string[]
 			start_date?: string | null
 			end_date?: string | null
