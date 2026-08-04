@@ -541,25 +541,47 @@ function getTypeGuidance(blockType: string, sectionType: string): string {
   
 
   try {
-    // Logged into ai generation table
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-    );
-    const { data: appResume, error: appResumeError } = await supabase.from("app_resumes").select("*").eq("id", appResumeId).single();
-    if (appResumeError) {
-      console.error("Something went wrong getting app resume:", appResumeError);
-      return null;
+    // Use service role (same as the request handler). Anon key has no user
+    // JWT here, so RLS would block app_resumes / ai_generations.
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (supabaseUrl && serviceRoleKey) {
+      const supabase = createClient(supabaseUrl, serviceRoleKey);
+      const { data: appResume, error: appResumeError } = await supabase
+        .from("app_resumes")
+        .select("application_id, user_id")
+        .eq("id", appResumeId)
+        .single();
+      if (appResumeError) {
+        console.error(
+          "Something went wrong getting app resume:",
+          appResumeError,
+        );
+      } else {
+        const { error: generationError } = await supabase
+          .from("ai_generations")
+          .insert({
+            user_id: appResume?.user_id,
+            prompt_hash: hash(prompt),
+            tokens_input: data.usageMetadata?.promptTokenCount,
+            tokens_output: data.usageMetadata?.candidatesTokenCount,
+            application_id: appResume?.application_id,
+            block_id: blockId,
+            created_at: new Date().toISOString(),
+          });
+        if (generationError) {
+          console.error(
+            "Something went wrong inserting ai_generations:",
+            generationError,
+          );
+        }
+      }
+    } else {
+      console.error(
+        "Something went wrong: Supabase env missing for ai_generations log",
+      );
     }
-    await supabase.from("ai_generations").insert({
-      prompt_hash: hash(prompt),
-      tokens_input: data.usageMetadata?.promptTokenCount,
-      tokens_output: data.usageMetadata?.candidatesTokenCount,
-      application_id: appResume?.application_id,
-      block_id: blockId,
-      created_at: new Date().toISOString(),
-    });
-    
+
     let jsonStr = text;
     const fenced = text.match(/^```(?:json)?\s*([\s\S]*?)```$/m);
     if (fenced) jsonStr = fenced[1].trim();

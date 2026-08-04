@@ -15,9 +15,7 @@ export function ApplicationsEmptyState() {
 				No applications yet
 			</h2>
 			<p className={`mx-auto mt-2 max-w-md text-sm ${APPLICATIONS_THEME.muted}`}>
-				Create your first application manually, or save roles from the
-				Chrome extension—they will all appear here as cards you can open
-				and manage.
+				Hello! Welcome to your application pipeline. To get started, let's create your first application
 			</p>
 			<Button className="mt-6 gap-2" asChild>
 				<Link to={ROUTES.applicationCreate} data-tour={TOUR_TARGET.newApplication}>
