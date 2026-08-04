@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { ChevronDown, ChevronRight, Sparkles } from "lucide-react"
 import {
 	formatDateRange,
+	formatEducationDates,
 	getBlockPreviewText,
 	sortBlocks,
 	sortSections,
@@ -173,6 +174,10 @@ function TailoredBlockPreview({ block }: { block: AppResumeBlock }) {
 	}
 
 	if (block.block_type === "education_entry" && "school" in content) {
+		const dateLabel = formatEducationDates(
+			content.start_date,
+			content.end_date,
+		)
 		return (
 			<div className="flex flex-wrap items-baseline justify-between gap-2">
 				<div>
@@ -181,9 +186,9 @@ function TailoredBlockPreview({ block }: { block: AppResumeBlock }) {
 					</p>
 					<p className="text-sm text-neutral-600">{content.school}</p>
 				</div>
-				<p className="text-xs text-neutral-500">
-					{formatDateRange(content.start_date, content.end_date)}
-				</p>
+				{dateLabel ? (
+					<p className="text-xs text-neutral-500">{dateLabel}</p>
+				) : null}
 			</div>
 		)
 	}

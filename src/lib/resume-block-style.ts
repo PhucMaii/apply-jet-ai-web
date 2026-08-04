@@ -82,11 +82,23 @@ export function getHeaderLayout(
 
 export function sectionSupportsHeaderLayout(
 	sectionType: AppResumeSection["section_type"],
+	blocks: AppResumeBlock[] = [],
 ): boolean {
-	return (
+	if (
 		sectionType === "experience" ||
 		sectionType === "education" ||
 		sectionType === "projects"
+	) {
+		return true
+	}
+
+	if (sectionType !== "custom") return false
+
+	return blocks.some(
+		(block) =>
+			block.block_type === "job_entry" ||
+			block.block_type === "education_entry" ||
+			block.block_type === "project_entry",
 	)
 }
 
@@ -129,6 +141,26 @@ export function headerLayoutOptions(
 				value: "inverted",
 				label: "Inverted",
 				hint: "Org above name",
+			},
+		]
+	}
+
+	if (sectionType === "custom") {
+		return [
+			{
+				value: "inline",
+				label: "Inline",
+				hint: "Primary — Secondary",
+			},
+			{
+				value: "stacked",
+				label: "Stacked",
+				hint: "Primary above secondary",
+			},
+			{
+				value: "inverted",
+				label: "Inverted",
+				hint: "Secondary above primary",
 			},
 		]
 	}
@@ -237,6 +269,7 @@ export interface ResumeStyleGroup {
 	label: string
 	description: string
 	blockIds: string[]
+	supportsHeaderLayout: boolean
 	/** Representative style shown in the editor (from the first block). */
 	style: AppResumeBlockStyle
 }
@@ -303,6 +336,10 @@ export function buildResumeStyleGroups(
 			label: section.display_name,
 			description: styleGroupDescription(section, blocks.length),
 			blockIds: blocks.map((block) => block.id),
+			supportsHeaderLayout: sectionSupportsHeaderLayout(
+				section.section_type,
+				blocks,
+			),
 			style: normalizeBlockStyle(blocks[0]?.style_json),
 		})
 	}
@@ -341,6 +378,7 @@ function buildHeaderStyleGroups(
 			label: "Name",
 			description: "Your name at the top of the resume",
 			blockIds: [nameBlock.id],
+			supportsHeaderLayout: false,
 			style: normalizeBlockStyle(nameBlock.style_json),
 		})
 	}
@@ -354,6 +392,7 @@ function buildHeaderStyleGroups(
 			label: "Job title",
 			description: "Headline under your name",
 			blockIds: [titleBlock.id],
+			supportsHeaderLayout: false,
 			style: normalizeBlockStyle(titleBlock.style_json),
 		})
 	}
@@ -367,6 +406,7 @@ function buildHeaderStyleGroups(
 			label: "Contact line",
 			description: "Location, phone, email, and links",
 			blockIds: contactBlocks.map((block) => block.id),
+			supportsHeaderLayout: false,
 			style: normalizeBlockStyle(contactBlocks[0]?.style_json),
 		})
 	}
@@ -380,6 +420,7 @@ function buildHeaderStyleGroups(
 			label: "Other header text",
 			description: "Additional header content",
 			blockIds: otherBlocks.map((block) => block.id),
+			supportsHeaderLayout: false,
 			style: normalizeBlockStyle(otherBlocks[0]?.style_json),
 		})
 	}
@@ -410,6 +451,10 @@ function styleGroupDescription(
 			return blockCount === 1
 				? "1 skill group"
 				: `${blockCount} skill groups`
+		case "custom":
+			return blockCount === 1
+				? "1 custom block"
+				: `${blockCount} custom blocks`
 		default:
 			return blockCount === 1 ? "1 block" : `${blockCount} blocks`
 	}

@@ -24,6 +24,7 @@ import type {
 	AppResumeBlockContent,
 	AppResumeBlockStyle,
 	AppResumeSection,
+	CustomSectionBlockType,
 } from "@/types/app-resume"
 import type { ApplicationDetailForm } from "@/types/application-detail"
 import { isRewriteSupportedBlockType } from "@/types/rewrite-resume-block"
@@ -59,6 +60,13 @@ interface ResumeTabProps {
 	}>
 	onGenerate: () => void
 	onSaveAppResumeBlock: (block: AppResumeBlock) => Promise<void>
+	onSaveAppResumeSectionDisplayName: (input: {
+		sectionId: string
+		displayName: string
+	}) => Promise<void>
+	onSaveAppResumeSectionOrder: (
+		orderedSections: Array<{ sectionId: string; sortKey: number }>,
+	) => Promise<void>
 	onCreateSkillCategory: (input: {
 		appResumeId: string
 		sectionId: string
@@ -74,7 +82,20 @@ interface ResumeTabProps {
 		appResumeId: string
 		sortKey: number
 	}) => Promise<AppResumeSection>
+	onCreateCustomSection: (input: {
+		appResumeId: string
+		displayName: string
+		sortKey: number
+		blockType: CustomSectionBlockType
+	}) => Promise<AppResumeSection>
+	onCreateCustomBlock: (input: {
+		appResumeId: string
+		sectionId: string
+		sortKey: number
+		blockType: CustomSectionBlockType
+	}) => Promise<AppResumeBlock>
 	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
+	onDeleteAppResumeSection: (sectionId: string) => Promise<void>
 	refetchApplication: () => void
 }
 
@@ -96,10 +117,15 @@ export function ResumeTab({
 	onDelete,
 	// onGenerate,
 	onSaveAppResumeBlock,
+	onSaveAppResumeSectionDisplayName,
+	onSaveAppResumeSectionOrder,
 	onCreateSkillCategory,
 	onCreateSummaryBlock,
 	onEnsureSkillsSection,
+	onCreateCustomSection,
+	onCreateCustomBlock,
 	onDeleteAppResumeBlock,
+	onDeleteAppResumeSection,
 	refetchApplication,
 }: ResumeTabProps) {
 	const seedSections = appResume?.sections ?? []
@@ -127,6 +153,8 @@ export function ResumeTab({
 	const [rightPanelWidth, setRightPanelWidth] = useState(RIGHT_PANEL_DEFAULT)
 	const layoutRef = useRef<HTMLDivElement | null>(null)
 	const [isAddingSkillCategory, setIsAddingSkillCategory] = useState(false)
+	const [isCreatingCustomSection, setIsCreatingCustomSection] = useState(false)
+	const [isAddingCustomBlock, setIsAddingCustomBlock] = useState(false)
 	const [atsResult, setAtsResult] = useState<ATSScoreResult | null>(null)
 	const [isScoringAts, setIsScoringAts] = useState(false)
 	const [rewritingBlockId, setRewritingBlockId] = useState<string | null>(null)
@@ -355,22 +383,88 @@ export function ResumeTab({
 		setDragId(sectionId)
 	}
 
-	function handleDrop(targetId: string) {
+	async function handleDrop(targetId: string) {
 		if (!dragId || dragId === targetId) {
 			setDragId(null)
 			return
 		}
-		setSections((prev) => {
-			const ordered = sortSections(prev)
-			const from = ordered.findIndex((section) => section.id === dragId)
-			const to = ordered.findIndex((section) => section.id === targetId)
-			if (from < 0 || to < 0) return prev
-			const next = [...ordered]
-			const [moved] = next.splice(from, 1)
-			next.splice(to, 0, moved)
-			return next.map((section, index) => ({ ...section, sort_key: index }))
-		})
+
+		const previousSections = sections
+		const ordered = sortSections(sections)
+		const from = ordered.findIndex((section) => section.id === dragId)
+		const to = ordered.findIndex((section) => section.id === targetId)
 		setDragId(null)
+		if (from < 0 || to < 0) return
+
+		const next = [...ordered]
+		const [moved] = next.splice(from, 1)
+		next.splice(to, 0, moved)
+		const reordered = next.map((section, index) => ({
+			...section,
+			sort_key: index,
+		}))
+
+		setSections(reordered)
+
+		try {
+			await onSaveAppResumeSectionOrder(
+				reordered.map((section) => ({
+					sectionId: section.id,
+					sortKey: section.sort_key,
+				})),
+			)
+			void refetchApplication()
+		} catch (error) {
+			console.error("Something went wrong saving section order:", error)
+			setSections(previousSections)
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to save section order.",
+			)
+		}
+	}
+
+	async function handleRenameSection(sectionId: string, displayName: string) {
+		const trimmed = displayName.trim()
+		if (!trimmed) {
+			toast.error("Section name cannot be empty.")
+			throw new Error("Section name cannot be empty.")
+		}
+
+		const previousSections = sections
+		const target = sections.find((section) => section.id === sectionId)
+		if (!target) {
+			toast.error("Section not found.")
+			throw new Error("Section not found.")
+		}
+		if (target.display_name === trimmed) return
+
+		setSections((prev) =>
+			prev.map((section) =>
+				section.id === sectionId
+					? { ...section, display_name: trimmed }
+					: section,
+			),
+		)
+		setActiveSectionId(sectionId)
+
+		try {
+			await onSaveAppResumeSectionDisplayName({
+				sectionId,
+				displayName: trimmed,
+			})
+			void refetchApplication()
+		} catch (error) {
+			console.error("Something went wrong renaming section:", error)
+			setSections(previousSections)
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to rename section.",
+			)
+			throw error
+		}
 	}
 
 	async function handleAddSkillCategory() {
@@ -432,6 +526,134 @@ export function ResumeTab({
 		)
 		if (editingBlockId === block.id) {
 			handleCancelEditBlock()
+		}
+	}
+
+	async function handleDeleteSection(section: AppResumeSection) {
+		if (section.section_type === "header") {
+			toast.error("The header section cannot be removed.")
+			throw new Error("The header section cannot be removed.")
+		}
+
+		await onDeleteAppResumeSection(section.id)
+
+		const remaining = sortSections(
+			sections.filter((item) => item.id !== section.id),
+		)
+		setSections(remaining)
+
+		if (editingBlockId) {
+			const wasEditingInSection = section.blocks.some(
+				(block) => block.id === editingBlockId,
+			)
+			if (wasEditingInSection) {
+				handleCancelEditBlock()
+			}
+		}
+
+		if (expandedId === section.id) {
+			setExpandedId(remaining[0]?.id ?? null)
+		}
+		if (activeSectionId === section.id) {
+			setActiveSectionId(remaining[0]?.id ?? "")
+		}
+
+		void refetchApplication()
+	}
+
+	async function handleCreateCustomSection(input: {
+		title: string
+		blockType: CustomSectionBlockType
+	}) {
+		if (!appResume) {
+			toast.error("No resume found for this application.")
+			return
+		}
+
+		setIsCreatingCustomSection(true)
+		try {
+			const nextSortKey =
+				sections.length === 0
+					? 0
+					: Math.max(...sections.map((section) => section.sort_key)) + 1
+			const createdSection = await onCreateCustomSection({
+				appResumeId: appResume.id,
+				displayName: input.title,
+				sortKey: nextSortKey,
+				blockType: input.blockType,
+			})
+
+			setSections((prev) => sortSections([...prev, createdSection]))
+			setExpandedId(createdSection.id)
+			setActiveSectionId(createdSection.id)
+			const firstBlock = createdSection.blocks[0]
+			if (firstBlock) {
+				handleStartEditBlock(firstBlock)
+			}
+			toast.success("Custom section added")
+			void refetchApplication()
+		} catch (error) {
+			console.error("Something went wrong creating custom section:", error)
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to create custom section.",
+			)
+			throw error
+		} finally {
+			setIsCreatingCustomSection(false)
+		}
+	}
+
+	async function handleAddCustomBlock(input: {
+		sectionId: string
+		blockType: CustomSectionBlockType
+	}) {
+		if (!appResume) {
+			toast.error("No resume found for this application.")
+			return
+		}
+
+		const targetSection = sections.find(
+			(section) => section.id === input.sectionId,
+		)
+		if (!targetSection || targetSection.section_type !== "custom") {
+			toast.error("Custom section not found.")
+			return
+		}
+
+		setIsAddingCustomBlock(true)
+		try {
+			const createdBlock = await onCreateCustomBlock({
+				appResumeId: appResume.id,
+				sectionId: targetSection.id,
+				sortKey: targetSection.blocks.length,
+				blockType: input.blockType,
+			})
+
+			setSections((prev) =>
+				prev.map((section) =>
+					section.id === targetSection.id
+						? {
+								...section,
+								blocks: [...section.blocks, createdBlock],
+							}
+						: section,
+				),
+			)
+			setExpandedId(targetSection.id)
+			setActiveSectionId(targetSection.id)
+			handleStartEditBlock(createdBlock)
+			toast.success("Block added")
+			void refetchApplication()
+		} catch (error) {
+			console.error("Something went wrong adding custom block:", error)
+			toast.error(
+				error instanceof Error ? error.message : "Failed to add block.",
+			)
+			throw error
+		} finally {
+			setIsAddingCustomBlock(false)
 		}
 	}
 
@@ -637,13 +859,17 @@ export function ResumeTab({
 						editingDraft={editingDraft}
 						editingFormData={editingFormData}
 						isAddingSkillCategory={isAddingSkillCategory}
+						isCreatingCustomSection={isCreatingCustomSection}
+						isAddingCustomBlock={isAddingCustomBlock}
 						rewritingBlockId={rewritingBlockId}
 						isGeneratingSummary={isGeneratingSummary}
 						savingStyleGroupId={savingStyleGroupId}
 						onSectionClick={handleSectionClick}
 						onStyleSectionFocus={handleStyleSectionFocus}
 						onDragStart={handleDragStart}
-						onDrop={handleDrop}
+						onDrop={(targetId) => {
+							void handleDrop(targetId)
+						}}
 						onStartEditBlock={handleStartEditBlock}
 						onDraftTextChange={setEditingDraft}
 						onFieldChange={(field, value) =>
@@ -655,7 +881,11 @@ export function ResumeTab({
 						onApplyEditBlock={handleApplyEditBlock}
 						onCancelEditBlock={handleCancelEditBlock}
 						onAddSkillCategory={handleAddSkillCategory}
-						onDeleteSkillCategory={handleDeleteSkillCategory}
+						onDeleteBlock={handleDeleteSkillCategory}
+						onRenameSection={handleRenameSection}
+						onDeleteSection={handleDeleteSection}
+						onCreateCustomSection={handleCreateCustomSection}
+						onAddCustomBlock={handleAddCustomBlock}
 						onRewriteBlock={handleRewriteBlock}
 						onGenerateSummary={handleGenerateSummary}
 						onStyleChange={(groupId, blockIds, patch) => {

@@ -26,10 +26,15 @@ export function ApplicationDetailPage() {
 		resolveStatus,
 		patchForm,
 		saveAppResumeBlock,
+		saveAppResumeSectionDisplayName,
+		saveAppResumeSectionOrder,
 		createAppResumeSkillCategory,
 		createAppResumeSummaryBlock,
 		ensureAppResumeSkillsSection,
+		createAppResumeCustomSection,
+		createAppResumeCustomBlock,
 		deleteAppResumeBlock,
+		deleteAppResumeSection,
 	} = useApplicationDetail(applicationId)
 
 	const { deleteApplication, deletingId } = useApplications()
@@ -120,10 +125,17 @@ export function ApplicationDetailPage() {
 					refetchApplication={() => void refetchApplication()}
 					appResume={appResume}
 					onSaveAppResumeBlock={saveAppResumeBlock}
+					onSaveAppResumeSectionDisplayName={
+						saveAppResumeSectionDisplayName
+					}
+					onSaveAppResumeSectionOrder={saveAppResumeSectionOrder}
 					onCreateSkillCategory={createAppResumeSkillCategory}
 					onCreateSummaryBlock={createAppResumeSummaryBlock}
 					onEnsureSkillsSection={ensureAppResumeSkillsSection}
+					onCreateCustomSection={createAppResumeCustomSection}
+					onCreateCustomBlock={createAppResumeCustomBlock}
 					onDeleteAppResumeBlock={deleteAppResumeBlock}
+					onDeleteAppResumeSection={deleteAppResumeSection}
 				/>
 			</main>
 		</div>

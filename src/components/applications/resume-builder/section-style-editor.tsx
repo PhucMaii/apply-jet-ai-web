@@ -19,7 +19,6 @@ import {
 	getHeaderLayout,
 	getTextAlign,
 	headerLayoutOptions,
-	sectionSupportsHeaderLayout,
 	type ResumeFontStyleMode,
 	type ResumeHeaderLayout,
 	type ResumeStyleGroup,
@@ -50,7 +49,7 @@ export function SectionStyleEditor({
 	const fontMode = getFontStyleMode(group.style)
 	const textAlign = getTextAlign(group.style)
 	const headerLayout = getHeaderLayout(group.style, group.sectionType)
-	const showHeaderLayout = sectionSupportsHeaderLayout(group.sectionType)
+	const showHeaderLayout = group.supportsHeaderLayout
 	const layoutOptions = headerLayoutOptions(group.sectionType)
 
 	const canDecrease = fontSize > RESUME_FONT_SIZE_OPTIONS[0]

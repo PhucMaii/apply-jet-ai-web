@@ -17,6 +17,15 @@ export type AppResumeBlockType =
 	| "education_entry"
 	| "skill_entry"
 	| "skill_category_entry"
+	| "bullet_list"
+
+/** Block types users can add inside a custom section. */
+export type CustomSectionBlockType =
+	| "education_entry"
+	| "bullet_list"
+	| "job_entry"
+	| "rich_text"
+	| "skill_category_entry"
 
 export interface AppResumeBlockStyle {
 	bold?: boolean
@@ -77,6 +86,10 @@ export type AppResumeBlockContent =
 			category_id: string
 			name: string
 			skills: string[]
+			style_json?: AppResumeBlockStyle
+	  }
+	| {
+			items: string[]
 			style_json?: AppResumeBlockStyle
 	  }
 

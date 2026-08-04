@@ -15,16 +15,20 @@ import {
 	sortBlocks,
 	sortSections,
 } from "@/components/applications/resume-builder/app-resume-utils"
+import { AddCustomSectionModal } from "@/components/applications/resume-builder/add-custom-section-modal"
 import { ResumeBlockEditor } from "@/components/applications/resume-builder/resume-block-editor"
 import { ResumeStylePanel } from "@/components/applications/resume-builder/resume-style-panel"
 import { getSectionIcon } from "@/components/applications/resume-builder/section-icon"
 import ConfirmModal from "@/components/ui/confirm-modal"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { customBlockTypeLabel } from "@/lib/custom-resume-section"
 import type {
 	AppResumeBlock,
 	AppResumeBlockStyle,
 	AppResumeSection,
+	CustomSectionBlockType,
 } from "@/types/app-resume"
 import { isRewriteSupportedBlockType } from "@/types/rewrite-resume-block"
 import { cn } from "@/lib/utils"
@@ -46,6 +50,8 @@ interface ResumeSectionsAsideProps {
 	editingDraft: string
 	editingFormData: Record<string, unknown> | null
 	isAddingSkillCategory?: boolean
+	isCreatingCustomSection?: boolean
+	isAddingCustomBlock?: boolean
 	rewritingBlockId?: string | null
 	isGeneratingSummary?: boolean
 	savingStyleGroupId?: string | null
@@ -59,7 +65,20 @@ interface ResumeSectionsAsideProps {
 	onApplyEditBlock: (block: AppResumeBlock) => void
 	onCancelEditBlock: () => void
 	onAddSkillCategory: () => Promise<void> | void
-	onDeleteSkillCategory: (block: AppResumeBlock) => Promise<void>
+	onDeleteBlock: (block: AppResumeBlock) => Promise<void>
+	onRenameSection: (
+		sectionId: string,
+		displayName: string,
+	) => Promise<void>
+	onDeleteSection: (section: AppResumeSection) => Promise<void>
+	onCreateCustomSection: (input: {
+		title: string
+		blockType: CustomSectionBlockType
+	}) => Promise<void>
+	onAddCustomBlock: (input: {
+		sectionId: string
+		blockType: CustomSectionBlockType
+	}) => Promise<void>
 	onRewriteBlock: (block: AppResumeBlock) => Promise<void> | void
 	onGenerateSummary: () => Promise<void> | void
 	onStyleChange: (
@@ -76,6 +95,17 @@ function isEmptySummaryBlock(block: AppResumeBlock) {
 	return content.text.trim().length === 0
 }
 
+function getDeletableBlockLabel(block: AppResumeBlock) {
+	if (block.block_type === "skill_category_entry") {
+		const content = block.content_json
+		if ("name" in content && typeof content.name === "string") {
+			return content.name.trim() || "Skill category"
+		}
+		return "Skill category"
+	}
+	return customBlockTypeLabel(block.block_type)
+}
+
 export function ResumeSectionsAside({
 	sections,
 	expandedId,
@@ -85,6 +115,8 @@ export function ResumeSectionsAside({
 	editingDraft,
 	editingFormData,
 	isAddingSkillCategory = false,
+	isCreatingCustomSection = false,
+	isAddingCustomBlock = false,
 	rewritingBlockId = null,
 	isGeneratingSummary = false,
 	savingStyleGroupId = null,
@@ -98,7 +130,11 @@ export function ResumeSectionsAside({
 	onApplyEditBlock,
 	onCancelEditBlock,
 	onAddSkillCategory,
-	onDeleteSkillCategory,
+	onDeleteBlock,
+	onRenameSection,
+	onDeleteSection,
+	onCreateCustomSection,
+	onAddCustomBlock,
 	onRewriteBlock,
 	onGenerateSummary,
 	onStyleChange,
@@ -106,7 +142,20 @@ export function ResumeSectionsAside({
 	const hasSections = sections.length > 0
 	const [pendingDeleteBlock, setPendingDeleteBlock] =
 		useState<AppResumeBlock | null>(null)
+	const [pendingDeleteSection, setPendingDeleteSection] =
+		useState<AppResumeSection | null>(null)
 	const [asideTab, setAsideTab] = useState<AsideTab>(ASIDE_TAB.content)
+	const [customModalMode, setCustomModalMode] = useState<
+		"section" | "block" | null
+	>(null)
+	const [addBlockSectionId, setAddBlockSectionId] = useState<string | null>(
+		null,
+	)
+	const [renamingSectionId, setRenamingSectionId] = useState<string | null>(
+		null,
+	)
+	const [renameDraft, setRenameDraft] = useState("")
+	const [isSavingRename, setIsSavingRename] = useState(false)
 
 	const summarySection = sections.find(
 		(section) => section.section_type === "summary",
@@ -123,15 +172,66 @@ export function ResumeSectionsAside({
 
 	async function handleConfirmDelete() {
 		if (!pendingDeleteBlock) return
-		await onDeleteSkillCategory(pendingDeleteBlock)
+		await onDeleteBlock(pendingDeleteBlock)
 	}
 
-	function getCategoryLabel(block: AppResumeBlock) {
-		const content = block.content_json
-		if ("name" in content && typeof content.name === "string") {
-			return content.name
+	async function handleConfirmDeleteSection() {
+		if (!pendingDeleteSection) return
+		const deletedId = pendingDeleteSection.id
+		await onDeleteSection(pendingDeleteSection)
+		if (renamingSectionId === deletedId) {
+			handleCancelRenameSection()
 		}
-		return "this skill category"
+	}
+
+	function handleStartRenameSection(section: AppResumeSection) {
+		setRenamingSectionId(section.id)
+		setRenameDraft(section.display_name)
+	}
+
+	function handleCancelRenameSection() {
+		setRenamingSectionId(null)
+		setRenameDraft("")
+		setIsSavingRename(false)
+	}
+
+	async function handleApplyRenameSection(sectionId: string) {
+		const trimmed = renameDraft.trim()
+		if (!trimmed) {
+			toast.error("Section name cannot be empty.")
+			return
+		}
+
+		setIsSavingRename(true)
+		try {
+			await onRenameSection(sectionId, trimmed)
+			handleCancelRenameSection()
+		} catch (error) {
+			console.error("Something went wrong renaming section:", error)
+			// Parent already toasts on failure; keep edit open.
+		} finally {
+			setIsSavingRename(false)
+		}
+	}
+
+	async function handleCustomModalSubmit(input: {
+		title: string
+		blockType: CustomSectionBlockType
+	}) {
+		if (customModalMode === "section") {
+			await onCreateCustomSection(input)
+			setCustomModalMode(null)
+			return
+		}
+
+		if (customModalMode === "block" && addBlockSectionId) {
+			await onAddCustomBlock({
+				sectionId: addBlockSectionId,
+				blockType: input.blockType,
+			})
+			setCustomModalMode(null)
+			setAddBlockSectionId(null)
+		}
 	}
 
 	return (
@@ -207,15 +307,25 @@ export function ResumeSectionsAside({
 							const Icon = getSectionIcon(section.section_type)
 							const expanded = expandedId === section.id
 							const isSkillsSection = section.section_type === "skills"
+							const isCustomSection = section.section_type === "custom"
+							const canRenameSection = section.section_type !== "header"
+							const canDeleteSection = section.section_type !== "header"
+							const isRenaming = renamingSectionId === section.id
 							return (
 								<div
 									key={section.id}
 									className="rounded-xl border border-neutral-200/80"
 								>
 									<div
-										onClick={() => onSectionClick(section.id)}
-										draggable
-										onDragStart={() => onDragStart(section.id)}
+										onClick={() => {
+											if (isRenaming) return
+											onSectionClick(section.id)
+										}}
+										draggable={!isRenaming}
+										onDragStart={() => {
+											if (isRenaming) return
+											onDragStart(section.id)
+										}}
 										onDragOver={(event: DragEvent) => event.preventDefault()}
 										onDrop={() => onDrop(section.id)}
 										className={cn(
@@ -232,36 +342,129 @@ export function ResumeSectionsAside({
 										>
 											<GripVertical className="size-3.5" />
 										</span>
-										<button
-											type="button"
-											className="flex min-w-0 flex-1 items-center gap-2 text-left"
-										>
-											<Icon
-												className="size-3.5 shrink-0 text-neutral-500"
-												aria-hidden
-											/>
-											<span className="truncate text-sm font-medium text-neutral-800">
-												{section.display_name}
-											</span>
-											{section.issueCount ? (
-												<span className="inline-flex items-center gap-0.5 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
-													<AlertCircle className="size-2.5" aria-hidden />
-													{section.issueCount}
-												</span>
-											) : null}
-										</button>
-										{expanded ? (
-											<ChevronDown className="size-3.5 text-neutral-400" />
+										{isRenaming ? (
+											<form
+												className="flex min-w-0 flex-1 items-center gap-1"
+												onClick={(event) => event.stopPropagation()}
+												onSubmit={(event) => {
+													event.preventDefault()
+													void handleApplyRenameSection(section.id)
+												}}
+											>
+												<Icon
+													className="size-3.5 shrink-0 text-neutral-500"
+													aria-hidden
+												/>
+												<Input
+													value={renameDraft}
+													onChange={(event) =>
+														setRenameDraft(event.target.value)
+													}
+													onKeyDown={(event) => {
+														if (event.key === "Escape") {
+															event.preventDefault()
+															handleCancelRenameSection()
+														}
+													}}
+													autoFocus
+													disabled={isSavingRename}
+													aria-label="Section header name"
+													className="h-7 min-w-0 flex-1 px-2 text-sm"
+												/>
+												<Button
+													type="submit"
+													size="sm"
+													className="h-7 shrink-0 px-2 text-xs"
+													disabled={isSavingRename}
+												>
+													{isSavingRename ? (
+														<Loader2
+															className="size-3.5 animate-spin"
+															aria-hidden
+														/>
+													) : (
+														"Save"
+													)}
+												</Button>
+												<Button
+													type="button"
+													size="sm"
+													variant="ghost"
+													className="h-7 shrink-0 px-2 text-xs"
+													disabled={isSavingRename}
+													onClick={handleCancelRenameSection}
+												>
+													Cancel
+												</Button>
+											</form>
 										) : (
-											<ChevronRight className="size-3.5 text-neutral-400" />
+											<>
+												<button
+													type="button"
+													className="flex min-w-0 flex-1 items-center gap-2 text-left"
+												>
+													<Icon
+														className="size-3.5 shrink-0 text-neutral-500"
+														aria-hidden
+													/>
+													<span className="truncate text-sm font-medium text-neutral-800">
+														{section.display_name}
+													</span>
+													{section.issueCount ? (
+														<span className="inline-flex items-center gap-0.5 rounded-full bg-red-50 px-1.5 py-0.5 text-[10px] font-bold text-red-600">
+															<AlertCircle
+																className="size-2.5"
+																aria-hidden
+															/>
+															{section.issueCount}
+														</span>
+													) : null}
+												</button>
+												{canRenameSection ? (
+													<Button
+														type="button"
+														size="sm"
+														variant="ghost"
+														className="h-7 shrink-0 px-1.5 text-neutral-500"
+														aria-label={`Rename ${section.display_name}`}
+														onClick={(event) => {
+															event.stopPropagation()
+															handleStartRenameSection(section)
+														}}
+													>
+														<Pencil className="size-3.5" aria-hidden />
+													</Button>
+												) : null}
+												{canDeleteSection ? (
+													<Button
+														type="button"
+														size="sm"
+														variant="ghost"
+														className="h-7 shrink-0 px-1.5 text-neutral-500 hover:bg-red-50 hover:text-red-600"
+														aria-label={`Remove ${section.display_name}`}
+														onClick={(event) => {
+															event.stopPropagation()
+															setPendingDeleteSection(section)
+														}}
+													>
+														<Trash2 className="size-3.5" aria-hidden />
+													</Button>
+												) : null}
+												{expanded ? (
+													<ChevronDown className="size-3.5 shrink-0 text-neutral-400" />
+												) : (
+													<ChevronRight className="size-3.5 shrink-0 text-neutral-400" />
+												)}
+											</>
 										)}
 									</div>
 									{expanded ? (
 										<div className="space-y-2 border-t border-neutral-100 px-3 pb-3 pt-2">
 											{sortBlocks(section.blocks).map((block) => {
 												const isEditing = editingBlockId === block.id
-												const canDeleteCategory =
-													block.block_type === "skill_category_entry"
+												const canDelete =
+													block.block_type === "skill_category_entry" ||
+													isCustomSection
 												const canRewrite =
 													isRewriteSupportedBlockType(block.block_type) &&
 													!(
@@ -285,19 +488,17 @@ export function ResumeSectionsAside({
 													>
 														<div className="mb-1 flex items-center justify-between gap-2">
 															<p className="truncate text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-																{block.block_type === "skill_category_entry"
-																	? "Skill category"
-																	: block.block_type.replaceAll("_", " ")}
+																{customBlockTypeLabel(block.block_type)}
 															</p>
 															<div className="flex items-center gap-1">
-																{canDeleteCategory ? (
+																{canDelete ? (
 																	<Button
 																		type="button"
 																		size="sm"
 																		variant="ghost"
 																		className="h-7 gap-1 px-2 text-xs text-neutral-500 hover:bg-red-50 hover:text-red-600"
 																		onClick={() => setPendingDeleteBlock(block)}
-																		aria-label="Remove skill category"
+																		aria-label="Remove block"
 																	>
 																		<Trash2 className="size-3.5" aria-hidden />
 																	</Button>
@@ -397,6 +598,31 @@ export function ResumeSectionsAside({
 													Add skill category
 												</Button>
 											) : null}
+
+											{isCustomSection ? (
+												<Button
+													type="button"
+													size="sm"
+													variant="outline"
+													className="h-8 w-full gap-1.5 border-dashed text-xs"
+													disabled={isAddingCustomBlock}
+													onClick={() => {
+														setAddBlockSectionId(section.id)
+														setCustomModalMode("block")
+													}}
+												>
+													{isAddingCustomBlock &&
+													addBlockSectionId === section.id ? (
+														<Loader2
+															className="size-3.5 animate-spin"
+															aria-hidden
+														/>
+													) : (
+														<Plus className="size-3.5" aria-hidden />
+													)}
+													Add block
+												</Button>
+											) : null}
 										</div>
 									) : null}
 								</div>
@@ -431,6 +657,21 @@ export function ResumeSectionsAside({
 								Add skill category
 							</Button>
 						) : null}
+
+						<Button
+							type="button"
+							variant="outline"
+							className="mt-2 h-9 w-full gap-2 border-dashed text-sm"
+							disabled={isCreatingCustomSection}
+							onClick={() => setCustomModalMode("section")}
+						>
+							{isCreatingCustomSection ? (
+								<Loader2 className="size-4 animate-spin" aria-hidden />
+							) : (
+								<Plus className="size-4" aria-hidden />
+							)}
+							Add custom section
+						</Button>
 					</div>
 				</TabsContent>
 
@@ -452,13 +693,37 @@ export function ResumeSectionsAside({
 				isOpen={Boolean(pendingDeleteBlock)}
 				onClose={() => setPendingDeleteBlock(null)}
 				onConfirm={handleConfirmDelete}
-				title="Remove skill category"
+				title="Remove block"
 				message={
 					pendingDeleteBlock
-						? `Remove "${getCategoryLabel(pendingDeleteBlock)}" from this resume? This cannot be undone.`
-						: "Remove this skill category from the resume?"
+						? `Remove "${getDeletableBlockLabel(pendingDeleteBlock)}" from this resume? This cannot be undone.`
+						: "Remove this block from the resume?"
 				}
-				successMessage="Skill category removed"
+				successMessage="Block removed"
+			/>
+
+			<ConfirmModal
+				isOpen={Boolean(pendingDeleteSection)}
+				onClose={() => setPendingDeleteSection(null)}
+				onConfirm={handleConfirmDeleteSection}
+				title="Remove section"
+				message={
+					pendingDeleteSection
+						? `Remove "${pendingDeleteSection.display_name}" and all of its content from this resume? This cannot be undone.`
+						: "Remove this section from the resume?"
+				}
+				successMessage="Section removed"
+			/>
+
+			<AddCustomSectionModal
+				isOpen={customModalMode !== null}
+				mode={customModalMode ?? "section"}
+				isSubmitting={isCreatingCustomSection || isAddingCustomBlock}
+				onClose={() => {
+					setCustomModalMode(null)
+					setAddBlockSectionId(null)
+				}}
+				onSubmit={handleCustomModalSubmit}
 			/>
 		</aside>
 	)

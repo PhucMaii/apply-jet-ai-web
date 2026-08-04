@@ -9,9 +9,17 @@ import {
 	fetchApplicationDetail,
 	toApplicationDetailForm,
 } from "@/lib/application-detail"
+import {
+	defaultContentForCustomBlock,
+	defaultStyleForCustomBlock,
+} from "@/lib/custom-resume-section"
 import { supabase } from "@/lib/supabase"
 import type { ApplicationDetailForm } from "@/types/application-detail"
-import type { AppResumeBlock, AppResumeSection } from "@/types/app-resume"
+import type {
+	AppResumeBlock,
+	AppResumeSection,
+	CustomSectionBlockType,
+} from "@/types/app-resume"
 
 export function useApplicationDetail(applicationId: string | undefined) {
 	const { user, isLoading: isAuthLoading } = useAuth()
@@ -157,6 +165,74 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		}
 	}, [user, applicationId])
 
+	const saveAppResumeSectionDisplayName = useCallback(
+		async (input: { sectionId: string; displayName: string }) => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const displayName = input.displayName.trim()
+			if (!displayName) {
+				throw new Error("Section name cannot be empty.")
+			}
+
+			const { error: upErr } = await supabase
+				.from("app_resume_sections")
+				.update({
+					display_name: displayName,
+					updated_at: new Date().toISOString(),
+				})
+				.eq("id", input.sectionId)
+
+			if (upErr) {
+				console.error(
+					"Something went wrong saving section display name:",
+					upErr,
+				)
+				throw new Error(upErr.message)
+			}
+		},
+		[user, applicationId],
+	)
+
+	const saveAppResumeSectionOrder = useCallback(
+		async (
+			orderedSections: Array<{ sectionId: string; sortKey: number }>,
+		) => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const now = new Date().toISOString()
+			const results = await Promise.all(
+				orderedSections.map(async ({ sectionId, sortKey }) => {
+					const { error: upErr } = await supabase
+						.from("app_resume_sections")
+						.update({
+							sort_key: sortKey,
+							updated_at: now,
+						})
+						.eq("id", sectionId)
+
+					if (upErr) {
+						console.error(
+							"Something went wrong saving section order:",
+							upErr,
+						)
+						return upErr
+					}
+					return null
+				}),
+			)
+
+			const firstError = results.find((error) => error !== null)
+			if (firstError) {
+				throw new Error(firstError.message)
+			}
+		},
+		[user, applicationId],
+	)
+
 	const createAppResumeSkillCategory = useCallback(
 		async (input: {
 			appResumeId: string
@@ -292,6 +368,124 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		[user, applicationId],
 	)
 
+	const createAppResumeCustomSection = useCallback(
+		async (input: {
+			appResumeId: string
+			displayName: string
+			sortKey: number
+			blockType: CustomSectionBlockType
+		}): Promise<AppResumeSection> => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const now = new Date().toISOString()
+			const displayName = input.displayName.trim() || "Custom section"
+
+			const { data: sectionData, error: sectionError } = await supabase
+				.from("app_resume_sections")
+				.insert({
+					app_resume_id: input.appResumeId,
+					section_type: "custom",
+					display_name: displayName,
+					sort_key: input.sortKey,
+					style_json: {},
+					generated_resume_id: null,
+					created_at: now,
+					updated_at: now,
+				})
+				.select("*")
+				.single()
+
+			if (sectionError || !sectionData) {
+				console.error(
+					"Something went wrong creating custom section:",
+					sectionError,
+				)
+				throw new Error(
+					sectionError?.message ?? "Failed to create custom section.",
+				)
+			}
+
+			const { data: blockData, error: blockError } = await supabase
+				.from("app_resume_blocks")
+				.insert({
+					app_resume_id: input.appResumeId,
+					section_id: sectionData.id,
+					block_type: input.blockType,
+					sort_key: 0,
+					content_json: defaultContentForCustomBlock(input.blockType),
+					style_json: defaultStyleForCustomBlock(input.blockType),
+					created_at: now,
+					updated_at: now,
+				})
+				.select("*")
+				.single()
+
+			if (blockError || !blockData) {
+				console.error(
+					"Something went wrong creating custom section block:",
+					blockError,
+				)
+				await supabase
+					.from("app_resume_sections")
+					.delete()
+					.eq("id", sectionData.id)
+				throw new Error(
+					blockError?.message ?? "Failed to create custom section block.",
+				)
+			}
+
+			return {
+				...(sectionData as Omit<AppResumeSection, "blocks">),
+				blocks: [blockData as AppResumeBlock],
+			}
+		},
+		[user, applicationId],
+	)
+
+	const createAppResumeCustomBlock = useCallback(
+		async (input: {
+			appResumeId: string
+			sectionId: string
+			sortKey: number
+			blockType: CustomSectionBlockType
+		}): Promise<AppResumeBlock> => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const now = new Date().toISOString()
+			const { data, error: insertError } = await supabase
+				.from("app_resume_blocks")
+				.insert({
+					app_resume_id: input.appResumeId,
+					section_id: input.sectionId,
+					block_type: input.blockType,
+					sort_key: input.sortKey,
+					content_json: defaultContentForCustomBlock(input.blockType),
+					style_json: defaultStyleForCustomBlock(input.blockType),
+					created_at: now,
+					updated_at: now,
+				})
+				.select("*")
+				.single()
+
+			if (insertError || !data) {
+				console.error(
+					"Something went wrong creating custom block:",
+					insertError,
+				)
+				throw new Error(
+					insertError?.message ?? "Failed to create custom block.",
+				)
+			}
+
+			return data as AppResumeBlock
+		},
+		[user, applicationId],
+	)
+
 	const deleteAppResumeBlock = useCallback(
 		async (blockId: string) => {
 			if (!user || !applicationId) {
@@ -309,6 +503,41 @@ export function useApplicationDetail(applicationId: string | undefined) {
 					deleteError,
 				)
 				throw new Error(deleteError.message)
+			}
+		},
+		[user, applicationId],
+	)
+
+	const deleteAppResumeSection = useCallback(
+		async (sectionId: string) => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const { error: blocksError } = await supabase
+				.from("app_resume_blocks")
+				.delete()
+				.eq("section_id", sectionId)
+
+			if (blocksError) {
+				console.error(
+					"Something went wrong deleting section blocks:",
+					blocksError,
+				)
+				throw new Error(blocksError.message)
+			}
+
+			const { error: sectionError } = await supabase
+				.from("app_resume_sections")
+				.delete()
+				.eq("id", sectionId)
+
+			if (sectionError) {
+				console.error(
+					"Something went wrong deleting app resume section:",
+					sectionError,
+				)
+				throw new Error(sectionError.message)
 			}
 		},
 		[user, applicationId],
@@ -332,10 +561,15 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		resolveStatus,
 		patchForm,
 		saveAppResumeBlock,
+		saveAppResumeSectionDisplayName,
+		saveAppResumeSectionOrder,
 		createAppResumeSkillCategory,
 		createAppResumeSummaryBlock,
 		ensureAppResumeSkillsSection,
+		createAppResumeCustomSection,
+		createAppResumeCustomBlock,
 		deleteAppResumeBlock,
+		deleteAppResumeSection,
 		toForm: toApplicationDetailForm,
 	}
 }

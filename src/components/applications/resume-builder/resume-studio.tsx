@@ -11,7 +11,7 @@ import type { ApplicationStatus } from "@/lib/application-status"
 import { ROUTES } from "@/lib/constants"
 import { cn } from "@/lib/utils"
 import type { ApplicationDetailForm } from "@/types/application-detail"
-import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume"
+import type { AppResume, AppResumeBlock, AppResumeSection, CustomSectionBlockType } from "@/types/app-resume"
 import { ResumeTab } from "./resume-tab"
 
 type StudioView = "editor" | "tailored"
@@ -32,6 +32,13 @@ interface ResumeStudioProps {
 		message: string
 	}>
 	onSaveAppResumeBlock: (block: AppResumeBlock) => Promise<void>
+	onSaveAppResumeSectionDisplayName: (input: {
+		sectionId: string
+		displayName: string
+	}) => Promise<void>
+	onSaveAppResumeSectionOrder: (
+		orderedSections: Array<{ sectionId: string; sortKey: number }>,
+	) => Promise<void>
 	onCreateSkillCategory: (input: {
 		appResumeId: string
 		sectionId: string
@@ -47,7 +54,20 @@ interface ResumeStudioProps {
 		appResumeId: string
 		sortKey: number
 	}) => Promise<AppResumeSection>
+	onCreateCustomSection: (input: {
+		appResumeId: string
+		displayName: string
+		sortKey: number
+		blockType: CustomSectionBlockType
+	}) => Promise<AppResumeSection>
+	onCreateCustomBlock: (input: {
+		appResumeId: string
+		sectionId: string
+		sortKey: number
+		blockType: CustomSectionBlockType
+	}) => Promise<AppResumeBlock>
 	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
+	onDeleteAppResumeSection: (sectionId: string) => Promise<void>
 	refetchApplication: () => void
 }
 
@@ -64,10 +84,15 @@ export function ResumeStudio({
 	onStatusChange,
 	onDelete,
 	onSaveAppResumeBlock,
+	onSaveAppResumeSectionDisplayName,
+	onSaveAppResumeSectionOrder,
 	onCreateSkillCategory,
 	onCreateSummaryBlock,
 	onEnsureSkillsSection,
+	onCreateCustomSection,
+	onCreateCustomBlock,
 	onDeleteAppResumeBlock,
+	onDeleteAppResumeSection,
 	refetchApplication,
 }: ResumeStudioProps) {
 	const [view, setView] = useState<StudioView>("editor")
@@ -177,10 +202,17 @@ export function ResumeStudio({
 					onGenerate={handleGenerate}
 					appResume={appResume}
 					onSaveAppResumeBlock={onSaveAppResumeBlock}
+					onSaveAppResumeSectionDisplayName={
+						onSaveAppResumeSectionDisplayName
+					}
+					onSaveAppResumeSectionOrder={onSaveAppResumeSectionOrder}
 					onCreateSkillCategory={onCreateSkillCategory}
 					onCreateSummaryBlock={onCreateSummaryBlock}
 					onEnsureSkillsSection={onEnsureSkillsSection}
+					onCreateCustomSection={onCreateCustomSection}
+					onCreateCustomBlock={onCreateCustomBlock}
 					onDeleteAppResumeBlock={onDeleteAppResumeBlock}
+					onDeleteAppResumeSection={onDeleteAppResumeSection}
 					refetchApplication={refetchApplication}
 				/>
 			) : null}

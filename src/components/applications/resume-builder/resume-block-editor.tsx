@@ -91,23 +91,41 @@ export function ResumeBlockEditor({
 						className="h-9"
 					/>
 					<div className="grid grid-cols-2 gap-2">
-						<Input
-							type="date"
-							value={stringValue(formData.start_date)}
-							onChange={(event) =>
-								onFieldChange("start_date", event.target.value)
-							}
-							className="h-9"
-						/>
-						<Input
-							type="date"
-							value={stringValue(formData.end_date)}
-							onChange={(event) =>
-								onFieldChange("end_date", event.target.value)
-							}
-							className="h-9"
-						/>
+						<div className="space-y-1">
+							<label className="text-[11px] font-medium text-neutral-500">
+								Start date
+								<span className="font-normal text-neutral-400">
+									{" "}
+									(optional)
+								</span>
+							</label>
+							<Input
+								type="date"
+								value={stringValue(formData.start_date)}
+								onChange={(event) =>
+									onFieldChange("start_date", event.target.value)
+								}
+								className="h-9"
+							/>
+						</div>
+						<div className="space-y-1">
+							<label className="text-[11px] font-medium text-neutral-500">
+								End / graduation
+							</label>
+							<Input
+								type="date"
+								value={stringValue(formData.end_date)}
+								onChange={(event) =>
+									onFieldChange("end_date", event.target.value)
+								}
+								className="h-9"
+							/>
+						</div>
 					</div>
+					<p className="text-[11px] leading-relaxed text-neutral-400">
+						Use both dates for a range, or only the end date for graduation
+						year.
+					</p>
 				</div>
 			) : null}
 
@@ -136,6 +154,16 @@ export function ResumeBlockEditor({
 						className="h-9"
 					/>
 				</div>
+			) : null}
+
+			{block.block_type === "bullet_list" ? (
+				<BulletListEditor
+					key={`${block.id}-bullets`}
+					bullets={toEditableStringList(formData.items)}
+					onChange={(bullets) => onFieldChange("items", bullets)}
+					label="Bullets"
+					placeholder="Add a bullet point"
+				/>
 			) : null}
 
 			{block.block_type === "project_entry" ? (

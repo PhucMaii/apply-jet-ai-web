@@ -31,6 +31,11 @@ export function getBlockPreviewText(block: AppResumeBlock): string {
 		if (skills.length === 0) return content.name
 		return `${content.name}: ${skills.join(", ")}`
 	}
+	if (block.block_type === "bullet_list" && "items" in content) {
+		const items = stringListValue(content.items).filter(Boolean)
+		if (items.length === 0) return "(empty bullet list)"
+		return items.map((item) => `• ${item}`).join(" ")
+	}
 	if ("name" in content && "categoryId" in content) {
 		return content.name
 	}
@@ -81,7 +86,7 @@ export function flattenResumeSectionsText(
 				) {
 					return [
 						`${content.degree} — ${content.school}`,
-						formatDateRange(content.start_date, content.end_date),
+						formatEducationDates(content.start_date, content.end_date),
 					]
 				}
 				if (
@@ -91,6 +96,9 @@ export function flattenResumeSectionsText(
 					return [
 						`${content.name}: ${stringListValue(content.skills).join(", ")}`,
 					]
+				}
+				if (block.block_type === "bullet_list" && "items" in content) {
+					return stringListValue(content.items)
 				}
 				return [getBlockPreviewText(block)]
 			})
@@ -115,13 +123,18 @@ export function getEditableText(block: AppResumeBlock): string {
 		return `${content.title} — ${content.company}\n${formatDateRange(content.start_date, content.end_date)}\n${bullets}`
 	}
 	if ("school" in content && "degree" in content) {
-		return `${content.degree}\n${content.school}\n${formatDateRange(content.start_date, content.end_date)}`
+		return `${content.degree}\n${content.school}\n${formatEducationDates(content.start_date, content.end_date)}`
 	}
 	if (block.block_type === "skill_category_entry" && "skills" in content) {
 		const bullets = stringListValue(content.skills)
 			.map((line) => `• ${line}`)
 			.join("\n")
 		return `${content.name}\n${bullets}`
+	}
+	if (block.block_type === "bullet_list" && "items" in content) {
+		return stringListValue(content.items)
+			.map((line) => `• ${line}`)
+			.join("\n")
 	}
 	if ("name" in content && "categoryId" in content) {
 		return content.name
@@ -177,6 +190,15 @@ export function applyEditableText(
 		}
 	}
 
+	if (block.block_type === "bullet_list" && "items" in content) {
+		return {
+			items: text
+				.split("\n")
+				.map((line) => line.replace(/^•\s*/, "").trim())
+				.filter(Boolean),
+		}
+	}
+
 	if (block.block_type === "job_entry" && "title" in content) {
 		const lines = text.split("\n").map((line) => line.trim()).filter(Boolean)
 		const header = lines[0] ?? `${content.title} — ${content.company}`
@@ -225,6 +247,22 @@ export function formatDateRange(
 	const end = endDate ? formatMonthYear(endDate) : "Present"
 	if (!start) return end
 	return `${start} - ${end}`
+}
+
+/**
+ * Education dates: full range, graduation-only (end), or in-progress
+ * (start → Present). Empty when neither date is set.
+ */
+export function formatEducationDates(
+	startDate: string | null,
+	endDate: string | null,
+): string {
+	const start = formatMonthYear(startDate)
+	const end = formatMonthYear(endDate)
+	if (start && end) return `${start} - ${end}`
+	if (end) return end
+	if (start) return `${start} - Present`
+	return ""
 }
 
 function formatMonthYear(value: string | null): string {
@@ -386,6 +424,11 @@ export function buildBlockContentFromForm(
 			description: stringListValue(formData.description),
 			start_date: nullableStringValue(formData.start_date),
 			end_date: nullableStringValue(formData.end_date),
+		}
+	}
+	if (block.block_type === "bullet_list") {
+		return {
+			items: stringListValue(formData.items),
 		}
 	}
 	return null

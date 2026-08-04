@@ -20,7 +20,7 @@ import { useUserSubscription } from "@/hooks/use-user-subscription"
 import ProFeatureGuard, { ProFeatureBadge } from "../pro-feature-guard"
 import useUserUsage from "@/hooks/use-user-usage"
 import { useMemo } from "react"
-import type { AppResume, AppResumeBlock, AppResumeSection } from "@/types/app-resume"
+import type { AppResume, AppResumeBlock, AppResumeSection, CustomSectionBlockType } from "@/types/app-resume"
 
 const DOCUMENT_TAB_TRIGGER = cn(
 	"relative h-11 min-w-0 shrink-0 rounded-none border-b-2 border-transparent",
@@ -53,6 +53,13 @@ interface ApplicationDetailDocumentsProps {
 	}>
 	refetchApplication: () => void
 	onSaveAppResumeBlock: (block: AppResumeBlock) => Promise<void>
+	onSaveAppResumeSectionDisplayName: (input: {
+		sectionId: string
+		displayName: string
+	}) => Promise<void>
+	onSaveAppResumeSectionOrder: (
+		orderedSections: Array<{ sectionId: string; sortKey: number }>,
+	) => Promise<void>
 	onCreateSkillCategory: (input: {
 		appResumeId: string
 		sectionId: string
@@ -68,7 +75,20 @@ interface ApplicationDetailDocumentsProps {
 		appResumeId: string
 		sortKey: number
 	}) => Promise<AppResumeSection>
+	onCreateCustomSection: (input: {
+		appResumeId: string
+		displayName: string
+		sortKey: number
+		blockType: CustomSectionBlockType
+	}) => Promise<AppResumeSection>
+	onCreateCustomBlock: (input: {
+		appResumeId: string
+		sectionId: string
+		sortKey: number
+		blockType: CustomSectionBlockType
+	}) => Promise<AppResumeBlock>
 	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
+	onDeleteAppResumeSection: (sectionId: string) => Promise<void>
 }
 
 export function ApplicationDetailDocuments({
@@ -88,10 +108,15 @@ export function ApplicationDetailDocuments({
 	onDelete,
 	refetchApplication,
 	onSaveAppResumeBlock,
+	onSaveAppResumeSectionDisplayName,
+	onSaveAppResumeSectionOrder,
 	onCreateSkillCategory,
 	onCreateSummaryBlock,
 	onEnsureSkillsSection,
+	onCreateCustomSection,
+	onCreateCustomBlock,
 	onDeleteAppResumeBlock,
+	onDeleteAppResumeSection,
 }: ApplicationDetailDocumentsProps) {
 	const { resumeText } = useProfilePage()
 	const { plan } = useUserSubscription()
@@ -188,10 +213,17 @@ export function ApplicationDetailDocuments({
 							onDelete={onDelete}
 							appResume={appResume}
 							onSaveAppResumeBlock={onSaveAppResumeBlock}
+							onSaveAppResumeSectionDisplayName={
+								onSaveAppResumeSectionDisplayName
+							}
+							onSaveAppResumeSectionOrder={onSaveAppResumeSectionOrder}
 							onCreateSkillCategory={onCreateSkillCategory}
 							onCreateSummaryBlock={onCreateSummaryBlock}
 							onEnsureSkillsSection={onEnsureSkillsSection}
+							onCreateCustomSection={onCreateCustomSection}
+							onCreateCustomBlock={onCreateCustomBlock}
 							onDeleteAppResumeBlock={onDeleteAppResumeBlock}
+							onDeleteAppResumeSection={onDeleteAppResumeSection}
 							refetchApplication={refetchApplication}
 						/>
 					</ProFeatureGuard>

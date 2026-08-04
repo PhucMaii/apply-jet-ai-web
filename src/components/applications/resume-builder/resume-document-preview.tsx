@@ -9,6 +9,7 @@ import {
 } from "react"
 import {
 	formatDateRange,
+	formatEducationDates,
 	getBlockPreviewText,
 	sortBlocks,
 	sortSections,
@@ -488,6 +489,11 @@ function buildFlowItems(
 				continue
 			}
 
+			if (block.block_type === "bullet_list") {
+				items.push(...buildBulletListFlowItems(section.id, block))
+				continue
+			}
+
 			if (block.block_type === "rich_text") {
 				items.push(
 					...buildRichTextFlowItems(
@@ -555,6 +561,43 @@ function buildEntryFlowItems(
 	})
 
 	return items
+}
+
+function buildBulletListFlowItems(
+	sectionId: string,
+	block: AppResumeBlock,
+): FlowItem[] {
+	const content = block.content_json
+	const bullets =
+		block.block_type === "bullet_list" && "items" in content
+			? stringListValue(content.items).filter((item) => item.trim().length > 0)
+			: []
+
+	if (bullets.length === 0) {
+		return [
+			{
+				key: `entry-bullet-${block.id}-empty`,
+				kind: "entry_bullet",
+				sectionId,
+				blockId: block.id,
+				text: "",
+				status: "unchanged",
+				isLastInEntry: true,
+				style: block.style_json ?? {},
+			},
+		]
+	}
+
+	return bullets.map((text, index) => ({
+		key: `entry-bullet-${block.id}-${index}`,
+		kind: "entry_bullet" as const,
+		sectionId,
+		blockId: block.id,
+		text,
+		status: "unchanged" as const,
+		isLastInEntry: index === bullets.length - 1,
+		style: block.style_json ?? {},
+	}))
 }
 
 function buildRichTextFlowItems(
@@ -1201,6 +1244,10 @@ function AlignedTitleDateRow({
 		)
 	}
 
+	if (!date) {
+		return <div className="mb-0.5">{primary}</div>
+	}
+
 	if (align === "right") {
 		return (
 			<div className="mb-0.5 flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0 text-right">
@@ -1301,6 +1348,10 @@ function ReadOnlyBlockPreview({
 		const layout = getHeaderLayout(style, "education")
 		const parts = getEntryHeadlineParts(block)
 		if (!parts) return null
+		const dateLabel = formatEducationDates(
+			content.start_date,
+			content.end_date,
+		)
 		return (
 			<div className="mb-1.5">
 				<AlignedTitleDateRow
@@ -1314,9 +1365,7 @@ function ReadOnlyBlockPreview({
 						/>
 					}
 					date={
-						<p style={subtleStyle}>
-							{formatDateRange(content.start_date, content.end_date)}
-						</p>
+						dateLabel ? <p style={subtleStyle}>{dateLabel}</p> : null
 					}
 				/>
 			</div>

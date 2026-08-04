@@ -3,6 +3,7 @@ import {
 	Briefcase,
 	FileText,
 	GraduationCap,
+	Layers,
 	UserRound,
 	Wrench,
 } from "lucide-react"
@@ -22,6 +23,8 @@ export function getSectionIcon(type: AppResumeSectionType) {
 			return Wrench
 		case "projects":
 			return FolderKanban
+		case "custom":
+			return Layers
 		default:
 			return FileText
 	}
