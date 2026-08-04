@@ -17,8 +17,11 @@ import {
 	fontStylePatch,
 	getFontStyleMode,
 	getHeaderLayout,
+	getPrimaryBold,
+	getSecondaryBold,
 	getTextAlign,
 	headerLayoutOptions,
+	headlineFieldLabels,
 	type ResumeFontStyleMode,
 	type ResumeHeaderLayout,
 	type ResumeStyleGroup,
@@ -50,6 +53,9 @@ export function SectionStyleEditor({
 	const textAlign = getTextAlign(group.style)
 	const headerLayout = getHeaderLayout(group.style, group.sectionType)
 	const showHeaderLayout = group.supportsHeaderLayout
+	const headlineLabels = headlineFieldLabels(group.sectionType)
+	const primaryBold = getPrimaryBold(group.style)
+	const secondaryBold = getSecondaryBold(group.style)
 	const layoutOptions = headerLayoutOptions(group.sectionType)
 
 	const canDecrease = fontSize > RESUME_FONT_SIZE_OPTIONS[0]
@@ -115,7 +121,7 @@ export function SectionStyleEditor({
 							? group.description
 							: `${fontSize}px · ${fontModeLabel(fontMode)} · ${alignLabel(textAlign)}${
 									showHeaderLayout
-										? ` · ${headerLayoutLabel(headerLayout)}`
+										? ` · ${headerLayoutLabel(headerLayout)} · ${headlineLabels.primary}${primaryBold ? " bold" : ""}${secondaryBold ? ` · ${headlineLabels.secondary} bold` : ""}`
 										: ""
 								} · ${lineHeight}`}
 					</span>
@@ -256,6 +262,28 @@ export function SectionStyleEditor({
 						</StyleField>
 					) : null}
 
+					{showHeaderLayout ? (
+						<div className="space-y-2">
+							<p className="text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+								Headline weight
+							</p>
+							<HeadlineBoldToggle
+								label={headlineLabels.primary}
+								bold={primaryBold}
+								onChange={(nextBold) =>
+									onChange({ primaryBold: nextBold })
+								}
+							/>
+							<HeadlineBoldToggle
+								label={headlineLabels.secondary}
+								bold={secondaryBold}
+								onChange={(nextBold) =>
+									onChange({ secondaryBold: nextBold })
+								}
+							/>
+						</div>
+					) : null}
+
 					<StyleField label="Text align">
 						<div
 							className="grid grid-cols-3 gap-1 rounded-lg bg-neutral-100 p-1"
@@ -376,6 +404,58 @@ function StyleField({
 				{label}
 			</p>
 			{children}
+		</div>
+	)
+}
+
+function HeadlineBoldToggle({
+	label,
+	bold,
+	onChange,
+}: {
+	label: string
+	bold: boolean
+	onChange: (bold: boolean) => void
+}) {
+	return (
+		<div className="space-y-1.5">
+			<p className="text-xs font-medium text-neutral-700">{label}</p>
+			<div
+				className="grid grid-cols-2 gap-1 rounded-lg bg-neutral-100 p-1"
+				role="radiogroup"
+				aria-label={`${label} weight`}
+			>
+				{(
+					[
+						{ value: false, label: "Regular", sampleClass: "" },
+						{
+							value: true,
+							label: "Bold",
+							sampleClass: "font-semibold",
+						},
+					] as const
+				).map((option) => {
+					const selected = bold === option.value
+					return (
+						<button
+							key={String(option.value)}
+							type="button"
+							role="radio"
+							aria-checked={selected}
+							onClick={() => onChange(option.value)}
+							className={cn(
+								"rounded-md px-2 py-1.5 text-xs transition-colors",
+								option.sampleClass,
+								selected
+									? "bg-white text-neutral-900 shadow-sm"
+									: "text-neutral-600 hover:text-neutral-900",
+							)}
+						>
+							{option.label}
+						</button>
+					)
+				})}
+			</div>
 		</div>
 	)
 }

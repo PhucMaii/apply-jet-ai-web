@@ -1,11 +1,14 @@
 import {
+	ArrowLeft,
 	FileText,
 	Loader2,
 	Mail,
 	UserSearch,
 } from "lucide-react"
+import { Link } from "react-router-dom"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { ApplicationStatus } from "@/lib/application-status"
+import { ROUTES } from "@/lib/constants"
 import type {
 	ApplicationDetailForm,
 	GeneratedDocumentRow,
@@ -132,6 +135,12 @@ export function ApplicationDetailDocuments({
 		return usage.cover_letters_used >= usage.cover_letters_limit
 	}, [usage])
 
+	const pageTitle = useMemo(() => {
+		const role = form.jobTitle.trim() || "Untitled role"
+		const company = form.companyName.trim() || "Company"
+		return `${role} at ${company}`
+	}, [form.companyName, form.jobTitle])
+
 	return (
 		<section
 			className={cn(
@@ -151,6 +160,23 @@ export function ApplicationDetailDocuments({
 					</span>
 				</div>
 			) : null}
+
+			<header className="shrink-0 border-b border-neutral-200 bg-white">
+				<div className="flex items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+					<Link
+						to={ROUTES.applications}
+						className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+						aria-label="Back to applications"
+					>
+						<ArrowLeft className="size-4" aria-hidden />
+					</Link>
+					<div className="min-w-0 flex-1">
+						<p className="truncate font-display text-sm font-semibold text-neutral-900 sm:text-base lg:text-lg">
+							{pageTitle}
+						</p>
+					</div>
+				</div>
+			</header>
 
 			<Tabs
 				defaultValue="resume"

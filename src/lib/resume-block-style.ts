@@ -80,6 +80,33 @@ export function getHeaderLayout(
 	return "inline"
 }
 
+/** Bold for primary headline (title / degree / project name). */
+export function getPrimaryBold(style?: AppResumeBlockStyle | null): boolean {
+	if (typeof style?.primaryBold === "boolean") return style.primaryBold
+	return Boolean(style?.bold)
+}
+
+/** Bold for secondary headline (company / school / organization). */
+export function getSecondaryBold(style?: AppResumeBlockStyle | null): boolean {
+	if (typeof style?.secondaryBold === "boolean") return style.secondaryBold
+	return false
+}
+
+export function headlineFieldLabels(
+	sectionType: AppResumeSection["section_type"],
+): { primary: string; secondary: string } {
+	if (sectionType === "education") {
+		return { primary: "Degree", secondary: "School" }
+	}
+	if (sectionType === "projects") {
+		return { primary: "Project name", secondary: "Organization" }
+	}
+	if (sectionType === "custom") {
+		return { primary: "Primary line", secondary: "Secondary line" }
+	}
+	return { primary: "Job title", secondary: "Company" }
+}
+
 export function sectionSupportsHeaderLayout(
 	sectionType: AppResumeSection["section_type"],
 	blocks: AppResumeBlock[] = [],

@@ -24,7 +24,8 @@ import type {
 import {
 	getEntryHeadlineParts,
 	getHeaderLayout,
-	orderHeadlineFields,
+	getPrimaryBold,
+	getSecondaryBold,
 	type EntryHeadlineParts,
 	type ResumeHeaderLayout,
 } from "@/lib/resume-block-style"
@@ -1096,9 +1097,15 @@ function EntryHeaderView({
 }) {
 	const content = block.content_json
 	const style = block.style_json
-	const titleStyle = blockTextStyle(style)
+	const primaryStyle = blockTextStyle({
+		...style,
+		bold: getPrimaryBold(style),
+	})
 	const metaStyle = blockTextStyle(style, "subtle")
-	const mutedStyle = blockTextStyle({ ...style, bold: false }, "muted")
+	const secondaryStyle = blockTextStyle(
+		{ ...style, bold: getSecondaryBold(style) },
+		"muted",
+	)
 	const align = resolveTextAlign(style)
 	const sectionType =
 		block.block_type === "job_entry"
@@ -1126,8 +1133,8 @@ function EntryHeaderView({
 						<EntryHeadline
 							parts={parts}
 							layout={layout}
-							titleStyle={titleStyle}
-							mutedStyle={mutedStyle}
+							primaryStyle={primaryStyle}
+							secondaryStyle={secondaryStyle}
 						/>
 					}
 					date={
@@ -1160,8 +1167,8 @@ function EntryHeaderView({
 						<EntryHeadline
 							parts={parts}
 							layout={layout}
-							titleStyle={titleStyle}
-							mutedStyle={mutedStyle}
+							primaryStyle={primaryStyle}
+							secondaryStyle={secondaryStyle}
 						/>
 					}
 					date={
@@ -1189,34 +1196,43 @@ function EntryHeaderView({
 function EntryHeadline({
 	parts,
 	layout,
-	titleStyle,
-	mutedStyle,
+	primaryStyle,
+	secondaryStyle,
 }: {
 	parts: EntryHeadlineParts
 	layout: ResumeHeaderLayout
-	titleStyle: CSSProperties
-	mutedStyle: CSSProperties
+	primaryStyle: CSSProperties
+	secondaryStyle: CSSProperties
 }) {
-	const ordered = orderHeadlineFields(parts, layout)
-
-	if (ordered.inline) {
+	if (layout === "inline") {
 		return (
-			<p style={titleStyle}>
-				{ordered.first}
-				{ordered.second ? (
-					<span style={mutedStyle}>
+			<p>
+				<span style={primaryStyle}>{parts.primary}</span>
+				{parts.secondary ? (
+					<span style={secondaryStyle}>
 						{" "}
-						— {ordered.second}
+						— {parts.secondary}
 					</span>
 				) : null}
 			</p>
 		)
 	}
 
+	if (layout === "inverted" && parts.secondary) {
+		return (
+			<div>
+				<p style={secondaryStyle}>{parts.secondary}</p>
+				<p style={primaryStyle}>{parts.primary}</p>
+			</div>
+		)
+	}
+
 	return (
 		<div>
-			<p style={titleStyle}>{ordered.first}</p>
-			{ordered.second ? <p style={mutedStyle}>{ordered.second}</p> : null}
+			<p style={primaryStyle}>{parts.primary}</p>
+			{parts.secondary ? (
+				<p style={secondaryStyle}>{parts.secondary}</p>
+			) : null}
 		</div>
 	)
 }
@@ -1333,7 +1349,6 @@ function ReadOnlyBlockPreview({
 	const textStyle = blockTextStyle(style)
 	const mutedStyle = blockTextStyle(style, "muted")
 	const subtleStyle = blockTextStyle(style, "subtle")
-	const titleStyle = blockTextStyle(style)
 
 	if (block.block_type === "group_text" && "texts" in content) {
 		return (
@@ -1352,6 +1367,14 @@ function ReadOnlyBlockPreview({
 			content.start_date,
 			content.end_date,
 		)
+		const primaryStyle = blockTextStyle({
+			...style,
+			bold: getPrimaryBold(style),
+		})
+		const secondaryStyle = blockTextStyle(
+			{ ...style, bold: getSecondaryBold(style) },
+			"muted",
+		)
 		return (
 			<div className="mb-1.5">
 				<AlignedTitleDateRow
@@ -1360,8 +1383,8 @@ function ReadOnlyBlockPreview({
 						<EntryHeadline
 							parts={parts}
 							layout={layout}
-							titleStyle={titleStyle}
-							mutedStyle={mutedStyle}
+							primaryStyle={primaryStyle}
+							secondaryStyle={secondaryStyle}
 						/>
 					}
 					date={

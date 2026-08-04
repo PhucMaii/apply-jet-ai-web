@@ -42,6 +42,16 @@ export interface AppResumeBlockStyle {
 	 * Projects: name + organization (when present)
 	 */
 	headerLayout?: "inline" | "stacked" | "inverted"
+	/**
+	 * Bold the primary headline field (job title / degree / project name).
+	 * Falls back to `bold` when unset.
+	 */
+	primaryBold?: boolean
+	/**
+	 * Bold the secondary headline field (company / school / organization).
+	 * Defaults to false when unset.
+	 */
+	secondaryBold?: boolean
 }
 
 export interface GroupTextItem {

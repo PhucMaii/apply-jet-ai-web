@@ -3,6 +3,7 @@ import {
 	Loader2,
 	Pencil,
 	Save,
+	ArrowLeft,
 } from "lucide-react"
 import { ApplicationsStatusBadge } from "@/components/applications/applications-status-badge"
 import { DeleteApplicationControl } from "@/components/applications/delete-application-control"
@@ -99,6 +100,15 @@ export function ResumeJobAside({
 								Added {addedLabel}
 							</p>
 						</div>
+
+						<Button
+							type="button"
+							variant="outline"
+							onClick={onDoneEditingJob}
+						>
+							<ArrowLeft className="size-4" aria-hidden />
+							Back
+						</Button>
 
 						<div className="space-y-2">
 							<span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
@@ -354,7 +364,7 @@ export function ResumeJobAside({
 							</>
 						)}
 
-						<div style={{marginTop: "30px"}}>
+						<div style={{ marginTop: "30px" }}>
 							<h1 className="text-sm font-semibold text-neutral-900">Resume Suggestions</h1>
 							<p className="text-xs text-neutral-600">
 								Here are some suggestions for your resume based on the job description.
