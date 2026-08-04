@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react"
+import { ApplicationsCardGrid } from "@/components/applications/applications-card-grid"
 import { ApplicationsEmptyState } from "@/components/applications/applications-empty-state"
-import { ApplicationsTable } from "@/components/applications/applications-table"
 import { PageHeader } from "@/components/page-header"
 import { useAuth } from "@/context/auth-context"
 import { useApplications } from "@/hooks/use-applications"
@@ -59,19 +59,31 @@ export function ApplicationsPage() {
 				) : rows.length === 0 ? (
 					<ApplicationsEmptyState />
 				) : (
-					<ApplicationsTable
+					<ApplicationsCardGrid
 						rows={rows}
 						updatingId={updatingId}
 						downloading={downloading}
+						deletingId={deletingId}
 						resolveStatus={resolveStatus}
 						onStatusChange={(id, status) => void updateStatus(id, status)}
 						onDownloadResume={(application, generatedResume, companyName) =>
-							void downloadResume(application, generatedResume, companyName)
+							void downloadResume(
+								application,
+								generatedResume,
+								companyName,
+							)
 						}
-						onDownloadCover={(application, generatedCoverLetter, companyName) =>
-							void downloadCoverLetter(application, generatedCoverLetter, companyName)
+						onDownloadCover={(
+							application,
+							generatedCoverLetter,
+							companyName,
+						) =>
+							void downloadCoverLetter(
+								application,
+								generatedCoverLetter,
+								companyName,
+							)
 						}
-						deletingId={deletingId}
 						onDelete={deleteApplication}
 					/>
 				)}
