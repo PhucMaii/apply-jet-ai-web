@@ -1,7 +1,6 @@
 import type { KeyboardEvent, MouseEvent } from "react"
 import { useNavigate } from "react-router-dom"
 import {
-	Download,
 	ExternalLink,
 	FileText,
 	Loader2,
@@ -23,7 +22,6 @@ import {
 } from "@/lib/application-display"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import { applicationDetailPath } from "@/lib/constants"
-import type { GeneratedDocumentRow } from "@/types/application-detail"
 import type { ApplicationWithDocuments } from "@/types/database"
 import { cn } from "@/lib/utils"
 
@@ -35,8 +33,6 @@ interface ApplicationCardProps {
 	resumeLoading: boolean
 	coverLoading: boolean
 	onStatusChange: (status: ApplicationStatus) => void
-	onDownloadResume: () => void
-	onDownloadCover: () => void
 	onDelete: (applicationId: string) => Promise<{
 		success: boolean
 		message: string
@@ -48,16 +44,12 @@ export function ApplicationCard({
 	status,
 	isUpdating,
 	isDeleting,
-	resumeLoading,
-	coverLoading,
 	onStatusChange,
-	onDownloadResume,
-	onDownloadCover,
 	onDelete,
 }: ApplicationCardProps) {
 	const navigate = useNavigate()
 	const detailPath = applicationDetailPath(app.id)
-	const { hasResume, hasCover } = getApplicationDocumentFlags(app)
+	const { hasCover } = getApplicationDocumentFlags(app)
 	const descriptionPreview = getJobDescriptionPreview(app.job_description)
 	const companyInitials = getApplicationCompanyInitials(app.company_name)
 	const addedLabel = formatApplicationAddedRelative(app.created_at)
@@ -135,7 +127,7 @@ export function ApplicationCard({
 				<DocumentPresence
 					label="Resume"
 					icon={FileText}
-					ready={hasResume}
+					ready={true}
 				/>
 				<DocumentPresence
 					label="Cover letter"
@@ -199,19 +191,6 @@ export function ApplicationCard({
 						</Button>
 					) : null}
 
-					<DocumentDownloadButton
-						label="Download resume"
-						available={hasResume}
-						loading={resumeLoading}
-						onClick={onDownloadResume}
-					/>
-					<DocumentDownloadButton
-						label="Download cover letter"
-						available={hasCover}
-						loading={coverLoading}
-						onClick={onDownloadCover}
-					/>
-
 					<DeleteApplicationControl
 						applicationId={app.id}
 						jobTitle={app.job_title}
@@ -251,34 +230,34 @@ function DocumentPresence({
 	)
 }
 
-function DocumentDownloadButton({
-	label,
-	available,
-	loading,
-	onClick,
-}: {
-	label: string
-	available: boolean
-	loading: boolean
-	onClick: () => void
-}) {
-	return (
-		<button
-			type="button"
-			title={available ? label : `${label} (not available)`}
-			className={cn(
-				APPLICATIONS_THEME.iconButton,
-				available && "text-primary",
-			)}
-			disabled={!available || loading}
-			onClick={onClick}
-		>
-			{loading ? (
-				<Loader2 className="size-4 animate-spin" aria-hidden />
-			) : (
-				<Download className="size-4" aria-hidden />
-			)}
-			<span className="sr-only">{label}</span>
-		</button>
-	)
-}
+// function DocumentDownloadButton({
+// 	label,
+// 	available,
+// 	loading,
+// 	onClick,
+// }: {
+// 	label: string
+// 	available: boolean
+// 	loading: boolean
+// 	onClick: () => void
+// }) {
+// 	return (
+// 		<button
+// 			type="button"
+// 			title={available ? label : `${label} (not available)`}
+// 			className={cn(
+// 				APPLICATIONS_THEME.iconButton,
+// 				available && "text-primary",
+// 			)}
+// 			disabled={!available || loading}
+// 			onClick={onClick}
+// 		>
+// 			{loading ? (
+// 				<Loader2 className="size-4 animate-spin" aria-hidden />
+// 			) : (
+// 				<Download className="size-4" aria-hidden />
+// 			)}
+// 			<span className="sr-only">{label}</span>
+// 		</button>
+// 	)
+// }

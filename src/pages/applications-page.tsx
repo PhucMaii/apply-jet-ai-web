@@ -16,8 +16,6 @@ export function ApplicationsPage() {
 		updatingId,
 		downloading,
 		updateStatus,
-		downloadResume,
-		downloadCoverLetter,
 		resolveStatus,
 		deleteApplication,
 		deletingId,
@@ -66,24 +64,6 @@ export function ApplicationsPage() {
 						deletingId={deletingId}
 						resolveStatus={resolveStatus}
 						onStatusChange={(id, status) => void updateStatus(id, status)}
-						onDownloadResume={(application, generatedResume, companyName) =>
-							void downloadResume(
-								application,
-								generatedResume,
-								companyName,
-							)
-						}
-						onDownloadCover={(
-							application,
-							generatedCoverLetter,
-							companyName,
-						) =>
-							void downloadCoverLetter(
-								application,
-								generatedCoverLetter,
-								companyName,
-							)
-						}
 						onDelete={deleteApplication}
 					/>
 				)}

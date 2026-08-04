@@ -360,7 +360,10 @@ export function ResumeDocumentPreview({
 	}, [rewriteDiff?.blockId])
 
 	return (
-		<div className="mx-auto flex w-[816px] flex-col items-center gap-5">
+		<div
+			className="mx-auto flex w-[816px] flex-col items-center gap-5"
+			data-resume-preview-export-root
+		>
 			{/* Hidden measurement layer — same content width as printable pages */}
 			<div
 				aria-hidden
@@ -381,7 +384,11 @@ export function ResumeDocumentPreview({
 			</div>
 
 			{pages.map((pageItems, pageIndex) => (
-				<div key={`page-${pageIndex}`} className="w-[816px] shrink-0">
+				<div
+					key={`page-${pageIndex}`}
+					className="w-[816px] shrink-0"
+					data-resume-preview-page
+				>
 					<article
 						className="overflow-hidden rounded-sm bg-white shadow-[0_1px_2px_rgba(0,0,0,0.06),0_12px_40px_rgba(0,0,0,0.08)]"
 						style={{
@@ -411,9 +418,10 @@ export function ResumeDocumentPreview({
 										}
 									}}
 									className={cn(
-										"scroll-mt-8 rounded-md",
-										activeSectionId === group.sectionId &&
-											"outline outline-2 outline-offset-2 outline-primary/20",
+										"relative scroll-mt-8 rounded-sm pl-2.5 transition-colors",
+										activeSectionId === group.sectionId
+											? "resume-preview-section-active border-l-[3px] border-primary bg-primary/[0.06]"
+											: "border-l-[3px] border-transparent",
 									)}
 								>
 									{group.items.map((item) => (

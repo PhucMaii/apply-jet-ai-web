@@ -6,10 +6,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { TailoredResumeTab } from "@/components/applications/resume-builder/tailored-resume-tab"
 import type { ApplicationStatus } from "@/lib/application-status"
+import { exportResumePreviewAsPdf } from "@/lib/resume-export"
 import { cn } from "@/lib/utils"
 import type { ApplicationDetailForm } from "@/types/application-detail"
 import type { AppResume, AppResumeBlock, AppResumeSection, CustomSectionBlockType } from "@/types/app-resume"
 import { ResumeTab } from "./resume-tab"
+import toast from "react-hot-toast"
 
 type StudioView = "editor" | "tailored"
 
@@ -96,6 +98,7 @@ export function ResumeStudio({
 	const [hasGenerated, setHasGenerated] = useState(false)
 	const [isGenerating, setIsGenerating] = useState(false)
 	const [appliedBlockKeys, setAppliedBlockKeys] = useState<string[]>([])
+	const [isExportingPdf, setIsExportingPdf] = useState(false)
 
 	function handleGenerate() {
 		setIsGenerating(true)
@@ -106,13 +109,30 @@ export function ResumeStudio({
 		}, 900)
 	}
 
-	const showStudioToolbar = hasGenerated
+	async function handleExportPdf() {
+		setIsExportingPdf(true)
+		try {
+			const jobPart = form.jobTitle.trim() || "resume"
+			const companyPart = form.companyName.trim()
+			const fileName = companyPart
+				? `${jobPart} - ${companyPart}`
+				: jobPart
+			await exportResumePreviewAsPdf({ fileName })
+		} catch (error) {
+			console.error("Something went wrong exporting resume PDF:", error)
+			toast.error(
+				error instanceof Error ? error.message : "Failed to export PDF.",
+			)
+		} finally {
+			setIsExportingPdf(false)
+		}
+	}
 
 	return (
 		<div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden bg-neutral-100">
-			{showStudioToolbar ? (
-				<header className="shrink-0 border-b border-neutral-200 bg-white">
-					<div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-4">
+			<header className="shrink-0 border-b border-neutral-200 bg-white">
+				<div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-4">
+					{hasGenerated ? (
 						<nav
 							className="flex items-center gap-1 overflow-x-auto rounded-lg border border-neutral-200 bg-neutral-50 p-1"
 							aria-label="Resume views"
@@ -138,20 +158,31 @@ export function ResumeStudio({
 								</button>
 							))}
 						</nav>
+					) : (
+						<p className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+							Resume studio
+						</p>
+					)}
 
-						<Button
-							type="button"
-							variant="outline"
-							size="sm"
-							className="hidden shrink-0 gap-2 sm:inline-flex"
-							disabled
-						>
+					<Button
+						type="button"
+						variant="outline"
+						size="sm"
+						className="hidden shrink-0 gap-2 sm:inline-flex"
+						disabled={view !== "editor" || isGenerating || isExportingPdf}
+						onClick={() => {
+							void handleExportPdf()
+						}}
+					>
+						{isExportingPdf ? (
+							<Loader2 className="size-4 animate-spin" aria-hidden />
+						) : (
 							<Download className="size-4" aria-hidden />
-							Export
-						</Button>
-					</div>
-				</header>
-			) : null}
+						)}
+						Export PDF
+					</Button>
+				</div>
+			</header>
 
 			{isGenerating ? (
 				<div

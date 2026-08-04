@@ -9,7 +9,6 @@ import {
 	filterApplicationsByStatus,
 } from "@/lib/application-display"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
-import type { GeneratedDocumentRow } from "@/types/application-detail"
 import type { ApplicationWithDocuments } from "@/types/database"
 import { cn } from "@/lib/utils"
 
@@ -22,16 +21,6 @@ interface ApplicationsCardGridProps {
 	deletingId: string | null
 	resolveStatus: (raw: string) => ApplicationStatus
 	onStatusChange: (id: string, status: ApplicationStatus) => void
-	onDownloadResume: (
-		application: ApplicationWithDocuments,
-		generatedResume: GeneratedDocumentRow,
-		companyName: string,
-	) => void
-	onDownloadCover: (
-		application: ApplicationWithDocuments,
-		generatedCoverLetter: GeneratedDocumentRow,
-		companyName: string,
-	) => void
 	onDelete: (applicationId: string) => Promise<{
 		success: boolean
 		message: string
@@ -45,8 +34,6 @@ export function ApplicationsCardGrid({
 	deletingId,
 	resolveStatus,
 	onStatusChange,
-	onDownloadResume,
-	onDownloadCover,
 	onDelete,
 }: ApplicationsCardGridProps) {
 	const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
@@ -131,15 +118,6 @@ export function ApplicationsCardGrid({
 				<div className={APPLICATIONS_THEME.applicationCardGrid}>
 					{visibleRows.map((app) => {
 						const status = resolveStatus(app.status)
-						const resumeDoc = app.generated_resume as
-							| GeneratedDocumentRow
-							| null
-							| undefined
-						const coverDoc = app.generated_cover_letter as
-							| GeneratedDocumentRow
-							| null
-							| undefined
-
 						return (
 							<ApplicationCard
 								key={app.id}
@@ -150,14 +128,6 @@ export function ApplicationsCardGrid({
 								resumeLoading={downloading === `resume-${app.id}`}
 								coverLoading={downloading === `cover-${app.id}`}
 								onStatusChange={(next) => onStatusChange(app.id, next)}
-								onDownloadResume={() => {
-									if (!resumeDoc) return
-									onDownloadResume(app, resumeDoc, app.company_name)
-								}}
-								onDownloadCover={() => {
-									if (!coverDoc) return
-									onDownloadCover(app, coverDoc, app.company_name)
-								}}
 								onDelete={onDelete}
 							/>
 						)
