@@ -12,6 +12,9 @@ import type { ApplicationDetailForm } from "@/types/application-detail"
 import type { AppResume, AppResumeBlock, AppResumeSection, CustomSectionBlockType } from "@/types/app-resume"
 import { ResumeTab } from "./resume-tab"
 import toast from "react-hot-toast"
+import useUserUsage from "@/hooks/use-user-usage"
+import { supabase } from "@/lib/supabase"
+import { env } from "@/lib/env"
 
 type StudioView = "editor" | "tailored"
 
@@ -94,6 +97,8 @@ export function ResumeStudio({
 	onDeleteAppResumeSection,
 	refetchApplication,
 }: ResumeStudioProps) {
+	const { usage, refetch: refetchUsage } = useUserUsage()
+
 	const [view, setView] = useState<StudioView>("editor")
 	const [hasGenerated, setHasGenerated] = useState(false)
 	const [isGenerating, setIsGenerating] = useState(false)
@@ -110,6 +115,13 @@ export function ResumeStudio({
 	}
 
 	async function handleExportPdf() {
+		console.log("usage", usage)
+		// Check if user has reached their usage limit
+		if (usage?.files_download_used && usage?.files_download_limit && usage.files_download_used >= usage.files_download_limit) {
+			toast.error("You have reached your usage limit.")
+			return
+		}
+
 		setIsExportingPdf(true)
 		try {
 			const jobPart = form.jobTitle.trim() || "resume"
@@ -118,6 +130,22 @@ export function ResumeStudio({
 				? `${jobPart} - ${companyPart}`
 				: jobPart
 			await exportResumePreviewAsPdf({ fileName })
+			// Increment usage
+			const { error: incrementUsageError } = await supabase.functions.invoke("increment-usage", {
+				body: {
+					userId: usage?.user_id,
+					guardType: "files_download",
+				},
+				headers: {
+					"X-Secret-Key": env.xsecretkey,
+				},
+			})
+			if (incrementUsageError) {
+				console.error("Something went wrong incrementing usage:", incrementUsageError)
+				toast.error("Something went wrong incrementing usage.")
+				return
+			}
+			await refetchUsage()
 		} catch (error) {
 			console.error("Something went wrong exporting resume PDF:", error)
 			toast.error(
@@ -166,7 +194,7 @@ export function ResumeStudio({
 
 					<Button
 						type="button"
-						variant="outline"
+						variant="default"
 						size="sm"
 						className="hidden shrink-0 gap-2 sm:inline-flex"
 						disabled={view !== "editor" || isGenerating || isExportingPdf}

@@ -92,8 +92,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    const successUrl = `http://applyjetai.com/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `http://applyjetai.com/profile?checkout=cancel`;
+    // const appOrigin = Deno.env.get("APP_ORIGIN");
+    const appOrigin = "http://localhost:5173";
+
+    const successUrl = `${appOrigin}/profile?checkout=success&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${appOrigin}/profile?checkout=cancel`;
 
     const session = await stripe.checkout.sessions.create({
       mode,

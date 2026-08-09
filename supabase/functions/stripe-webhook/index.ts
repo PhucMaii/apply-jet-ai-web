@@ -14,8 +14,45 @@ declare const Deno: {
  * Events: checkout.session.completed, customer.subscription.*
  *
  * Secrets: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
- *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ *   SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+ *   STRIPE_PRICE_INTERN_PACK, STRIPE_PRICE_JUNIOR_PACK,
+ *   STRIPE_PRICE_ADVANCED_PACK
  */
+
+type PackKey = "intern_pack" | "junior_pack" | "advanced_pack";
+
+interface PackCredits {
+  packKey: PackKey;
+  aiGenerations: number;
+  coverLetters: number;
+  filesDownload: number;
+  findHr: number;
+}
+
+interface UsageLimitsRow {
+  ai_generations_limit?: number | null;
+  resume_generations_limit?: number | null;
+  cover_letters_limit?: number | null;
+  files_download_limit?: number | null;
+  find_hr_limit?: number | null;
+}
+
+const STARTER_USAGE_RESET = {
+  resume_generations_limit: 10,
+  cover_letters_limit: 5,
+  extract_text_limit: 10,
+  files_download_limit: 5,
+  find_hr_limit: 0,
+  ai_generations_limit: 10,
+  ai_generations_used: 0,
+  resume_generations_used: 0,
+  cover_letters_used: 0,
+  extract_text_used: 0,
+  files_download_used: 0,
+  find_hr_used: 0,
+  plan_key: "free",
+} as const;
+
 function mapStripeStatus(status: Stripe.Subscription.Status): string {
   switch (status) {
     case "active":
@@ -35,6 +72,68 @@ function mapStripeStatus(status: Stripe.Subscription.Status): string {
   }
 }
 
+function resolvePackCredits(
+  priceId: string | null | undefined,
+): PackCredits | null {
+  if (!priceId) return null;
+
+  // const internPrice = Deno.env.get("STRIPE_PRICE_INTERN_PACK");
+  // const juniorPrice = Deno.env.get("STRIPE_PRICE_JUNIOR_PACK");
+  // const advancedPrice = Deno.env.get("STRIPE_PRICE_ADVANCED_PACK");
+  const internPrice = "price_1U2F5KRdPwUNVtDIerf1YwGm";
+  const juniorPrice = "price_1U2F69RdPwUNVtDILVFOIVLa";
+  const advancedPrice = "price_1U1qhLDcwEeENZwpFtJpB7PS";
+
+  if (internPrice && priceId === internPrice) {
+    return {
+      packKey: "intern_pack",
+      aiGenerations: 10,
+      coverLetters: 10,
+      filesDownload: 10,
+      findHr: 0,
+    };
+  }
+  if (juniorPrice && priceId === juniorPrice) {
+    return {
+      packKey: "junior_pack",
+      aiGenerations: 50,
+      coverLetters: 50,
+      filesDownload: 50,
+      findHr: 25,
+    };
+  }
+  if (advancedPrice && priceId === advancedPrice) {
+    return {
+      packKey: "advanced_pack",
+      aiGenerations: 100,
+      coverLetters: 100,
+      filesDownload: 100,
+      findHr: 50,
+    };
+  }
+
+  return null;
+}
+
+function asLimit(value: number | null | undefined): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+async function resolveCheckoutPriceId(
+  stripe: Stripe,
+  session: Stripe.Checkout.Session,
+): Promise<string | null> {
+  if (session.metadata?.stripe_price_id) {
+    return session.metadata.stripe_price_id;
+  }
+
+  const lineItems = await stripe.checkout.sessions.listLineItems(session.id, {
+    limit: 1,
+  });
+  const price = lineItems.data[0]?.price;
+  return typeof price === "string" ? price : (price?.id ?? null);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: STRIPE_FUNCTION_CORS });
@@ -46,6 +145,8 @@ Deno.serve(async (req) => {
     }
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    // const stripeKey =
+    //   "sk_test_51TDUgmRdPwUNVtDIxFBPTXwtMvUnBJnJjZW13ISLPCzFw5jMQ7i62wzChPkXGQU2fLcTsyAD8N8cCdhlvydZ84qX00qDIGV47Q";
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     // const webhookSecret = "whsec_7ahE9UbrEomdofjKVRMZtT6J4lJWfnC1";
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
@@ -69,6 +170,9 @@ Deno.serve(async (req) => {
 
     let event: Stripe.Event;
     try {
+      console.log("body", body);
+      console.log("signature", signature);
+      console.log("webhookSecret", webhookSecret);
       event = await stripe.webhooks.constructEventAsync(
         body,
         signature,
@@ -86,33 +190,65 @@ Deno.serve(async (req) => {
         const session = event.data.object as Stripe.Checkout.Session;
         if (session.mode === "payment" && session.payment_status == "paid") {
           const userId = session.metadata?.supabase_user_id;
-          // Get user usage
-          const { data: usage } = await admin
-            .from("user_usage")
-            .select("user_id")
-            .eq("user_id", userId)
-            .maybeSingle();
-
-          if (!usage) {
-            console.error("User usage not found:", userId);
+          if (!userId) {
+            console.error(
+              "Something went wrong: payment checkout missing user id",
+            );
             return new Response("db error", { status: 500 });
           }
 
-          const updatedUsage = {
-            resume_generations_limit: usage.resume_generations_limit + 50,
-            cover_letters_limit: usage.cover_letters_limit + 50,
-            extract_text_limit: usage.extract_text_limit + 50,
-            application_answers_limit: usage.application_answers_limit + 50,
+          const priceId = await resolveCheckoutPriceId(stripe, session);
+          const pack = resolvePackCredits(priceId);
+          if (!pack) {
+            console.error("Something went wrong: unknown one-time price", {
+              priceId,
+              sessionId: session.id,
+            });
+            return new Response("unknown_price", { status: 400 });
           }
 
-          // Update user usage
+          const { data: usage, error: usageSelectError } = await admin
+            .from("user_usage")
+            .select(
+              "user_id, ai_generations_limit, resume_generations_limit, cover_letters_limit, files_download_limit, find_hr_limit",
+            )
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          if (usageSelectError || !usage) {
+            console.error("User usage not found:", {
+              userId,
+              usageSelectError,
+            });
+            return new Response("db error", { status: 500 });
+          }
+
+          const usageRow = usage as UsageLimitsRow;
+          const nextAiLimit =
+            asLimit(usageRow.ai_generations_limit) + pack.aiGenerations;
+
+          const updatedUsage = {
+            ai_generations_limit: nextAiLimit,
+            resume_generations_limit:
+              asLimit(usageRow.resume_generations_limit) + pack.aiGenerations,
+            cover_letters_limit:
+              asLimit(usageRow.cover_letters_limit) + pack.coverLetters,
+            files_download_limit:
+              asLimit(usageRow.files_download_limit) + pack.filesDownload,
+            find_hr_limit: asLimit(usageRow.find_hr_limit) + pack.findHr,
+            plan_key: pack.packKey,
+          };
+
           const { error: usageError } = await admin
             .from("user_usage")
             .update(updatedUsage)
             .eq("user_id", userId);
 
           if (usageError) {
-            console.error("Something went wrong updating user usage:", usageError);
+            console.error(
+              "Something went wrong updating user usage:",
+              usageError,
+            );
             return new Response("db error", { status: 500 });
           }
         }
@@ -166,6 +302,21 @@ Deno.serve(async (req) => {
           console.error("Something went wrong updating subscription:", error);
           return new Response("db error", { status: 500 });
         }
+
+        if (plan === "pro") {
+          const { error: usageError } = await admin
+            .from("user_usage")
+            .update({ plan_key: "pro" })
+            .eq("user_id", userId);
+
+          if (usageError) {
+            console.error(
+              "Something went wrong marking Pro usage:",
+              usageError,
+            );
+            return new Response("db error", { status: 500 });
+          }
+        }
         break;
       }
 
@@ -208,7 +359,6 @@ Deno.serve(async (req) => {
           return new Response("db error", { status: 500 });
         }
 
-        // Get user id from subscription id
         const { data: subscriptionRow } = await admin
           .from("user_subscriptions")
           .select("user_id")
@@ -223,18 +373,10 @@ Deno.serve(async (req) => {
           return new Response("db error", { status: 500 });
         }
 
-        // Handle if subscription is cancelled
         if (event.type === "customer.subscription.deleted") {
-          // Reset user usage
           const { error: usageError } = await admin
             .from("user_usage")
-            .update({
-              resume_generations_limit: 10,
-              cover_letters_limit: 10,
-              extract_text_limit: 10,
-              applications_answers_limit: 0,
-              plan_key: "free",
-            })
+            .update(STARTER_USAGE_RESET)
             .eq("user_id", subscriptionRow.user_id);
 
           if (usageError) {
@@ -244,26 +386,42 @@ Deno.serve(async (req) => {
             );
             return new Response("db error", { status: 500 });
           }
+        } else if (plan === "pro") {
+          const { error: usageError } = await admin
+            .from("user_usage")
+            .update({ plan_key: "pro" })
+            .eq("user_id", subscriptionRow.user_id);
+
+          if (usageError) {
+            console.error(
+              "Something went wrong marking Pro usage:",
+              usageError,
+            );
+            return new Response("db error", { status: 500 });
+          }
         }
         break;
       }
 
-      // Handle renewal of subscription
       case "invoice.paid": {
-        // Get user id from subscription id
         const invoice = event.data.object as Stripe.Invoice;
-        const userId = invoice.lines.data[0].metadata.supabase_user_id;
+        const lineMeta = invoice.lines?.data?.[0]?.metadata as
+          | Record<string, string>
+          | null
+          | undefined;
+        const userId = lineMeta?.supabase_user_id;
 
-        // Update user usage
+        if (!userId) {
+          console.error(
+            "Something went wrong: invoice.paid missing supabase_user_id",
+          );
+          break;
+        }
+
+        // Pro is unlimited via subscription.plan; only mark plan_key.
         const { error: usageError } = await admin
           .from("user_usage")
-          .update({
-            resume_generations_limit: 200,
-            cover_letters_limit: 200,
-            extract_text_limit: 200,
-            application_answers_limit: 200,
-            plan_key: "pro",
-          })
+          .update({ plan_key: "pro" })
           .eq("user_id", userId);
 
         if (usageError) {

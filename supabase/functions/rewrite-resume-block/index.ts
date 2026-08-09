@@ -69,6 +69,13 @@ interface RewriteResult {
   changes: RewriteChanges;
 }
 
+interface RewriteResumeBlockBody {
+  userId: string;
+  blockId: string;
+  appResumeId: string;
+  jdText: string;
+}
+
 interface GeminiRewritePayload {
   content_json: Record<string, unknown>;
   changes: RewriteChanges;
@@ -76,7 +83,7 @@ interface GeminiRewritePayload {
 
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: STRIPE_FUNCTION_CORS });
+    return jsonResponse({ message: "OK" }, 200);
   }
 
   const secretKey = Deno.env.get("X-SECRET-KEY");
@@ -96,15 +103,53 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    let body: Record<string, unknown>;
+    let body: RewriteResumeBlockBody;
     try {
       body = await req.json();
+      console.log("body", body);
+      if (!body?.userId || !body?.blockId || !body?.appResumeId || !body?.jdText) {
+        console.error("Something went wrong: missing required rewrite-resume-block fields", {
+          bodyKeys: Object.keys(body ?? {}),
+        });
+        return jsonResponse({ error: "Missing required fields: userId, blockId, appResumeId, jdText" }, 400);
+      }
     } catch (parseError) {
       console.error(
         "Something went wrong parsing rewrite-resume-block request JSON:",
         parseError,
       );
       return jsonResponse({ error: "Invalid JSON body" }, 400);
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error(
+        "Something went wrong: Supabase env is not configured for rewrite-resume-block",
+        {
+          hasSupabaseUrl: Boolean(supabaseUrl),
+          hasServiceRoleKey: Boolean(serviceRoleKey),
+        },
+      );
+      return jsonResponse({ error: "Supabase env is not configured" }, 500);
+    }
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+    
+    // Guard user usage of this function
+    const { error: guardError } = await supabase.functions.invoke("ai-generations-guard", {
+      body: {
+        userId: body?.userId as string,
+        guard_type: 'ai_generations'
+      },
+      headers: {
+        "X-Secret-Key": secretKey,
+      },
+    });
+
+    if (guardError) {
+      const errorMsg = await guardError.context?.json() || "Failed to invoke ai-generations-guard."
+      console.error("Something went wrong invoking ai-generations-guard:", errorMsg);
+      return jsonResponse({ error: errorMsg.error }, 500);
     }
 
     const blockId =
@@ -129,19 +174,6 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!supabaseUrl || !serviceRoleKey) {
-      console.error(
-        "Something went wrong: Supabase env is not configured for rewrite-resume-block",
-        {
-          hasSupabaseUrl: Boolean(supabaseUrl),
-          hasServiceRoleKey: Boolean(serviceRoleKey),
-        },
-      );
-      return jsonResponse({ error: "Supabase env is not configured" }, 500);
-    }
-
     const apiKey = Deno.env.get("GEMINI_API_KEY");
     if (!apiKey) {
       console.error(
@@ -150,7 +182,6 @@ Deno.serve(async (req: Request) => {
       return jsonResponse({ error: "GEMINI_API_KEY is not set" }, 500);
     }
 
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const { data: block, error: blockError } = await supabase
       .from("app_resume_blocks")
@@ -270,6 +301,22 @@ Deno.serve(async (req: Request) => {
       changes,
     };
 
+    // increment usage
+    const { error: incrementUsageError } = await supabase.functions.invoke("increment-usage", {
+      body: {
+        userId: body?.userId as string,
+        guardType: "ai_generations",
+      },
+      headers: {
+        "X-Secret-Key": secretKey,
+      },
+    });
+
+    if (incrementUsageError) {
+      console.error(incrementUsageError.message);
+      return jsonResponse({ error: incrementUsageError.message }, 500);
+    }
+
     return jsonResponse(result as unknown as Record<string, unknown>, 200);
   } catch (error) {
     console.error("Something went wrong in rewrite-resume-block:", {
@@ -304,6 +351,7 @@ function buildResumeContext(
 }
 
 function stripStyle(content: Record<string, unknown>): Record<string, unknown> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { style_json: _style, ...rest } = content;
   return rest;
 }

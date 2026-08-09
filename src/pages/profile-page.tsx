@@ -25,7 +25,7 @@ export function ProfilePage() {
 		subscription,
 		userProfile,
 		subscribeToPro,
-		buyJobHuntPack,
+		buyPack,
 		openBillingPortal,
 
 		refetchProfile,
@@ -142,7 +142,7 @@ export function ProfilePage() {
 								subscription={subscription}
 								billingBusy={billingBusy}
 								onSubscribePro={() => void subscribeToPro()}
-								onBuyJobHuntPack={() => void buyJobHuntPack()}
+								onBuyPack={(packKey) => void buyPack(packKey)}
 								onOpenPortal={() => void openBillingPortal()}
 							/>
 						</TabsContent>

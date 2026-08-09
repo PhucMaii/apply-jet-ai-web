@@ -61,11 +61,16 @@ function buildMetricView(
 }
 
 function readMetricSources(usage: UserUsageRow): UsageMetricSource[] {
+	const aiUsed =
+		usage.ai_generations_used ?? usage.resume_generations_used ?? 0
+	const aiLimit =
+		usage.ai_generations_limit ?? usage.resume_generations_limit ?? 0
+
 	return [
 		{
-			key: "resumeGenerations",
-			used: usage.resume_generations_used ?? 0,
-			limit: usage.resume_generations_limit ?? 0,
+			key: "aiGenerations",
+			used: aiUsed,
+			limit: aiLimit,
 		},
 		{
 			key: "coverLetters",
@@ -73,9 +78,14 @@ function readMetricSources(usage: UserUsageRow): UsageMetricSource[] {
 			limit: usage.cover_letters_limit ?? 0,
 		},
 		{
-			key: "extractText",
-			used: usage.extract_text_used ?? 0,
-			limit: usage.extract_text_limit ?? 0,
+			key: "filesDownload",
+			used: usage.files_download_used ?? 0,
+			limit: usage.files_download_limit ?? 0,
+		},
+		{
+			key: "findHr",
+			used: usage.find_hr_used ?? usage.find_hr_usage ?? 0,
+			limit: usage.find_hr_limit ?? 0,
 		},
 	]
 }

@@ -5,9 +5,10 @@ import { emptyDisclosure, emptyProfileRow } from "@/lib/profile-defaults";
 import { type ProfileNotice } from "@/lib/profile-notice";
 import {
   openStripeCustomerPortal,
-  startJobHuntPackCheckout,
+  startOneTimePackCheckout,
   startProSubscriptionCheckout,
 } from "@/lib/stripe-client";
+import type { OneTimePackKey } from "@/lib/pricing-plans";
 import { supabase } from "@/lib/supabase";
 import type {
   SubscriptionRow,
@@ -695,11 +696,11 @@ export function useProfilePage() {
     if (!result.ok) setError(result.message);
   }
 
-  async function buyJobHuntPack() {
+  async function buyPack(packKey: OneTimePackKey) {
     setBillingBusy(true);
     setError(null);
     setNotice(null);
-    const result = await startJobHuntPackCheckout();
+    const result = await startOneTimePackCheckout(packKey);
     setBillingBusy(false);
     if (!result.ok) setError(result.message);
   }
@@ -744,7 +745,7 @@ export function useProfilePage() {
     renameSkillCategory,
     deleteSkillCategory,
     subscribeToPro,
-    buyJobHuntPack,
+    buyPack,
     openBillingPortal,
     onSaveDisclosure,
     onAddLink,

@@ -23,6 +23,7 @@ import {
 	getPlanPresentation,
 	getSubscriptionStatusPresentation,
 } from "@/lib/profile-presentation"
+import type { OneTimePackKey } from "@/lib/pricing-plans"
 import type { SubscriptionRow } from "@/types/database"
 import { cn } from "@/lib/utils"
 
@@ -30,7 +31,7 @@ interface ProfileBillingPanelProps {
 	subscription: SubscriptionRow | null
 	billingBusy: boolean
 	onSubscribePro: () => void
-	onBuyJobHuntPack: () => void
+	onBuyPack: (packKey: OneTimePackKey) => void
 	onOpenPortal: () => void
 }
 
@@ -38,16 +39,16 @@ export function ProfileBillingPanel({
 	subscription,
 	billingBusy,
 	onSubscribePro,
-	onBuyJobHuntPack,
+	onBuyPack,
 	onOpenPortal,
 }: ProfileBillingPanelProps) {
 	const isPro = subscription?.plan === "pro"
 	const periodEnd = subscription?.current_period_end
 		? new Date(subscription.current_period_end).toLocaleDateString(undefined, {
-				year: "numeric",
-				month: "short",
-				day: "numeric",
-			})
+			year: "numeric",
+			month: "short",
+			day: "numeric",
+		})
 		: null
 
 	const planPresentation = getPlanPresentation(subscription?.plan)
@@ -57,8 +58,8 @@ export function ProfileBillingPanel({
 	const PlanIcon = planPresentation.Icon
 	const StatusIcon = statusPresentation.Icon
 
-	const stripeConfigWarning = !env.isStripePriceConfigured
-		|| !env.stripeJobHuntPackPriceId
+	const stripeConfigWarning =
+		!env.isStripePriceConfigured || !env.isStripePacksConfigured
 
 	return (
 		<div className="space-y-6">
@@ -90,7 +91,8 @@ export function ProfileBillingPanel({
 						>
 							Stripe Checkout
 						</a>
-						. Job Hunt Pack is a one-time purchase with no subscription.
+						. Intern, Junior, and Advanced packs are one-time credit
+						top-ups with no subscription.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-6">
@@ -187,10 +189,18 @@ export function ProfileBillingPanel({
 								Set{" "}
 								<code className={DASHBOARD_THEME.code}>
 									VITE_STRIPE_PRICE_PRO
-								</code>{" "}
-								and{" "}
+								</code>
+								,{" "}
 								<code className={DASHBOARD_THEME.code}>
-									VITE_STRIPE_PRICE_JOB_HUNT_PACK
+									VITE_STRIPE_PRICE_INTERN_PACK
+								</code>
+								,{" "}
+								<code className={DASHBOARD_THEME.code}>
+									VITE_STRIPE_PRICE_JUNIOR_PACK
+								</code>
+								, and{" "}
+								<code className={DASHBOARD_THEME.code}>
+									VITE_STRIPE_PRICE_ADVANCED_PACK
 								</code>{" "}
 								in your app env to enable checkout.
 							</p>
@@ -205,8 +215,8 @@ export function ProfileBillingPanel({
 						Choose a plan
 					</CardTitle>
 					<CardDescription className={DASHBOARD_THEME.cardDescription}>
-						Start free, try Job Hunt Pack with a one-time payment, or go Pro
-						for unlimited access.
+						Start on Starter, buy a one-time credit pack, or go Pro for
+						unlimited access.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-6">
@@ -215,7 +225,7 @@ export function ProfileBillingPanel({
 						subscription={subscription}
 						billingBusy={billingBusy}
 						onSubscribePro={onSubscribePro}
-						onBuyJobHuntPack={onBuyJobHuntPack}
+						onBuyPack={onBuyPack}
 					/>
 
 					{isPro ? (

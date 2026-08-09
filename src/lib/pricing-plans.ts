@@ -3,10 +3,20 @@ import { LANDING_COPY } from "@/lib/landing-copy"
 import { env } from "@/lib/env"
 import type { SubscriptionRow } from "@/types/database"
 
-export type PricingPlanKey = "free" | "jobHuntPack" | "pro"
+export type PricingPlanKey =
+	| "starter"
+	| "pro"
+	| "internPack"
+	| "juniorPack"
+	| "advancedPack"
+
+export type OneTimePackKey = "internPack" | "juniorPack" | "advancedPack"
+
+export type PricingBillingType = "monthly" | "one_time"
 
 export interface PricingPlan {
 	key: PricingPlanKey
+	billingType: PricingBillingType
 	name: string
 	price: string
 	period?: string
@@ -29,22 +39,53 @@ export interface PricingPlanAction {
 
 const { plans } = LANDING_COPY.pricing
 
-export const PRICING_PLAN_ORDER: readonly PricingPlanKey[] = [
-	"free",
-	"jobHuntPack",
-	"pro",
-] as const
+export const MONTHLY_PRICING_PLAN_ORDER = ["starter", "pro"] as const satisfies readonly PricingPlanKey[]
 
-export const PRICING_PLANS: readonly PricingPlan[] = PRICING_PLAN_ORDER.map(
-	(key) => ({
+export const ONE_TIME_PRICING_PLAN_ORDER = [
+	"internPack",
+	"juniorPack",
+	"advancedPack",
+] as const satisfies readonly OneTimePackKey[]
+
+export const PRICING_PLAN_ORDER: readonly PricingPlanKey[] = [
+	...MONTHLY_PRICING_PLAN_ORDER,
+	...ONE_TIME_PRICING_PLAN_ORDER,
+]
+
+function planBillingType(key: PricingPlanKey): PricingBillingType {
+	return key === "starter" || key === "pro" ? "monthly" : "one_time"
+}
+
+function buildPlan(key: PricingPlanKey): PricingPlan {
+	return {
 		key,
+		billingType: planBillingType(key),
 		...plans[key],
-	}),
-)
+	}
+}
+
+export const MONTHLY_PRICING_PLANS: readonly PricingPlan[] =
+	MONTHLY_PRICING_PLAN_ORDER.map(buildPlan)
+
+export const ONE_TIME_PRICING_PLANS: readonly PricingPlan[] =
+	ONE_TIME_PRICING_PLAN_ORDER.map(buildPlan)
+
+export const PRICING_PLANS: readonly PricingPlan[] = [
+	...MONTHLY_PRICING_PLANS,
+	...ONE_TIME_PRICING_PLANS,
+]
 
 /** Max feature rows across plans — keeps bullet lists aligned in the grid. */
 export const PRICING_MAX_FEATURE_ROWS = Math.max(
 	...PRICING_PLANS.map((plan) => plan.features.length),
+)
+
+export const MONTHLY_MAX_FEATURE_ROWS = Math.max(
+	...MONTHLY_PRICING_PLANS.map((plan) => plan.features.length),
+)
+
+export const ONE_TIME_MAX_FEATURE_ROWS = Math.max(
+	...ONE_TIME_PRICING_PLANS.map((plan) => plan.features.length),
 )
 
 export function getPricingPlan(key: PricingPlanKey): PricingPlan {
@@ -54,12 +95,31 @@ export function getPricingPlan(key: PricingPlanKey): PricingPlan {
 export function resolveCurrentPlanKey(
 	plan: SubscriptionRow["plan"] | null | undefined,
 ): PricingPlanKey {
-	return plan === "pro" ? "pro" : "free"
+	return plan === "pro" ? "pro" : "starter"
+}
+
+export function isOneTimePackKey(key: PricingPlanKey): key is OneTimePackKey {
+	return (
+		key === "internPack" ||
+		key === "juniorPack" ||
+		key === "advancedPack"
+	)
+}
+
+function packPriceId(packKey: OneTimePackKey): string {
+	switch (packKey) {
+		case "internPack":
+			return env.stripeInternPackPriceId
+		case "juniorPack":
+			return env.stripeJuniorPackPriceId
+		case "advancedPack":
+			return env.stripeAdvancedPackPriceId
+	}
 }
 
 interface ProfilePlanActionHandlers {
 	onSubscribePro: () => void
-	onBuyJobHuntPack: () => void
+	onBuyPack: (packKey: OneTimePackKey) => void
 }
 
 interface ProfilePlanActionOptions {
@@ -75,15 +135,15 @@ export function getProfilePlanAction(
 	const { billingBusy } = options
 	const plan = getPricingPlan(planKey)
 
-	if (planKey === "free") return null
+	if (planKey === "starter") return null
 
-	if (planKey === "jobHuntPack") {
+	if (isOneTimePackKey(planKey)) {
 		if (currentPlanKey === "pro") return null
 
 		return {
-			label: plan.cta ?? "Buy Job Hunt Pack",
-			onClick: handlers.onBuyJobHuntPack,
-			disabled: billingBusy || !env.stripeJobHuntPackPriceId,
+			label: plan.cta ?? `Buy ${plan.name}`,
+			onClick: () => handlers.onBuyPack(planKey),
+			disabled: billingBusy || !packPriceId(planKey),
 			loading: billingBusy,
 			variant: plan.highlight ? "default" : "secondary",
 		}
@@ -103,7 +163,7 @@ export function getProfilePlanAction(
 export function getLandingPlanAction(planKey: PricingPlanKey): PricingPlanAction {
 	const plan = getPricingPlan(planKey)
 
-	if (planKey === "free") {
+	if (planKey === "starter") {
 		return {
 			label: plan.cta ?? "Get started",
 			href: ROUTES.signup,

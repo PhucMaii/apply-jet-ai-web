@@ -1,14 +1,21 @@
 import { cn } from "@/lib/utils"
 import type { UsageMetricKey, UsageMetricView } from "@/types/user-usage"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
-import { FileText, InfinityIcon, ScanText, type LucideIcon, MessageSquareText, Mail } from "lucide-react"
+import {
+	Download,
+	FileText,
+	InfinityIcon,
+	Mail,
+	Users,
+	type LucideIcon,
+} from "lucide-react"
 import { USAGE_COPY } from "@/lib/usage-copy"
 
 const USAGE_METRIC_ICONS: Record<UsageMetricKey, LucideIcon> = {
-    resumeGenerations: FileText,
-    coverLetters: Mail,
-    extractText: ScanText,
-    applicationAnswers: MessageSquareText,
+	aiGenerations: FileText,
+	coverLetters: Mail,
+	filesDownload: Download,
+	findHr: Users,
 }
 
 const USAGE_STATUS_THEME = {

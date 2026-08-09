@@ -1,5 +1,7 @@
 export interface UserUsageRow {
 	user_id: string
+	ai_generations_used?: number | null
+	ai_generations_limit?: number | null
 	resume_generations_used: number
 	resume_generations_limit: number
 	cover_letters_used: number
@@ -8,15 +10,20 @@ export interface UserUsageRow {
 	extract_text_limit?: number | null
 	application_answers_used?: number | null
 	application_answers_limit?: number | null
+	files_download_used?: number | null
+	files_download_limit?: number | null
+	find_hr_used?: number | null
+	find_hr_usage?: number | null
+	find_hr_limit?: number | null
 	plan_key?: string | null
 	updated_at?: string | null
 }
 
 export type UsageMetricKey =
-	| "resumeGenerations"
+	| "aiGenerations"
 	| "coverLetters"
-	| "extractText"
-	| "applicationAnswers"
+	| "filesDownload"
+	| "findHr"
 
 export type UsageMetricStatus = "ok" | "warning" | "exhausted"
 

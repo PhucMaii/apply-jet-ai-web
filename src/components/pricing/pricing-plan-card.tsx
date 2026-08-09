@@ -6,7 +6,8 @@ import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import { ROUTES } from "@/lib/constants"
 import {
-	PRICING_MAX_FEATURE_ROWS,
+	MONTHLY_MAX_FEATURE_ROWS,
+	ONE_TIME_MAX_FEATURE_ROWS,
 	type PricingPlan,
 	type PricingPlanAction,
 } from "@/lib/pricing-plans"
@@ -31,9 +32,12 @@ const CARD_LAYOUT = {
 	ctaBlock: "min-h-[4.25rem]",
 } as const
 
-function padFeatureRows(features: readonly string[]): (string | null)[] {
+function padFeatureRows(
+	features: readonly string[],
+	maxRows: number,
+): (string | null)[] {
 	const rows: (string | null)[] = [...features]
-	while (rows.length < PRICING_MAX_FEATURE_ROWS) {
+	while (rows.length < maxRows) {
 		rows.push(null)
 	}
 	return rows
@@ -76,9 +80,13 @@ export function PricingPlanCard({
 }: PricingPlanCardProps) {
 	const isLanding = variant === "landing"
 	const isHighlighted = isLanding
-		? plan.key === "free"
+		? Boolean(plan.highlight)
 		: isCurrentPlan
-	const featureRows = padFeatureRows(plan.features)
+	const maxFeatureRows =
+		plan.billingType === "monthly"
+			? MONTHLY_MAX_FEATURE_ROWS
+			: ONE_TIME_MAX_FEATURE_ROWS
+	const featureRows = padFeatureRows(plan.features, maxFeatureRows)
 	const badgeLabel =
 		isCurrentPlan && !isLanding
 			? "Current plan"
@@ -86,7 +94,7 @@ export function PricingPlanCard({
 				? plan.badge
 				: null
 	const badgeTone =
-		isLanding && plan.key !== "free" ? "outline" : "solid"
+		isLanding && plan.key !== "starter" ? "outline" : "solid"
 
 	const cardClassName = cn(
 		"relative grid h-full grid-rows-[auto_auto_auto_auto_1fr_auto]",

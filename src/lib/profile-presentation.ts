@@ -87,7 +87,7 @@ export function getPlanPresentation(plan: SubscriptionRow["plan"] | null | undef
 	const isPro = plan === "pro"
 	return {
 		Icon: isPro ? Crown : CircleDashed,
-		label: isPro ? "Pro" : "Free",
+		label: isPro ? "Pro" : "Starter",
 		containerClass: isPro
 			? "border-emerald-200 bg-emerald-50"
 			: "border-neutral-200 bg-neutral-50",
@@ -101,7 +101,7 @@ export function getPlanHeaderBadgePresentation(
 	const isPro = plan === "pro"
 	return {
 		Icon: isPro ? Crown : CircleDashed,
-		label: isPro ? "Pro" : "Free",
+		label: isPro ? "Pro" : "Starter",
 		className: isPro
 			? "border-primary/35 bg-primary/10 text-primary hover:border-primary/50 hover:bg-primary/15"
 			: "border-white/10 bg-white/5 text-muted-foreground hover:border-white/20 hover:bg-white/10",
@@ -115,7 +115,7 @@ export function getPlanDashboardBadgePresentation(
 	const isPro = plan === "pro"
 	return {
 		Icon: isPro ? Crown : CircleDashed,
-		label: isPro ? "Pro" : "Free",
+		label: isPro ? "Pro" : "Starter",
 		className: isPro
 			? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:border-emerald-300 hover:bg-emerald-100"
 			: "border-neutral-200 bg-neutral-50 text-neutral-600 hover:border-neutral-300 hover:bg-neutral-100",

@@ -1,6 +1,7 @@
 import { EDGE_FUNCTIONS } from "@/lib/constants";
 import { env } from "@/lib/env";
 import { invokeEdgeFunction } from "@/lib/edge-function";
+import type { OneTimePackKey } from "@/lib/pricing-plans";
 import { supabase } from "./supabase";
 
 type PortalResponse = { url?: string | null; error?: string };
@@ -42,6 +43,17 @@ async function startStripeCheckout(priceId: string, mode: CheckoutMode) {
   return { ok: true as const };
 }
 
+function packPriceId(pack: OneTimePackKey): string {
+  switch (pack) {
+    case "internPack":
+      return env.stripeInternPackPriceId;
+    case "juniorPack":
+      return env.stripeJuniorPackPriceId;
+    case "advancedPack":
+      return env.stripeAdvancedPackPriceId;
+  }
+}
+
 /**
  * Opens Stripe Checkout (subscription mode) for the Pro plan.
  * Requires deployed `stripe-checkout` Edge Function and secrets.
@@ -51,10 +63,10 @@ export async function startProSubscriptionCheckout() {
 }
 
 /**
- * Opens Stripe Checkout (payment mode) for the Job Hunt Pack.
+ * Opens Stripe Checkout (payment mode) for a one-time credit pack.
  */
-export async function startJobHuntPackCheckout() {
-  return startStripeCheckout(env.stripeJobHuntPackPriceId, "payment");
+export async function startOneTimePackCheckout(pack: OneTimePackKey) {
+  return startStripeCheckout(packPriceId(pack), "payment");
 }
 
 /**

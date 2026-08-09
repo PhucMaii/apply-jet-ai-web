@@ -2,8 +2,11 @@ import { LANDING_COPY } from "@/lib/landing-copy"
 import {
 	getLandingPlanAction,
 	getProfilePlanAction,
-	PRICING_PLANS,
+	MONTHLY_PRICING_PLANS,
+	ONE_TIME_PRICING_PLANS,
 	resolveCurrentPlanKey,
+	type OneTimePackKey,
+	type PricingPlan,
 	type PricingPlanKey,
 } from "@/lib/pricing-plans"
 import type { SubscriptionRow } from "@/types/database"
@@ -27,12 +30,60 @@ interface ProfilePricingPlansGridProps extends PricingPlansGridBaseProps {
 	subscription: SubscriptionRow | null
 	billingBusy: boolean
 	onSubscribePro: () => void
-	onBuyJobHuntPack: () => void
+	onBuyPack: (packKey: OneTimePackKey) => void
 }
 
 export type PricingPlansGridProps =
 	| LandingPricingPlansGridProps
 	| ProfilePricingPlansGridProps
+
+function PlanGroup({
+	title,
+	plans,
+	variant,
+	gridClassName,
+	currentPlanKey,
+	getAction,
+}: {
+	title: string
+	plans: readonly PricingPlan[]
+	variant: PricingPlanCardVariant
+	gridClassName: string
+	currentPlanKey: PricingPlanKey | null
+	getAction: (planKey: PricingPlanKey) => ReturnType<
+		typeof getLandingPlanAction
+	> | null
+}) {
+	return (
+		<div className="space-y-4">
+			<h3
+				className={cn(
+					"text-sm font-semibold uppercase tracking-wider",
+					variant === "landing" ? "text-primary" : "text-neutral-500",
+				)}
+			>
+				{title}
+			</h3>
+			<div className={cn("grid items-stretch gap-5", gridClassName)}>
+				{plans.map((plan, index) => {
+					const isCurrentPlan =
+						variant === "profile" && plan.key === currentPlanKey
+
+					return (
+						<PricingPlanCard
+							key={plan.key}
+							plan={plan}
+							variant={variant}
+							action={getAction(plan.key)}
+							isCurrentPlan={isCurrentPlan}
+							animationIndex={index}
+						/>
+					)
+				})}
+			</div>
+		</div>
+	)
+}
 
 export function PricingPlansGrid(props: PricingPlansGridProps) {
 	const { variant, className } = props
@@ -41,41 +92,40 @@ export function PricingPlansGrid(props: PricingPlansGridProps) {
 			? resolveCurrentPlanKey(props.subscription?.plan)
 			: null
 
+	const getAction = (planKey: PricingPlanKey) => {
+		if (variant === "landing") {
+			return getLandingPlanAction(planKey)
+		}
+
+		return getProfilePlanAction(
+			planKey,
+			currentPlanKey!,
+			{
+				onSubscribePro: props.onSubscribePro,
+				onBuyPack: props.onBuyPack,
+			},
+			{ billingBusy: props.billingBusy },
+		)
+	}
+
 	return (
-		<div
-			className={cn(
-				"grid items-stretch gap-5 lg:grid-cols-3",
-				className,
-			)}
-		>
-			{PRICING_PLANS.map((plan, index) => {
-				const isCurrentPlan =
-					variant === "profile" && plan.key === currentPlanKey
-
-				const action =
-					variant === "landing"
-						? getLandingPlanAction(plan.key)
-						: getProfilePlanAction(
-								plan.key,
-								currentPlanKey!,
-								{
-									onSubscribePro: props.onSubscribePro,
-									onBuyJobHuntPack: props.onBuyJobHuntPack,
-								},
-								{ billingBusy: props.billingBusy },
-							)
-
-				return (
-					<PricingPlanCard
-						key={plan.key}
-						plan={plan}
-						variant={variant}
-						action={action}
-						isCurrentPlan={isCurrentPlan}
-						animationIndex={index}
-					/>
-				)
-			})}
+		<div className={cn("space-y-10", className)}>
+			<PlanGroup
+				title={LANDING_COPY.pricing.monthlyLabel}
+				plans={MONTHLY_PRICING_PLANS}
+				variant={variant}
+				gridClassName="lg:grid-cols-2"
+				currentPlanKey={currentPlanKey}
+				getAction={getAction}
+			/>
+			<PlanGroup
+				title={LANDING_COPY.pricing.oneTimeLabel}
+				plans={ONE_TIME_PRICING_PLANS}
+				variant={variant}
+				gridClassName="lg:grid-cols-3"
+				currentPlanKey={currentPlanKey}
+				getAction={getAction}
+			/>
 		</div>
 	)
 }
@@ -93,7 +143,7 @@ export function PricingSectionHeader({
 			<p
 				className={cn(
 					"text-sm font-semibold uppercase tracking-wider",
-					isLanding ? "text-primary" : "text-primary",
+					"text-primary",
 				)}
 			>
 				{eyebrow}
@@ -120,4 +170,4 @@ export function PricingSectionHeader({
 	)
 }
 
-export type { PricingPlanKey }
+export type { PricingPlanKey, OneTimePackKey }

@@ -6,6 +6,7 @@ export async function invokeRewriteResumeBlock(input: {
 	blockId: string
 	appResumeId: string
 	jdText: string
+	userId: string
 }): Promise<RewriteResumeBlockResult> {
 	const { data, error } = await supabase.functions.invoke(
 		"rewrite-resume-block",
@@ -14,6 +15,7 @@ export async function invokeRewriteResumeBlock(input: {
 				blockId: input.blockId,
 				appResumeId: input.appResumeId,
 				jdText: input.jdText,
+				userId: input.userId,
 			},
 			headers: {
 				"X-Secret-Key": env.xsecretkey,
@@ -22,11 +24,13 @@ export async function invokeRewriteResumeBlock(input: {
 	)
 
 	if (error) {
-		console.error(
-			"Something went wrong invoking rewrite-resume-block:",
-			error,
-		)
-		throw new Error(error.message || "Failed to rewrite resume block.")
+		const errorMsg = await error.context?.json() as { error: string } || { error: "Failed to rewrite resume block." }
+		console.log("error", error)
+		console.log("errorMsg", errorMsg)
+		console.error("Something went wrong invoking rewrite-resume-block:", errorMsg)
+		throw new Error(errorMsg.error || "Failed to rewrite resume block.")
+	} else {
+		console.log("data", data)
 	}
 
 	if (!data || typeof data !== "object") {

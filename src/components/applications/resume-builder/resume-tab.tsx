@@ -692,6 +692,7 @@ export function ResumeTab({
 				blockId: block.id,
 				appResumeId: appResume.id,
 				jdText,
+				userId: appResume.user_id,
 			})
 			const diff = buildBlockRewriteDiff({
 				originalBlock: block,
