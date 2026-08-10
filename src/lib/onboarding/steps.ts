@@ -19,7 +19,6 @@ export const ONBOARDING_STEP_ORDER: OnboardingStepId[] = [
 	ONBOARDING_STEP.reviewProjects,
 	ONBOARDING_STEP.reviewLinks,
 	ONBOARDING_STEP.reviewSkills,
-	ONBOARDING_STEP.reviewDisclosure,
 	ONBOARDING_STEP.navigateApplications,
 	ONBOARDING_STEP.createApplication,
 	ONBOARDING_STEP.resumeStudioEditor,
@@ -37,7 +36,6 @@ const REVIEW_SECTION_BY_STEP: Partial<
 	[ONBOARDING_STEP.reviewProjects]: PROFILE_SECTION.projects,
 	[ONBOARDING_STEP.reviewLinks]: PROFILE_SECTION.links,
 	[ONBOARDING_STEP.reviewSkills]: PROFILE_SECTION.skills,
-	[ONBOARDING_STEP.reviewDisclosure]: PROFILE_SECTION.disclosure,
 }
 
 function buildStep(
@@ -106,12 +104,6 @@ export const ONBOARDING_TOUR_STEPS: Partial<
 	[ONBOARDING_STEP.reviewSkills]: buildStep(
 		ONBOARDING_STEP.reviewSkills,
 		TOUR_TARGET.profileSection(PROFILE_SECTION.skills),
-		"manual",
-		true,
-	),
-	[ONBOARDING_STEP.reviewDisclosure]: buildStep(
-		ONBOARDING_STEP.reviewDisclosure,
-		TOUR_TARGET.profileSection(PROFILE_SECTION.disclosure),
 		"manual",
 		true,
 	),

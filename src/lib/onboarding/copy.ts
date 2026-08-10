@@ -50,11 +50,6 @@ export const ONBOARDING_STEP_COPY: Record<
 		title: "Review skills",
 		description: "Verify the skills we extracted match what you want to highlight.",
 	},
-	[ONBOARDING_STEP.reviewDisclosure]: {
-		title: "Review disclosure",
-		description:
-			"Set work authorization and other standard application answers.",
-	},
 	[ONBOARDING_STEP.navigateApplications]: {
 		title: "Open Applications",
 		description:

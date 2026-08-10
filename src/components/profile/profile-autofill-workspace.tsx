@@ -18,11 +18,9 @@ import { WorkExperienceEditor } from "./work-experience-editor"
 import { EducationEditor } from "./education-editor"
 import { ProjectsEditor } from "./projects-editor"
 import { LinksAdditionalEditor } from "./links-additional-editor"
-import { DisclosureEditor } from "./disclosure-editor"
 import { SkillsEditor } from "./skills-editor"
 import type {
 	UserLinkRow,
-	UserDisclosureRow,
 	UserAdditionalInfoRow,
 	UserEducationRow,
 	UserProfileRow,
@@ -57,7 +55,6 @@ interface ProfileAutofillWorkspaceProps {
 		name: string,
 	) => Promise<AsyncResultMsg>
 	deleteSkillCategory: (categoryId: string) => Promise<AsyncResultMsg>
-	onSaveDisclosure: (disclosure: UserDisclosureRow) => Promise<AsyncResultMsg>
 	onAddLink: (link: UserLinkRow) => Promise<AsyncResultMsg>
 	onSaveLink: (link: UserLinkRow) => Promise<AsyncResultMsg>
 	refetchProfile: () => void
@@ -83,7 +80,6 @@ export function ProfileAutofillWorkspace({
 	addSkillCategory,
 	renameSkillCategory,
 	deleteSkillCategory,
-	onSaveDisclosure,
 	onAddLink,
 	onSaveLink,
 	refetchProfile,
@@ -220,16 +216,6 @@ export function ProfileAutofillWorkspace({
 						onDeleteLink={deleteLink}
 						onSaveLink={onSaveLink}
 						onSaveAdditionalInfo={onSaveAdditionalInfo}
-					/>
-				</TabsContent>
-
-				<TabsContent
-					value={PROFILE_SECTION.disclosure}
-					className="mt-6 space-y-4 focus-visible:outline-none"
-				>
-					<DisclosureEditor
-						disclosure={userProfile.disclosure}
-						onSave={onSaveDisclosure}
 					/>
 				</TabsContent>
 

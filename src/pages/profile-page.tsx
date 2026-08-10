@@ -46,7 +46,6 @@ export function ProfilePage() {
 		addSkillCategory,
 		renameSkillCategory,
 		deleteSkillCategory,
-		onSaveDisclosure,
 		onAddLink,
 		onSaveLink,
 	} = useProfilePage()
@@ -121,7 +120,6 @@ export function ProfilePage() {
 								addSkillCategory={addSkillCategory}
 								renameSkillCategory={renameSkillCategory}
 								deleteSkillCategory={deleteSkillCategory}
-								onSaveDisclosure={onSaveDisclosure}
 								onAddLink={onAddLink}
 								onSaveLink={onSaveLink}
 								refetchProfile={refetchProfile}

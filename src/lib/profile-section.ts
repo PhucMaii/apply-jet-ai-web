@@ -4,7 +4,6 @@ import {
 	FolderKanban,
 	GraduationCap,
 	Link2,
-	ShieldCheck,
 	UserRound,
 	Wrench,
 } from "lucide-react"
@@ -15,7 +14,6 @@ export const PROFILE_SECTION = {
 	education: "education",
 	projects: "projects",
 	links: "links",
-	disclosure: "disclosure",
 	skills: "skills",
 } as const
 
@@ -31,6 +29,5 @@ export const PROFILE_SECTION_META: Record<
 	[PROFILE_SECTION.education]: { label: "Education", Icon: GraduationCap },
 	[PROFILE_SECTION.projects]: { label: "Projects", Icon: FolderKanban },
 	[PROFILE_SECTION.links]: { label: "Links", Icon: Link2 },
-	[PROFILE_SECTION.disclosure]: { label: "Disclosure", Icon: ShieldCheck },
 	[PROFILE_SECTION.skills]: { label: "Skills", Icon: Wrench },
 }
