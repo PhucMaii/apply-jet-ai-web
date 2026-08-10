@@ -39,7 +39,8 @@ export const LINKS = {
 } as const
 
 export const META = {
-	title: "ApplyJet AI — Tailored job applications in your browser",
+	title:
+		"ApplyJet — Free AI Resume Builder | Live Score vs Job Description",
 	description:
-		"Create an account, upload your resume, and paste any job description. ApplyJet pre-fills your profile and generates tailored resumes, cover letters, and HR contacts.",
+		"Build your resume free forever with ApplyJet. Score it live against any job description, get free match suggestions, try AI tailoring, generate cover letters, and find HR contacts.",
 } as const

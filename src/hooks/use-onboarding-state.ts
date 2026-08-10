@@ -15,6 +15,33 @@ import {
 	type OnboardingStepId,
 } from "@/lib/onboarding/types"
 
+const USER_ROW_RETRY_ATTEMPTS = 8
+const USER_ROW_RETRY_DELAY_MS = 250
+
+function delay(ms: number) {
+	return new Promise((resolve) => {
+		window.setTimeout(resolve, ms)
+	})
+}
+
+/**
+ * First-sign-in race: auth session can exist before the `users` row
+ * (trigger / initialUserSetup) is readable. Retry briefly so we don't
+ * cache a permanent `null` and skip the welcome modal.
+ */
+async function fetchOnboardingStateWhenReady(
+	userId: string,
+): Promise<OnboardingState | null> {
+	for (let attempt = 0; attempt < USER_ROW_RETRY_ATTEMPTS; attempt++) {
+		const state = await fetchOnboardingState(userId)
+		if (state) return state
+		if (attempt < USER_ROW_RETRY_ATTEMPTS - 1) {
+			await delay(USER_ROW_RETRY_DELAY_MS)
+		}
+	}
+	return null
+}
+
 function patchCachedOnboardingState(
 	queryClient: ReturnType<typeof useQueryClient>,
 	userId: string,
@@ -22,7 +49,14 @@ function patchCachedOnboardingState(
 ) {
 	queryClient.setQueryData<OnboardingState | null>(
 		onboardingStateQueryKey(userId),
-		(old) => (old ? { ...old, ...patch } : old),
+		(old) => {
+			if (old) return { ...old, ...patch }
+			return {
+				onboarding_tour_status:
+					patch.onboarding_tour_status ?? ONBOARDING_TOUR_STATUS.idle,
+				onboarding_current_step: patch.onboarding_current_step ?? null,
+			}
+		},
 	)
 }
 
@@ -35,10 +69,11 @@ export function useOnboardingState() {
 		queryKey: onboardingStateQueryKey(userId),
 		queryFn: async (): Promise<OnboardingState | null> => {
 			if (!userId) return null
-			return fetchOnboardingState(userId)
+			return fetchOnboardingStateWhenReady(userId)
 		},
 		enabled: Boolean(userId),
 		staleTime: 30 * 1000,
+		refetchOnMount: "always",
 	})
 
 	const invalidate = () => {

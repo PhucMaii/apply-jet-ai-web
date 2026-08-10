@@ -9,7 +9,9 @@ export const TOUR_TARGET = {
 	navApplications: "nav-applications",
 	newApplication: "new-application",
 	createApplicationSubmit: "create-application-submit",
-	generateResume: "generate-resume",
+	resumeStudioEditor: "resume-studio-editor",
+	resumeStudioPreview: "resume-studio-preview",
+	resumeStudioJobPanel: "resume-studio-job-panel",
 } as const
 
 export function tourSelector(target: string): string {

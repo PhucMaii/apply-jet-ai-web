@@ -5,7 +5,7 @@ export const USAGE_COPY = {
 	pageDescription:
 		"Track how much of your plan allowance you have used.",
 	freePlanHint:
-		"Starter includes limited AI generations, cover letters, and downloads. Buy a one-time pack for more credits, or upgrade to Pro for unlimited access.",
+		"Resume builder is free forever. Starter includes free AI tries, cover letters, and downloads. Buy a one-time pack for more credits, or upgrade to Pro for unlimited access.",
 	proPlanHint:
 		"Your Pro plan includes unlimited generations, downloads, and HR contact search.",
 	unlimited: "Unlimited",

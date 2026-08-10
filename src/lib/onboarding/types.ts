@@ -22,12 +22,17 @@ export const ONBOARDING_STEP = {
 	reviewDisclosure: "review_disclosure",
 	navigateApplications: "navigate_applications",
 	createApplication: "create_application",
-	generateResume: "generate_resume",
+	resumeStudioEditor: "resume_studio_editor",
+	resumeStudioPreview: "resume_studio_preview",
+	resumeStudioJobPanel: "resume_studio_job_panel",
 	completed: "completed",
 } as const
 
 export type OnboardingStepId =
 	(typeof ONBOARDING_STEP)[keyof typeof ONBOARDING_STEP]
+
+/** Legacy step id from the old “generate resume” tour. */
+const LEGACY_GENERATE_RESUME_STEP = "generate_resume"
 
 export interface OnboardingState {
 	onboarding_tour_status: OnboardingTourStatus | null
@@ -38,6 +43,9 @@ export function parseOnboardingStep(
 	raw: string | null | undefined,
 ): OnboardingStepId | null {
 	if (!raw) return null
+	if (raw === LEGACY_GENERATE_RESUME_STEP) {
+		return ONBOARDING_STEP.resumeStudioEditor
+	}
 	const values = Object.values(ONBOARDING_STEP) as string[]
 	if (!values.includes(raw)) return null
 	return raw as OnboardingStepId

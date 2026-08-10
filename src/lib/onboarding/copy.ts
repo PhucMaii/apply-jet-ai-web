@@ -4,7 +4,7 @@ export const ONBOARDING_WELCOME_COPY = {
 	eyebrow: "Welcome to ApplyJet",
 	title: "Let's set up your profile first",
 	description:
-		"Upload your resume and we'll pre-fill your profile. Then you can create your first tailored application in seconds.",
+		"Upload your resume and we'll pre-fill your profile. Then create your first application and explore the free resume builder.",
 	startTour: "Guide me step by step",
 	skip: "I'll explore on my own",
 } as const
@@ -16,7 +16,7 @@ export const ONBOARDING_STEP_COPY: Record<
 	[ONBOARDING_STEP.uploadResume]: {
 		title: "Upload your resume",
 		description:
-			"Drop a PDF or Word file here. We use it to pre-fill your profile and generate tailored documents.",
+			"Drop a PDF or Word file here. We use it to pre-fill your profile for the resume builder.",
 	},
 	[ONBOARDING_STEP.autofillProfile]: {
 		title: "Auto-fill your profile",
@@ -26,7 +26,7 @@ export const ONBOARDING_STEP_COPY: Record<
 	[ONBOARDING_STEP.reviewContact]: {
 		title: "Review contact details",
 		description:
-			"Double-check your name, email, phone, and address — we use these for job application autofill.",
+			"Double-check your name, email, phone, and address — these appear on your resume and applications.",
 	},
 	[ONBOARDING_STEP.reviewWork]: {
 		title: "Review work experience",
@@ -58,22 +58,32 @@ export const ONBOARDING_STEP_COPY: Record<
 	[ONBOARDING_STEP.navigateApplications]: {
 		title: "Open Applications",
 		description:
-			"You're ready to apply. Click Applications to create your first job entry.",
+			"Your profile is ready. Click Applications to add your first job and open the resume builder.",
 	},
 	[ONBOARDING_STEP.createApplication]: {
 		title: "Create your first application",
 		description:
-			"Paste the job title, company, and full job description — we'll tailor your resume to it.",
+			"Add the job title, company, and job description. We'll open the resume builder with your profile filled in.",
 	},
-	[ONBOARDING_STEP.generateResume]: {
-		title: "Generate a tailored resume",
+	[ONBOARDING_STEP.resumeStudioEditor]: {
+		title: "Edit content and style",
 		description:
-			"Hit generate to create a resume matched to this job description.",
+			"This left panel is your resume editor. Update section content, reorder blocks, and switch to Style to adjust how things look.",
+	},
+	[ONBOARDING_STEP.resumeStudioPreview]: {
+		title: "Live print preview",
+		description:
+			"The middle panel shows how your resume will print. It starts with your profile information—edit on the left and watch it update here.",
+	},
+	[ONBOARDING_STEP.resumeStudioJobPanel]: {
+		title: "Score, job details & suggestions",
+		description:
+			"On the right, score your resume against the job description, edit the posting, and review suggestions to improve your match.",
 	},
 }
 
 export const ONBOARDING_COMPLETE_COPY = {
 	title: "You're all set!",
 	description:
-		"Your profile is ready and you've generated your first tailored resume. Explore cover letters and HR contacts anytime.",
+		"Your profile is ready and you know the resume builder: edit on the left, preview in the middle, score and refine on the right. Try AI, cover letters, and HR contacts anytime.",
 } as const

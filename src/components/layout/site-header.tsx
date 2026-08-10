@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 
 const nav = [
 	{ href: `${ROUTES.home}#how-it-works`, label: "How it works" },
-	{ href: `${ROUTES.home}#why-wording`, label: "Why wording" },
+	{ href: `${ROUTES.home}#why-wording`, label: "AI tailoring" },
 	{ href: `${ROUTES.home}#pricing`, label: "Pricing" },
 ] as const
 

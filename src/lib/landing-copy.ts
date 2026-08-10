@@ -1,7 +1,7 @@
 import { ROUTES } from "@/lib/constants"
 
 /** Primary conversion CTA — one label everywhere on the marketing site. */
-export const LANDING_PRIMARY_CTA = "Start tailoring for free" as const
+export const LANDING_PRIMARY_CTA = "Build your resume free" as const
 
 /** Returning-user link copy for secondary auth moments. */
 export const LANDING_LOGIN_LINK = "Already have an account? Log in" as const
@@ -11,21 +11,31 @@ export const LANDING_PRIMARY_CTA_BUTTON_CLASS =
 	"gap-2 bg-landing-primary text-white hover:bg-landing-primary-hover hover:scale-[1.02] hover:shadow-none active:scale-[0.98]"
 
 /** Reassurance copy shown under free-entry CTAs. */
-export const LANDING_NO_CREDIT_CARD_NOTE = "No credit card required" as const
+export const LANDING_NO_CREDIT_CARD_NOTE =
+	"Free builder · Free live scoring · No credit card" as const
 
 /** Single source of truth for marketing / landing page copy. */
 export const LANDING_COPY = {
 	hero: {
-		title: "Your resume, written for this job.",
+		title: "Free resume builder. AI that fits every job.",
 		description:
-			"Upload once. Paste the posting. Walk away with a tailored resume and cover letter—built for that exact role.",
+			"Welcome to ApplyJet—the resume builder that's free forever. Build a polished resume, score it live against any job description, and get free suggestions to match the role better. Try AI that tailors your content—plus cover letters and HR contacts when you're ready to apply.",
 		primaryCta: LANDING_PRIMARY_CTA,
 		noCreditCardNote: LANDING_NO_CREDIT_CARD_NOTE,
 		socialProof: {
 			rating: 4.9,
 			label: "from early users",
 			tagline:
-				"Built by a job seeker who was tired of sending the same resume everywhere",
+				"Free live scoring and match suggestions—built so you can improve before you apply",
+		},
+		video: {
+			youtubeId: "7QBcWjdO8iA",
+			eyebrow: "Product walkthrough",
+			title: "See how ApplyJet works",
+			description:
+				"A short tour of the free resume builder, live job-match scoring, and AI tailoring.",
+			playLabel: "Play product walkthrough video",
+			caption: "Watch the walkthrough — then build your resume free",
 		},
 	},
 	tryItNow: {
@@ -60,11 +70,11 @@ export const LANDING_COPY = {
 		cta: "Tailor My Resume",
 		loading: "Tailoring your resume…",
 		results: {
-			lockMessage: "Sign up to keep tailoring resumes",
+			lockMessage: "Sign up to keep building and tailoring resumes",
 			signupCta: LANDING_PRIMARY_CTA,
 			downloadTitle: "Your tailored resume is ready",
 			downloadDescription:
-				"Download the PDF below. Create a free account to save it and tailor more applications.",
+				"Download the PDF below. Create a free account to save it and keep building.",
 			downloadCta: "Download resume",
 			downloadLastCta: "Download tailored resume",
 			downloadLoading: "Downloading…",
@@ -75,41 +85,41 @@ export const LANDING_COPY = {
 		},
 	},
 	trustStrip: [
-		"Works entirely in your browser—no extension required",
-		"Resume upload fills your profile automatically",
-		"Tailored resume + cover letter for every job",
-		"Find HR contacts for each application",
+		"Resume builder—free forever",
+		"Free live score vs any job description",
+		"Free match suggestions to improve your resume",
+		"Free AI tries, cover letters & HR contacts",
 	],
 	howItWorks: {
 		eyebrow: "How it works",
-		title: "Four steps from sign-up to application-ready.",
+		title: "From blank page to job-ready—in four simple steps.",
 		description:
-			"Everything happens on this site. Upload once, paste a job description, and let ApplyJet handle the heavy lifting.",
+			"Start with a free resume builder. Paste a job description to score your resume live, get free suggestions to match better, and try AI when you want a rewrite.",
 		steps: [
 			{
-				title: "Create your account",
-				body: "Sign up in seconds with email or Google. Your workspace is ready immediately—nothing to install.",
+				title: "Create your free account",
+				body: "Sign up in seconds with email or Google. Your resume workspace is ready right away—nothing to install.",
 			},
 			{
-				title: "Upload your resume",
-				body: "Drop in your PDF or DOCX. We read it and pre-fill your profile—contact info, experience, skills, and education.",
+				title: "Build your resume",
+				body: "Upload a PDF or DOCX, or start from scratch. Edit sections, polish your story, and save a resume you'll actually reuse.",
 			},
 			{
-				title: "Add a job application",
-				body: "Paste the job title, company, and full job description. That posting becomes the source for everything we generate.",
+				title: "Score live & improve for free",
+				body: "Paste the job description. See your match score update live, with free core suggestions on what to strengthen so you fit the role better.",
 			},
 			{
-				title: "Generate & reach out",
-				body: "Get a tailored resume, a role-specific cover letter, and suggested HR contacts—built from your profile and that job.",
+				title: "AI, cover letter & reach out",
+				body: "Try AI that rewrites experience for the posting, generate a cover letter, and discover HR contacts—when you're ready to apply.",
 			},
 		],
 	},
 	experienceBullets: {
 		sectionId: "why-wording",
-		eyebrow: "Why wording matters",
+		eyebrow: "Why AI tailoring helps",
 		title: "Recruiters skim for 6 seconds. Your bullets decide if they keep reading.",
 		description:
-			"Most people list what they did. Strong applicants show how they matched the role—with the same keywords, metrics, and impact the job description asks for.",
+			"Most resumes list what you did. Strong applications show how you match the role—with the same keywords, metrics, and impact the job description asks for.",
 		jobContext: {
 			label: "The job you're applying to",
 			role: "Senior Full Stack Developer",
@@ -168,7 +178,7 @@ export const LANDING_COPY = {
 			{
 				key: "excellent",
 				label: "Excellent",
-				subtitle: "ApplyJet generated",
+				subtitle: "ApplyJet AI tailored",
 				verdict: "Same real experience—rewritten to mirror the job and prove impact.",
 				bullets: [
 					"Architected React + Node.js dashboard for 12K daily users; cut API latency 40% via query caching and connection pooling",
@@ -184,66 +194,66 @@ export const LANDING_COPY = {
 			},
 		],
 		footerNote:
-			"ApplyJet reads your resume and the job description, then rewrites your experience bullets for each application—your real work, phrased the way this role asks for it.",
+			"ApplyJet reads your resume and the job description, then rewrites your experience bullets for each application—your real work, phrased the way this role asks for it. Try AI free when you start.",
 	},
 	features: {
 		eyebrow: "What you get",
-		title: "One workspace for every job you apply to.",
+		title: "A free resume builder—plus live scoring and suggestions.",
 		description:
-			"Upload your resume once. For each application, paste the job description and generate the documents and contacts you need.",
+			"Build and edit your resume at no cost. Score it live against any job description, get free suggestions to match better, try AI when you want a rewrite, then generate cover letters and find HR contacts.",
 		items: [
 			{
-				title: "Resume upload → instant profile",
-				body: "Upload your resume and we extract your details into your profile—so you never retype work history from scratch.",
+				title: "Resume builder—free forever",
+				body: "Create, edit, and download your resume without a subscription. Your core builder stays free—no credit card, no trial cliff.",
 				className: "md:col-span-2",
 			},
 			{
-				title: "Tailored resume per job",
-				body: "Each application gets its own resume version—keywords, scope, and proof points aligned to that job description.",
+				title: "Free live score vs the job",
+				body: "Paste a job description and see your resume match score update live—keywords, gaps, and fit—always free in the core app.",
 				className: "md:col-span-2",
 			},
 			{
-				title: "Cover letters that cite the role",
+				title: "Free match suggestions",
+				body: "Get clear, actionable suggestions in the app so you know what to strengthen to match the job description better—no paywall on the basics.",
+				className: "md:col-span-2",
+			},
+			{
+				title: "AI that fits the job description",
+				body: "Try AI that rewrites your experience to match the role's keywords, scope, and priorities.",
+				className: "",
+			},
+			{
+				title: "Cover letter generator",
 				body: "Generate a letter grounded in this posting and your matched experience—not a one-size-fits-all opener.",
 				className: "",
 			},
 			{
 				title: "HR contact finder",
 				body: "Discover recruiters and hiring contacts at the company so you know who to reach out to after you apply.",
-				className: "",
-			},
-			{
-				title: "Match score before you generate",
-				body: "See skill overlap and gaps against the job description so you know what to emphasize in your materials.",
-				className: "md:col-span-2",
-			},
-			{
-				title: "Everything saved to your account",
-				body: "Applications, generated docs, and contact lists stay in one place—pick up any role where you left off.",
 				className: "md:col-span-2",
 			},
 		],
 	},
 	why: {
 		eyebrow: "Why ApplyJet",
-		title: "Stop sending the same resume to every job.",
+		title: "A better resume—without paying just to begin.",
 		without: {
-			label: "Manual applications",
-			title: "Generic docs, slow setup, no contacts",
+			label: "Typical tools",
+			title: "Paywalls, generic docs, no outreach help",
 			items: [
-				"Retype your work history for every new platform",
-				"One resume blasted at dozens of different roles",
-				"Cover letters copied from a template with a new company name",
+				"Resume builders that lock edits or downloads behind a paywall",
+				"One generic resume sent to every different role",
+				"Match scores and tips locked behind a subscription",
 				"No idea who to follow up with after you hit submit",
 			],
 		},
 		with: {
-			title: "Upload once, tailor every application",
+			title: "Free builder, free scoring, flexible plans",
 			items: [
-				"Resume upload fills your profile automatically",
-				"Each job gets its own resume and cover letter",
-				"Job description drives every generation—not guesswork",
-				"HR contacts surfaced for every application you create",
+				"Resume builder free forever—build and edit without pressure",
+				"Free live scoring against every job description",
+				"Free core suggestions to match the role better",
+				"AI tries, cover letters, HR contacts—plus Pro or one-time packs when you need more",
 			],
 		},
 	},
@@ -255,21 +265,21 @@ export const LANDING_COPY = {
 		items: [
 			{
 				quote:
-					"I used to spend an hour tweaking bullets for each application. ApplyJet got me a solid first draft in minutes.",
+					"I finally have a resume builder I can actually use for free—and the AI drafts for each job saved me so much time.",
 				name: "Sarah M.",
 				role: "Product designer",
 				rating: 5,
 			},
 			{
 				quote:
-					"The tailored resume actually used keywords from the job posting. Felt way more relevant than my old template.",
+					"Pasting the job description and seeing my bullets rewritten with the right keywords felt like a real advantage.",
 				name: "James K.",
 				role: "Software engineer",
 				rating: 5,
 			},
 			{
 				quote:
-					"Upload once and stop retyping my work history — that alone was worth signing up.",
+					"Cover letters plus finding who to email—that's what I was missing with every other resume tool.",
 				name: "Priya R.",
 				role: "Job seeker",
 				rating: 4.5,
@@ -282,9 +292,9 @@ export const LANDING_COPY = {
 	},
 	pricing: {
 		eyebrow: "Pricing",
-		title: "Start free. Upgrade when you're applying seriously.",
+		title: "Free forever to build. Flexible options when you need more.",
 		description:
-			"Starter covers the core workflow. Pro unlocks unlimited generations and HR contacts. One-time packs top up credits anytime.",
+			"The resume builder, live job-match scoring, and core suggestions stay free. Try AI at no cost, then pick monthly Pro or one-time credit packs when you need more.",
 		monthlyLabel: "Monthly",
 		oneTimeLabel: "One-time packs",
 		plans: {
@@ -292,26 +302,26 @@ export const LANDING_COPY = {
 				name: "Starter",
 				price: "$0",
 				period: "/month",
-				desc: "Core tools to build, score, and track applications.",
+				desc: "Free forever builder—plus free live scoring, match suggestions, and AI tries to start.",
 				features: [
-					"10 AI generations",
-					"Application tracking",
-					"Resume builder",
-					"Score resume against job description",
+					"Resume builder—free forever",
+					"Free live score vs job description",
+					"Free core match suggestions",
+					"10 free AI tries to start",
 					"5 cover letters",
 					"5 resume downloads",
 				],
 				cta: LANDING_PRIMARY_CTA,
-				badge: "No credit card required",
+				badge: "Free forever",
 				ctaSubtext: LANDING_NO_CREDIT_CARD_NOTE,
 			},
 			pro: {
 				name: "Pro",
 				price: "$19.99",
 				period: "/month",
-				desc: "Unlimited access for active job seekers.",
+				desc: "Unlimited AI, cover letters, and HR contacts for an active search.",
 				features: [
-					"Unlimited AI generations",
+					"Unlimited AI resume tailoring",
 					"Unlimited cover letters",
 					"Unlimited resume downloads",
 					"HR contacts finding",
@@ -325,7 +335,7 @@ export const LANDING_COPY = {
 				name: "Intern Pack",
 				price: "$5.99",
 				period: "one-time",
-				desc: "A small credit boost without a subscription.",
+				desc: "A small credit boost—no subscription required.",
 				features: [
 					"10 AI generations",
 					"10 cover letters",
@@ -337,7 +347,7 @@ export const LANDING_COPY = {
 				name: "Junior Pack",
 				price: "$9.99",
 				period: "one-time",
-				desc: "More generations plus HR contact searches.",
+				desc: "More AI generations plus HR contact searches.",
 				features: [
 					"50 AI generations",
 					"50 cover letters",
@@ -352,7 +362,7 @@ export const LANDING_COPY = {
 				name: "Advanced Pack",
 				price: "$14.99",
 				period: "one-time",
-				desc: "The largest one-time credit pack.",
+				desc: "The largest one-time pack for a busy application season.",
 				features: [
 					"100 AI generations",
 					"100 cover letters",
@@ -364,33 +374,34 @@ export const LANDING_COPY = {
 		},
 	},
 	authCta: {
-		badge: "Free account · works in your browser",
-		title: "Your profile, applications, and generated docs—one place.",
+		badge: "Free forever · live scoring included",
+		title: "Welcome—your resume workspace is waiting.",
 		description:
-			"Upload your resume once. Every application you create keeps its tailored resume, cover letter, and contacts tied to your account.",
+			"Build your resume free, score it live against any job description, get free match suggestions, and try AI when you want a rewrite—cover letters and HR contacts stay in one place.",
 		primaryCta: LANDING_PRIMARY_CTA,
 		loginLink: LANDING_LOGIN_LINK,
 	},
 	finalCta: {
-		title: "Ready to apply smarter?",
+		title: "Ready to build a resume that fits the job?",
 		description:
-			"Create your account, upload your resume, and generate your first tailored application in minutes—all on this site.",
+			"Join ApplyJet free. Build forever at no cost, score your resume live against the job description, get free suggestions to match better, and upgrade only when you need more.",
 		primaryCta: LANDING_PRIMARY_CTA,
 		loginLink: LANDING_LOGIN_LINK,
 	},
 	footer: {
 		tagline:
-			"Upload your resume, paste the job description, and generate tailored resumes, cover letters, and HR contacts—right in your browser.",
-		copyrightNote: "Built for job seekers who want less busywork and better applications.",
+			"Free resume builder with live job-match scoring and free suggestions—plus AI tailoring, cover letters, and HR contacts.",
+		copyrightNote: "Built for job seekers who want a better resume without the paywall.",
 		productLinks: {
 			features: { label: "Features", to: `${ROUTES.home}#features` },
-			wording: { label: "Why wording matters", to: `${ROUTES.home}#why-wording` },
+			wording: { label: "Why AI tailoring", to: `${ROUTES.home}#why-wording` },
 		},
 	},
 	meta: {
-		title: "ApplyJet AI — Tailored job applications in your browser",
+		title:
+			"ApplyJet — Free AI Resume Builder | Live Score vs Job Description",
 		description:
-			"Create an account, upload your resume, and paste any job description. ApplyJet pre-fills your profile and generates tailored resumes, cover letters, and HR contacts.",
+			"Build your resume free forever with ApplyJet. Score it live against any job description, get free match suggestions, try AI tailoring, generate cover letters, and find HR contacts.",
 	},
 } as const
 

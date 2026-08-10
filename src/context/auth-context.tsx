@@ -8,8 +8,10 @@ import {
 	type ReactNode,
 } from "react"
 import type { Session, User } from "@supabase/supabase-js"
+import { useQueryClient } from "@tanstack/react-query"
 import { supabase } from "@/lib/supabase"
 import { env } from "@/lib/env"
+import { onboardingStateQueryKey } from "@/lib/onboarding/query-keys"
 import { useUser } from "../../hooks/useUser"
 
 interface AuthContextValue {
@@ -41,6 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		() => env.isSupabaseConfigured,
 	)
 	const { initialUserSetup } = useUser()
+	const queryClient = useQueryClient()
 
 	useEffect(() => {
 		if (!env.isSupabaseConfigured) return
@@ -50,9 +53,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 		const syncUserRow = (next: Session | null) => {
 			const u = next?.user
 			if (!u?.id) return
-			void initialUserSetup(buildInitialPayload(u)).catch((err) => {
-				console.error("Something went wrong syncing user row:", err)
-			})
+			void initialUserSetup(buildInitialPayload(u))
+				.then(() => {
+					if (!mounted) return
+					void queryClient.invalidateQueries({
+						queryKey: onboardingStateQueryKey(u.id),
+					})
+				})
+				.catch((err) => {
+					console.error("Something went wrong syncing user row:", err)
+				})
 		}
 
 		void supabase.auth.getSession().then(({ data }) => {
@@ -73,7 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 			mounted = false
 			subscription.unsubscribe()
 		}
-	}, [initialUserSetup])
+	}, [initialUserSetup, queryClient])
 
 	const signOut = useCallback(async () => {
 		if (!env.isSupabaseConfigured) return

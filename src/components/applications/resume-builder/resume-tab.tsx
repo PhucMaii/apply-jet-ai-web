@@ -18,6 +18,7 @@ import {
 } from "@/lib/atsScoring"
 import { buildBlockRewriteDiff, type BlockRewriteDiff } from "@/lib/rewrite-diff"
 import { invokeRewriteResumeBlock } from "@/lib/rewrite-resume-block"
+import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import type {
 	AppResume,
 	AppResumeBlock,
@@ -850,6 +851,7 @@ export function ResumeTab({
 							"--left-panel-width": `${leftPanelWidth}px`,
 						} as CSSProperties
 					}
+					data-tour={TOUR_TARGET.resumeStudioEditor}
 				>
 					<ResumeSectionsAside
 						sections={sections}
@@ -900,19 +902,24 @@ export function ResumeTab({
 					onResize={handleResizeLeft}
 				/>
 
-				<ResumePreviewPanel
-					sections={sections}
-					activeSectionId={activeSectionId}
-					sectionRefs={previewRefs}
-					pageCount={pageCount}
-					onPageCountChange={setPageCount}
-					rewriteDiff={rewriteDiff}
-					isApplyingRewrite={isApplyingRewrite}
-					onAcceptRewrite={() => {
-						void handleApplyRewriteSuggestion()
-					}}
-					onRejectRewrite={clearRewriteReview}
-				/>
+				<div
+					className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+					data-tour={TOUR_TARGET.resumeStudioPreview}
+				>
+					<ResumePreviewPanel
+						sections={sections}
+						activeSectionId={activeSectionId}
+						sectionRefs={previewRefs}
+						pageCount={pageCount}
+						onPageCountChange={setPageCount}
+						rewriteDiff={rewriteDiff}
+						isApplyingRewrite={isApplyingRewrite}
+						onAcceptRewrite={() => {
+							void handleApplyRewriteSuggestion()
+						}}
+						onRejectRewrite={clearRewriteReview}
+					/>
+				</div>
 
 				<PanelResizeHandle
 					label="Resize job panel"
@@ -926,6 +933,7 @@ export function ResumeTab({
 							"--right-panel-width": `${rightPanelWidth}px`,
 						} as CSSProperties
 					}
+					data-tour={TOUR_TARGET.resumeStudioJobPanel}
 				>
 					<ResumeJobAside
 						form={form}

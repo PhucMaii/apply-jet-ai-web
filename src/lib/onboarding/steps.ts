@@ -22,7 +22,9 @@ export const ONBOARDING_STEP_ORDER: OnboardingStepId[] = [
 	ONBOARDING_STEP.reviewDisclosure,
 	ONBOARDING_STEP.navigateApplications,
 	ONBOARDING_STEP.createApplication,
-	ONBOARDING_STEP.generateResume,
+	ONBOARDING_STEP.resumeStudioEditor,
+	ONBOARDING_STEP.resumeStudioPreview,
+	ONBOARDING_STEP.resumeStudioJobPanel,
 	ONBOARDING_STEP.completed,
 ]
 
@@ -125,11 +127,23 @@ export const ONBOARDING_TOUR_STEPS: Partial<
 		"route",
 		false,
 	),
-	[ONBOARDING_STEP.generateResume]: buildStep(
-		ONBOARDING_STEP.generateResume,
-		TOUR_TARGET.generateResume,
-		"action",
-		false,
+	[ONBOARDING_STEP.resumeStudioEditor]: buildStep(
+		ONBOARDING_STEP.resumeStudioEditor,
+		TOUR_TARGET.resumeStudioEditor,
+		"manual",
+		true,
+	),
+	[ONBOARDING_STEP.resumeStudioPreview]: buildStep(
+		ONBOARDING_STEP.resumeStudioPreview,
+		TOUR_TARGET.resumeStudioPreview,
+		"manual",
+		true,
+	),
+	[ONBOARDING_STEP.resumeStudioJobPanel]: buildStep(
+		ONBOARDING_STEP.resumeStudioJobPanel,
+		TOUR_TARGET.resumeStudioJobPanel,
+		"manual",
+		true,
 	),
 }
 
@@ -149,6 +163,14 @@ export function getReviewSectionForStep(
 	step: OnboardingStepId,
 ): string | null {
 	return REVIEW_SECTION_BY_STEP[step] ?? null
+}
+
+export function isResumeStudioStep(step: OnboardingStepId): boolean {
+	return (
+		step === ONBOARDING_STEP.resumeStudioEditor ||
+		step === ONBOARDING_STEP.resumeStudioPreview ||
+		step === ONBOARDING_STEP.resumeStudioJobPanel
+	)
 }
 
 export function resolveCreateApplicationTarget(pathname: string): string {

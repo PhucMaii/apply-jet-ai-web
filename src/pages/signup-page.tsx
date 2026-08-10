@@ -47,7 +47,7 @@ export function SignupPage() {
 	}
 
 	if (!isLoading && user) {
-		return <Navigate to={ROUTES.applications} replace />
+		return <Navigate to={ROUTES.profile} replace />
 	}
 
 	async function handleOAuth(provider: "google") {
@@ -155,9 +155,9 @@ export function SignupPage() {
 			<SiteHeader />
 			<div className="mx-auto flex max-w-md flex-col px-4 py-16 sm:py-24">
 				<AuthFormCard
-					eyebrow="Create account"
+					eyebrow="Welcome"
 					title={`Join ${APP_NAME}`}
-					description="Upload your baseline resume—the source for every tailored version, cover letter, and long answer you generate."
+					description="Build your resume free forever. Try AI that tailors it to any job description—plus cover letters and HR contacts when you're ready."
 					footer={
 						<p className="mt-6 text-center text-sm text-landing-muted">
 							Already have an account?{" "}

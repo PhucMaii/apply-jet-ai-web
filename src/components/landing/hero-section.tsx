@@ -1,7 +1,7 @@
 import { motion, useReducedMotion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { HeroResumeMock } from "@/components/landing/hero-resume-mock"
+import { HeroDemoVideo } from "@/components/landing/hero-demo-video"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { StarRating } from "@/components/landing/star-rating"
 import {
@@ -85,7 +85,7 @@ export function HeroSection() {
 				</div>
 
 				<div className="relative min-w-0 w-full lg:mx-0">
-					<HeroResumeMock />
+					<HeroDemoVideo />
 				</div>
 			</div>
 		</section>

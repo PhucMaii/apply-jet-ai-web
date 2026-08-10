@@ -3,6 +3,8 @@
  *
  * Flow:
  *   Signup → /profile → WelcomeModal → (optional) driver.js tour
+ *   Profile setup → Applications → create job → Resume Studio tour
+ *   (left editor → middle preview → right score/job/suggestions)
  *
  * Layers:
  *   lib/onboarding/*     Step definitions, copy, selectors, Supabase prefs (users table)

@@ -38,7 +38,6 @@ interface OnboardingContextValue {
 	activeProfileSection: string | null
 	notifyResumeUploaded: () => void
 	notifyAutofillComplete: () => void
-	notifyResumeGenerated: () => void
 	startGuidedTour: () => Promise<void>
 	skipOnboarding: () => Promise<void>
 	advanceStep: () => Promise<void>
@@ -116,7 +115,9 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 
 		if (next === ONBOARDING_STEP.completed) {
 			await completeOnboarding()
-			toast.success(ONBOARDING_COMPLETE_COPY.title)
+			toast.success(ONBOARDING_COMPLETE_COPY.title, {
+				duration: 4500,
+			})
 			return
 		}
 
@@ -150,13 +151,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 		void advanceStep()
 	}, [advanceStep, currentStep, isTourActive])
 
-	const notifyResumeGenerated = useCallback(() => {
-		if (!isTourActive || currentStep !== ONBOARDING_STEP.generateResume) return
-		void completeOnboarding().then(() => {
-			toast.success(ONBOARDING_COMPLETE_COPY.title)
-		})
-	}, [completeOnboarding, currentStep, isTourActive])
-
 	useEffect(() => {
 		if (!isTourActive || !currentStep) return
 
@@ -172,7 +166,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 			currentStep === ONBOARDING_STEP.createApplication &&
 			isApplicationDetailPath(pathname)
 		) {
-			void persistStep(ONBOARDING_STEP.generateResume)
+			void persistStep(ONBOARDING_STEP.resumeStudioEditor)
 		}
 	}, [currentStep, isTourActive, pathname, persistStep])
 
@@ -194,7 +188,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 			activeProfileSection,
 			notifyResumeUploaded,
 			notifyAutofillComplete,
-			notifyResumeGenerated,
 			startGuidedTour,
 			skipOnboarding,
 			advanceStep,
@@ -208,7 +201,6 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
 			activeProfileSection,
 			notifyResumeUploaded,
 			notifyAutofillComplete,
-			notifyResumeGenerated,
 			startGuidedTour,
 			skipOnboarding,
 			advanceStep,

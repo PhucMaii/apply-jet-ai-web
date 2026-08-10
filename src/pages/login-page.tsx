@@ -100,7 +100,7 @@ export function LoginPage() {
 				<AuthFormCard
 					eyebrow="Welcome back"
 					title={`Log in to ${APP_NAME}`}
-					description="Resume vault, match history, and every tailored doc tied to your account."
+					description="Your free resume builder, AI-tailored applications, cover letters, and HR contacts—all in one place."
 					footer={
 						<p className="mt-6 text-center text-sm text-landing-muted">
 							New here?{" "}

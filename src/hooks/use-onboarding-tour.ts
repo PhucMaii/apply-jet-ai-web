@@ -5,6 +5,7 @@ import "@/styles/onboarding-tour.css"
 import {
 	ONBOARDING_TOUR_STEPS,
 	getReviewSectionForStep,
+	isResumeStudioStep,
 	resolveCreateApplicationTarget,
 } from "@/lib/onboarding/steps"
 import { logOnboarding } from "@/lib/onboarding/index"
@@ -20,9 +21,12 @@ interface UseOnboardingTourOptions {
 	onManualAdvance: () => void
 }
 
+const DEFAULT_WAIT_MS = 4000
+const STUDIO_WAIT_MS = 10000
+
 function waitForElement(
 	selector: string,
-	timeoutMs = 4000,
+	timeoutMs = DEFAULT_WAIT_MS,
 ): Promise<Element | null> {
 	return new Promise((resolve) => {
 		const existing = document.querySelector(selector)
@@ -97,7 +101,10 @@ export function useOnboardingTour({
 				selector = resolveCreateApplicationTarget(pathname)
 			}
 
-			const element = await waitForElement(selector)
+			const waitMs = isResumeStudioStep(stepToShow)
+				? STUDIO_WAIT_MS
+				: DEFAULT_WAIT_MS
+			const element = await waitForElement(selector, waitMs)
 			if (cancelled || generation !== showGenerationRef.current) return
 
 			if (!element) {
@@ -108,7 +115,7 @@ export function useOnboardingTour({
 			destroyTour()
 
 			const reviewSection = getReviewSectionForStep(stepToShow)
-			if (reviewSection) {
+			if (reviewSection || isResumeStudioStep(stepToShow)) {
 				element.scrollIntoView({ behavior: "smooth", block: "nearest" })
 			}
 
@@ -129,12 +136,17 @@ export function useOnboardingTour({
 
 			driverRef.current = driverObj
 
+			const isLastStudioStep =
+				stepToShow === ONBOARDING_STEP.resumeStudioJobPanel
+			const nextButtonLabel = isLastStudioStep ? "Done" : "Next"
+
 			driverObj.highlight({
 				element: selector,
 				popover: {
 					title: definition.title,
 					description: definition.description,
 					showButtons: definition.showNextButton ? ["next"] : [],
+					nextBtnText: nextButtonLabel,
 					onNextClick: () => {
 						driverObj.destroy()
 						onManualAdvanceRef.current()
