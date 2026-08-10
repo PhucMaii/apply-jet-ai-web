@@ -60,8 +60,8 @@ export interface GroupTextItem {
 }
 
 export type AppResumeBlockContent =
-	| { text: string, style_json?: AppResumeBlockStyle }
-	| { texts: GroupTextItem[], style_json?: AppResumeBlockStyle }
+	| { text: string, style_json?: AppResumeBlockStyle, description?: string[] }
+	| { texts: GroupTextItem[], style_json?: AppResumeBlockStyle, description?: string[] }
 	| {
 			title: string
 			company: string
@@ -85,22 +85,26 @@ export type AppResumeBlockContent =
 			start_date: string | null
 			end_date: string | null
 			style_json?: AppResumeBlockStyle
+			description?: string[]
 	  }
 	| {
 			name: string
 			categoryId: number
 			categoryName: string
 			style_json?: AppResumeBlockStyle
+			description?: string[]
 	  }
 	| {
 			category_id: string
 			name: string
 			skills: string[]
 			style_json?: AppResumeBlockStyle
+			description?: string[]
 	  }
 	| {
 			items: string[]
 			style_json?: AppResumeBlockStyle
+			description?: string[]
 	  }
 
 export interface AppResumeBlock {
@@ -113,6 +117,8 @@ export interface AppResumeBlock {
 	style_json: AppResumeBlockStyle
 	created_at: string 
 	updated_at: string
+	is_hidden?: boolean
+	is_removed?: boolean
 }
 
 export interface AppResumeSection {

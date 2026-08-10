@@ -111,5 +111,6 @@ export function emptySkill(userId: string): UserSkillRow {
 		name: "",
 		created_at: "",
 		is_from_org_resume: false,
+		category_id: null,
 	}
 }

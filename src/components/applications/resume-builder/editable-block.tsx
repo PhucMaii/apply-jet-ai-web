@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import {
 	applyEditableText,
 	formatDateRange,
@@ -24,15 +24,6 @@ export function EditableBlock({
 	onCommit: (block: AppResumeBlock) => void
 	onCancel: () => void
 }) {
-	const editableText = getEditableText(block)
-	const [draft, setDraft] = useState(editableText)
-
-	useEffect(() => {
-		if (editing) {
-			setDraft(getEditableText(block))
-		}
-	}, [editing, block])
-
 	if (!editing) {
 		return (
 			<button
@@ -44,6 +35,31 @@ export function EditableBlock({
 			</button>
 		)
 	}
+
+	return (
+		<EditableBlockEditor
+			key={block.id}
+			block={block}
+			isName={isName}
+			onCommit={onCommit}
+			onCancel={onCancel}
+		/>
+	)
+}
+
+function EditableBlockEditor({
+	block,
+	isName,
+	onCommit,
+	onCancel,
+}: {
+	block: AppResumeBlock
+	isName?: boolean
+	onCommit: (block: AppResumeBlock) => void
+	onCancel: () => void
+}) {
+	const editableText = getEditableText(block)
+	const [draft, setDraft] = useState(editableText)
 
 	return (
 		<textarea
@@ -59,7 +75,6 @@ export function EditableBlock({
 			onKeyDown={(event) => {
 				if (event.key === "Escape") {
 					event.preventDefault()
-					setDraft(editableText)
 					onCancel()
 				}
 				if (
@@ -177,7 +192,7 @@ function BlockPreview({
 			<div className="space-y-1">
 				<p className="text-sm font-semibold text-neutral-900">{content.name}</p>
 				<ul className="space-y-0.5">
-					{content.description.map((line) => (
+					{content.description && content.description.map((line) => (
 						<li
 							key={line}
 							className="flex gap-2 text-[13px] leading-relaxed text-neutral-800"
