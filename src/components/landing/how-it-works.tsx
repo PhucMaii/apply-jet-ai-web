@@ -1,17 +1,16 @@
 import { motion, useReducedMotion } from "framer-motion"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import {
 	LANDING_EASE_OUT,
 	landingRevealViewport,
 } from "@/lib/landing-motion"
 import { cn } from "@/lib/utils"
 
-const { howItWorks } = LANDING_COPY
-
 const STEP_NUMBERS = ["01", "02", "03", "04"] as const
 
 export function HowItWorks() {
 	const reduceMotion = useReducedMotion()
+	const { howItWorks } = useLandingCopy()
 
 	return (
 		<section

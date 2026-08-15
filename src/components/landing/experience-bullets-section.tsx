@@ -9,17 +9,15 @@ import {
 	XCircle,
 } from "lucide-react"
 import { APP_NAME } from "@/lib/constants"
-import {
-	LANDING_COPY,
-	type ExperienceBulletTierKey,
-} from "@/lib/landing-copy"
+import { LANDING_COPY, type ExperienceBulletTierKey } from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import { cn } from "@/lib/utils"
 
 const easeOutExpo = [0.22, 1, 0.36, 1] as [number, number, number, number]
 
-const { experienceBullets } = LANDING_COPY
-
 const principleIcons = [Target, Hash, TrendingUp] as const
+
+type ExperienceTier = (typeof LANDING_COPY.experienceBullets.tiers)[number]
 
 const tierStyles: Record<
 	ExperienceBulletTierKey,
@@ -70,7 +68,7 @@ function TierCard({
 	tier,
 	index,
 }: {
-	tier: (typeof experienceBullets.tiers)[number]
+	tier: ExperienceTier
 	index: number
 }) {
 	const style = tierStyles[tier.key as ExperienceBulletTierKey]
@@ -188,6 +186,7 @@ export function ExperienceBulletsSection({
 }: {
 	variant?: "full" | "condensed"
 }) {
+	const { experienceBullets } = useLandingCopy()
 	const { jobContext, principles } = experienceBullets
 	const isCondensed = variant === "condensed"
 	const visibleTiers = isCondensed

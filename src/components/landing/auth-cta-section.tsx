@@ -3,15 +3,13 @@ import { Link } from "react-router-dom"
 import { ArrowRight, Monitor } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import { ROUTES } from "@/lib/constants"
-import {
-	LANDING_COPY,
-	LANDING_PRIMARY_CTA_BUTTON_CLASS,
-} from "@/lib/landing-copy"
-
-const { authCta } = LANDING_COPY
+import { LANDING_PRIMARY_CTA_BUTTON_CLASS } from "@/lib/landing-copy"
 
 export function AuthCtaSection() {
+	const { authCta } = useLandingCopy()
+
 	return (
 		<section className="py-20 sm:py-24">
 			<div className="mx-auto max-w-6xl px-4 sm:px-6">

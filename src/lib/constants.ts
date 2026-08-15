@@ -6,6 +6,9 @@ export const BRAND_LOGO_SRC = "/logo.png"
 /** Hero illustration — person celebrating a job offer */
 export const HERO_OFFER_IMAGE_SRC = "/hero-offer-celebration.png"
 
+/** Reddit Ads pixel ID used on `/lp/ads`. */
+export const REDDIT_ADS_PIXEL_ID = "a2_j4v4yl9cxm2u" as const
+
 export const ROUTES = {
 	home: "/",
 	login: "/login",

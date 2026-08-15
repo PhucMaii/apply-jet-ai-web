@@ -1,9 +1,9 @@
 import { ShieldCheck } from "lucide-react"
-import { LANDING_COPY } from "@/lib/landing-copy"
-
-const { privacyTrust } = LANDING_COPY
+import { useLandingCopy } from "@/context/landing-copy-context"
 
 export function PrivacyTrustLine() {
+	const { privacyTrust } = useLandingCopy()
+
 	return (
 		<p className="mt-10 flex items-center justify-center gap-2 text-center text-sm text-landing-muted">
 			<ShieldCheck

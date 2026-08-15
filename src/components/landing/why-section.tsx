@@ -1,12 +1,12 @@
 import { motion } from "framer-motion"
 import { Check, X } from "lucide-react"
 import { APP_NAME } from "@/lib/constants"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import { cn } from "@/lib/utils"
 
-const { why } = LANDING_COPY
-
 export function WhySection() {
+	const { why } = useLandingCopy()
+
 	return (
 		<section className="py-20 sm:py-24">
 			<div className="mx-auto max-w-6xl px-4 sm:px-6">

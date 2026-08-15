@@ -1,26 +1,34 @@
 import { Link, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
 import { APP_NAME, BRAND_LOGO_SRC, ROUTES } from "@/lib/constants"
-import {
-	LANDING_PRIMARY_CTA,
-	LANDING_PRIMARY_CTA_BUTTON_CLASS,
-} from "@/lib/landing-copy"
+import { LANDING_PRIMARY_CTA_BUTTON_CLASS } from "@/lib/landing-copy"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import { isMarketingRoute } from "@/lib/marketing-routes"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
-const nav = [
-	{ href: `${ROUTES.home}#how-it-works`, label: "How it works" },
-	{ href: `${ROUTES.home}#why-wording`, label: "AI tailoring" },
-	{ href: `${ROUTES.home}#pricing`, label: "Pricing" },
-] as const
-
 export function SiteHeader() {
 	const { pathname } = useLocation()
 	const { user } = useAuth()
+	const { hero } = useLandingCopy()
 	const isMarketing = isMarketingRoute(pathname)
+	const isAdsLanding = pathname === ROUTES.adsLanding
+	const basePath = isAdsLanding ? ROUTES.adsLanding : ROUTES.home
+	const primaryCta = hero.primaryCta
+
+	const nav = isAdsLanding
+		? [
+				{ href: `${basePath}#how-it-works`, label: "How it works" },
+				{ href: `${basePath}#why-wording`, label: "AI tailoring" },
+				{ href: `${basePath}#features`, label: "What you get" },
+			]
+		: [
+				{ href: `${ROUTES.home}#how-it-works`, label: "How it works" },
+				{ href: `${ROUTES.home}#why-wording`, label: "AI tailoring" },
+				{ href: `${ROUTES.home}#pricing`, label: "Pricing" },
+			]
 
 	return (
 		<header
@@ -33,7 +41,7 @@ export function SiteHeader() {
 		>
 			<div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
 				<Link
-					to={ROUTES.home}
+					to={isAdsLanding ? ROUTES.adsLanding : ROUTES.home}
 					className={cn(
 						"group flex items-center gap-2.5 font-display text-lg font-semibold tracking-tight",
 						isMarketing ? "text-landing-ink" : "font-bold text-foreground",
@@ -68,9 +76,7 @@ export function SiteHeader() {
 								href={item.href}
 								className={cn(
 									"rounded-md px-3 py-2 text-sm font-medium transition-colors",
-									isMarketing
-										? "text-landing-muted hover:bg-landing-sand hover:text-landing-ink"
-										: "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+									"text-landing-muted hover:bg-landing-sand hover:text-landing-ink",
 								)}
 							>
 								{item.label}
@@ -89,15 +95,6 @@ export function SiteHeader() {
 					>
 						<Link to={ROUTES.support}>Support</Link>
 					</Button>
-					{/* <Button variant="ghost" surface="dark" size="sm" asChild>
-						<a
-							href={LINKS.extensionDownload}
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							Get extension
-						</a>
-					</Button> */}
 					{user ? (
 						<>
 							<Button
@@ -133,9 +130,9 @@ export function SiteHeader() {
 							>
 								<LandingSignupLink
 									location="header"
-									label={LANDING_PRIMARY_CTA}
+									label={primaryCta}
 								>
-									{LANDING_PRIMARY_CTA}
+									{primaryCta}
 								</LandingSignupLink>
 							</Button>
 						</>

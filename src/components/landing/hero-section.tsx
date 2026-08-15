@@ -4,16 +4,13 @@ import { Button } from "@/components/ui/button"
 import { HeroDemoVideo } from "@/components/landing/hero-demo-video"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { StarRating } from "@/components/landing/star-rating"
-import {
-	LANDING_COPY,
-	LANDING_PRIMARY_CTA_BUTTON_CLASS,
-} from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
+import { LANDING_PRIMARY_CTA_BUTTON_CLASS } from "@/lib/landing-copy"
 import { LANDING_EASE_OUT } from "@/lib/landing-motion"
-
-const { hero } = LANDING_COPY
 
 export function HeroSection() {
 	const reduceMotion = useReducedMotion()
+	const { hero } = useLandingCopy()
 
 	return (
 		<section className="relative overflow-hidden pt-10 pb-16 sm:pt-14 sm:pb-24 lg:pt-20 lg:pb-28">

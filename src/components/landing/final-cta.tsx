@@ -3,15 +3,13 @@ import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import { ROUTES } from "@/lib/constants"
-import {
-	LANDING_COPY,
-	LANDING_PRIMARY_CTA_BUTTON_CLASS,
-} from "@/lib/landing-copy"
-
-const { finalCta } = LANDING_COPY
+import { LANDING_PRIMARY_CTA_BUTTON_CLASS } from "@/lib/landing-copy"
 
 export function FinalCta() {
+	const { finalCta } = useLandingCopy()
+
 	return (
 		<section className="pb-24 pt-6">
 			<div className="mx-auto max-w-6xl px-4 sm:px-6">

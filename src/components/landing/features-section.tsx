@@ -7,16 +7,15 @@ import {
 	Upload,
 	Users,
 } from "lucide-react"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import { cn } from "@/lib/utils"
 
 const easeOutExpo = [0.22, 1, 0.36, 1] as [number, number, number, number]
 
 const featureIcons = [Upload, FileText, Mail, Users, Gauge, Briefcase] as const
 
-const { features } = LANDING_COPY
-
 export function FeaturesSection() {
+	const { features } = useLandingCopy()
 	return (
 		<section id="features" className="scroll-mt-24 py-20 sm:py-24">
 			<div className="mx-auto max-w-6xl px-4 sm:px-6">

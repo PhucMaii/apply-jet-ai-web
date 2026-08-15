@@ -1,10 +1,8 @@
 import { motion } from "framer-motion"
 import { Quote } from "lucide-react"
 import { StarRating } from "@/components/landing/star-rating"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import { cn } from "@/lib/utils"
-
-const { testimonials } = LANDING_COPY
 
 function getInitials(name: string) {
 	return name
@@ -16,6 +14,8 @@ function getInitials(name: string) {
 }
 
 export function TestimonialsSection() {
+	const { testimonials } = useLandingCopy()
+
 	return (
 		<section className="py-20 sm:py-24">
 			<div className="mx-auto max-w-6xl px-4 sm:px-6">

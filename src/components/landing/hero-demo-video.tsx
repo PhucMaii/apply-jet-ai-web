@@ -1,17 +1,9 @@
-import { useCallback, useId, useState } from "react"
+import { useCallback, useId, useMemo, useState } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import { Play } from "lucide-react"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import { LANDING_EASE_OUT } from "@/lib/landing-motion"
 import { cn } from "@/lib/utils"
-
-const { video } = LANDING_COPY.hero
-
-const YOUTUBE_THUMB_MAX = `https://i.ytimg.com/vi/${video.youtubeId}/maxresdefault.jpg`
-const YOUTUBE_THUMB_HQ = `https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`
-const YOUTUBE_EMBED_SRC =
-	`https://www.youtube-nocookie.com/embed/${video.youtubeId}` +
-	`?autoplay=1&rel=0&modestbranding=1&playsinline=1`
 
 interface HeroDemoVideoProps {
 	className?: string
@@ -20,8 +12,18 @@ interface HeroDemoVideoProps {
 export function HeroDemoVideo({ className }: HeroDemoVideoProps) {
 	const reduceMotion = useReducedMotion()
 	const titleId = useId()
+	const { video } = useLandingCopy().hero
 	const [isPlaying, setIsPlaying] = useState(false)
-	const [thumbSrc, setThumbSrc] = useState(YOUTUBE_THUMB_MAX)
+	const [thumbSrc, setThumbSrc] = useState(
+		() => `https://i.ytimg.com/vi/${video.youtubeId}/maxresdefault.jpg`,
+	)
+
+	const youtubeEmbedSrc = useMemo(
+		() =>
+			`https://www.youtube-nocookie.com/embed/${video.youtubeId}` +
+			`?autoplay=1&rel=0&modestbranding=1&playsinline=1`,
+		[video.youtubeId],
+	)
 
 	const handlePlay = useCallback(() => {
 		setIsPlaying(true)
@@ -82,7 +84,7 @@ export function HeroDemoVideo({ className }: HeroDemoVideoProps) {
 					{isPlaying ? (
 						<iframe
 							title={video.playLabel}
-							src={YOUTUBE_EMBED_SRC}
+							src={youtubeEmbedSrc}
 							className="absolute inset-0 size-full border-0"
 							allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
 							allowFullScreen
@@ -108,7 +110,11 @@ export function HeroDemoVideo({ className }: HeroDemoVideoProps) {
 								decoding="async"
 								fetchPriority="high"
 								className="absolute inset-0 size-full object-cover transition duration-500 ease-out group-hover:scale-[1.02]"
-								onError={() => setThumbSrc(YOUTUBE_THUMB_HQ)}
+								onError={() =>
+									setThumbSrc(
+										`https://i.ytimg.com/vi/${video.youtubeId}/hqdefault.jpg`,
+									)
+								}
 							/>
 
 							{/* Readable gradient over thumbnail */}

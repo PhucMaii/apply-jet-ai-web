@@ -1,41 +1,10 @@
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import { APP_NAME, BRAND_LOGO_SRC, ROUTES, LINKS } from "@/lib/constants"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
 
 type FooterItem =
 	| { label: string; to: string }
 	| { label: string; href: string }
-
-const { footer } = LANDING_COPY
-
-const columns: { title: string; links: FooterItem[] }[] = [
-	{
-		title: "Product",
-		links: [
-			{ label: "How it works", to: `${ROUTES.home}#how-it-works` },
-			{ label: footer.productLinks.features.label, to: footer.productLinks.features.to },
-			{ label: footer.productLinks.wording.label, to: footer.productLinks.wording.to },
-			{ label: "Pricing", to: `${ROUTES.home}#pricing` },
-		],
-	},
-	{
-		title: "Account",
-		links: [
-			{ label: "Sign up", to: ROUTES.signup },
-			{ label: "Log in", to: ROUTES.login },
-			{ label: "Applications", to: ROUTES.applications },
-		],
-	},
-	{
-		title: "Legal",
-		links: [
-			{ label: "Support", to: ROUTES.support },
-			{ label: "Privacy", to: ROUTES.privacy },
-			{ label: "Terms", to: ROUTES.terms },
-			{ label: "Contact", href: LINKS.contactMail },
-		],
-	},
-]
 
 function FooterLink({ item }: { item: FooterItem }) {
 	if ("to" in item) {
@@ -59,6 +28,51 @@ function FooterLink({ item }: { item: FooterItem }) {
 }
 
 export function SiteFooter() {
+	const { pathname } = useLocation()
+	const { footer } = useLandingCopy()
+	const isAdsLanding = pathname === ROUTES.adsLanding
+	const basePath = isAdsLanding ? ROUTES.adsLanding : ROUTES.home
+
+	const productLinks: FooterItem[] = [
+		{ label: "How it works", to: `${basePath}#how-it-works` },
+		{
+			label: footer.productLinks.features.label,
+			to: footer.productLinks.features.to,
+		},
+		{
+			label: footer.productLinks.wording.label,
+			to: footer.productLinks.wording.to,
+		},
+	]
+
+	if (!isAdsLanding) {
+		productLinks.push({ label: "Pricing", to: `${ROUTES.home}#pricing` })
+	}
+
+	const columns: { title: string; links: FooterItem[] }[] = [
+		{
+			title: "Product",
+			links: productLinks,
+		},
+		{
+			title: "Account",
+			links: [
+				{ label: "Sign up", to: ROUTES.signup },
+				{ label: "Log in", to: ROUTES.login },
+				{ label: "Applications", to: ROUTES.applications },
+			],
+		},
+		{
+			title: "Legal",
+			links: [
+				{ label: "Support", to: ROUTES.support },
+				{ label: "Privacy", to: ROUTES.privacy },
+				{ label: "Terms", to: ROUTES.terms },
+				{ label: "Contact", href: LINKS.contactMail },
+			],
+		},
+	]
+
 	return (
 		<footer className="border-t border-border/80 bg-muted/20">
 			<div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
@@ -101,8 +115,12 @@ export function SiteFooter() {
 					</div>
 				</div>
 				<div className="mt-12 flex flex-col gap-2 border-t border-border/60 pt-8 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-					<span>© {new Date().getFullYear()} {APP_NAME}. All rights reserved.</span>
-					<span className="text-muted-foreground/80">{footer.copyrightNote}</span>
+					<span>
+						© {new Date().getFullYear()} {APP_NAME}. All rights reserved.
+					</span>
+					<span className="text-muted-foreground/80">
+						{footer.copyrightNote}
+					</span>
 				</div>
 			</div>
 		</footer>

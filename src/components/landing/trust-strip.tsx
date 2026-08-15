@@ -1,15 +1,17 @@
 import { motion } from "framer-motion"
 import { Briefcase, FileUp, Mail, Monitor } from "lucide-react"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
 
 const trustIcons = [Monitor, FileUp, Briefcase, Mail] as const
 
 export function TrustStrip() {
+	const { trustStrip } = useLandingCopy()
+
 	return (
 		<section className="border-y border-border/60 bg-muted/15">
 			<div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
 				<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-					{LANDING_COPY.trustStrip.map((label, index) => {
+					{trustStrip.map((label, index) => {
 						const Icon = trustIcons[index]
 						return (
 							<motion.div
