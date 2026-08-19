@@ -1,7 +1,7 @@
 import { createContext, useContext, type ReactNode } from "react"
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { LANDING_COPY, type LandingCopy } from "@/lib/landing-copy"
 
-export type LandingCopy = typeof LANDING_COPY
+export type { LandingCopy }
 
 const LandingCopyContext = createContext<LandingCopy>(LANDING_COPY)
 

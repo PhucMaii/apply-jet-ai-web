@@ -20,7 +20,8 @@ export const PGWP_COPY = {
 export const PGWP_PHASE_MESSAGE: Record<PgwpPhase, string> = {
 	healthy: "Steady pace wins. One strong application at a time.",
 	focus: "Your window is open — keep building momentum.",
-	urgent: "Every application counts. You’ve got this.",
+	urgent: "The clock is getting real. Keep sending strong applications.",
+	critical: "Last stretch. Apply today — you’ve got this.",
 	expired:
 		"Your PGWP date has passed. Update it if you renewed — we’re still here for your search.",
 }

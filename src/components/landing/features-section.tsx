@@ -1,18 +1,27 @@
 import { motion } from "framer-motion"
 import {
-	Briefcase,
+	CalendarDays,
 	FileText,
 	Gauge,
-	Mail,
-	Upload,
+	List,
+	Sparkles,
 	Users,
+	type LucideIcon,
 } from "lucide-react"
 import { useLandingCopy } from "@/context/landing-copy-context"
+import type { LandingFeatureIconKey } from "@/lib/landing/landing-section"
 import { cn } from "@/lib/utils"
 
 const easeOutExpo = [0.22, 1, 0.36, 1] as [number, number, number, number]
 
-const featureIcons = [Upload, FileText, Mail, Users, Gauge, Briefcase] as const
+const FEATURE_ICONS: Record<LandingFeatureIconKey, LucideIcon> = {
+	calendar: CalendarDays,
+	gauge: Gauge,
+	list: List,
+	sparkles: Sparkles,
+	fileText: FileText,
+	users: Users,
+}
 
 export function FeaturesSection() {
 	const { features } = useLandingCopy()
@@ -31,7 +40,7 @@ export function FeaturesSection() {
 
 				<div className="mt-12 grid gap-4 md:grid-cols-3">
 					{features.items.map((feature, index) => {
-						const Icon = featureIcons[index]
+						const Icon = FEATURE_ICONS[feature.icon]
 						return (
 							<motion.div
 								key={feature.title}

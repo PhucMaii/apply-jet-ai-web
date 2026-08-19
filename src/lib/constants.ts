@@ -46,7 +46,7 @@ export const LINKS = {
 
 export const META = {
 	title:
-		"ApplyJet — Free AI Resume Builder | Live Score vs Job Description",
+		"ApplyJet — Free Resume Builder for PGWP Holders in Canada",
 	description:
-		"Build your resume free forever with ApplyJet. Score it live against any job description, get free match suggestions, try AI tailoring, generate cover letters, and find HR contacts.",
+		"Track your PGWP expiry, build your resume free, and tailor it for Canadian employers and ATS. Not immigration advice—job application help only.",
 } as const

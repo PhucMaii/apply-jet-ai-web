@@ -15,6 +15,7 @@ function getInitials(name: string) {
 
 export function TestimonialsSection() {
 	const { testimonials } = useLandingCopy()
+	const showSummaryRating = testimonials.showSummaryRating !== false
 
 	return (
 		<section className="py-20 sm:py-24">
@@ -27,11 +28,13 @@ export function TestimonialsSection() {
 						{testimonials.title}
 					</h2>
 					<div className="mt-4 flex flex-wrap items-center gap-3">
-						<StarRating
-							rating={testimonials.summaryRating}
-							size="md"
-							showValue
-						/>
+						{showSummaryRating ? (
+							<StarRating
+								rating={testimonials.summaryRating}
+								size="md"
+								showValue
+							/>
+						) : null}
 						<span className="text-sm text-landing-muted">
 							{testimonials.summaryLabel}
 						</span>
@@ -42,7 +45,13 @@ export function TestimonialsSection() {
 					{testimonials.items.map((item, index) => (
 						<motion.blockquote
 							key={item.name}
-							className="flex h-full flex-col rounded-2xl border border-landing-border bg-landing-paper p-6 shadow-[0_8px_30px_-12px_rgba(26,26,46,0.12)]"
+							className={cn(
+								"flex h-full flex-col rounded-2xl border bg-landing-paper p-6",
+								"shadow-[0_8px_30px_-12px_rgba(26,26,46,0.12)]",
+								item.isPlaceholder
+									? "border-dashed border-landing-border"
+									: "border-landing-border",
+							)}
 							initial={{ opacity: 0, y: 14 }}
 							whileInView={{ opacity: 1, y: 0 }}
 							viewport={{ once: true }}
@@ -53,9 +62,22 @@ export function TestimonialsSection() {
 									className="size-5 shrink-0 text-landing-primary/70"
 									aria-hidden
 								/>
-								<StarRating rating={item.rating} size="sm" />
+								{item.isPlaceholder ? (
+									<span className="rounded-full border border-landing-border bg-landing-sand px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-landing-muted">
+										Placeholder
+									</span>
+								) : (
+									<StarRating rating={item.rating} size="sm" />
+								)}
 							</div>
-							<p className="mt-4 flex-1 text-sm leading-relaxed text-landing-ink">
+							<p
+								className={cn(
+									"mt-4 flex-1 text-sm leading-relaxed",
+									item.isPlaceholder
+										? "text-landing-muted"
+										: "text-landing-ink",
+								)}
+							>
 								&ldquo;{item.quote}&rdquo;
 							</p>
 							<footer className="mt-5 border-t border-landing-border pt-4">
@@ -68,7 +90,7 @@ export function TestimonialsSection() {
 										)}
 										aria-hidden
 									>
-										{getInitials(item.name)}
+										{item.isPlaceholder ? "?" : getInitials(item.name)}
 									</span>
 									<span>
 										<p className="text-sm font-semibold text-landing-ink">

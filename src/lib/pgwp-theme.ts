@@ -2,7 +2,7 @@ import type { PgwpPhase } from "@/lib/pgwp-display"
 
 export const PGWP_THEME = {
 	heroCard:
-		"relative overflow-hidden rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50 via-white to-indigo-50/40 p-6 shadow-sm sm:p-8",
+		"relative overflow-visible rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50 via-white to-indigo-50/40 p-6 shadow-sm sm:p-8",
 	heroIcon:
 		"flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-900/10 text-indigo-900",
 	heroNumber:
@@ -12,7 +12,9 @@ export const PGWP_THEME = {
 	heroMessage:
 		"mt-5 max-w-xl text-sm leading-relaxed text-indigo-950/75 sm:text-[0.9375rem]",
 	watermark:
-		"pointer-events-none absolute bottom-4 right-4 flex items-center gap-1.5 opacity-40",
+		"pointer-events-none absolute bottom-4 left-4 flex items-center gap-1.5 opacity-40",
+	mascotWrap:
+		"relative flex shrink-0 items-end justify-center self-stretch",
 	watermarkText: "text-xs font-semibold tracking-tight text-indigo-900",
 	compactCard:
 		"mb-6 flex flex-col gap-3 rounded-xl border border-indigo-200/70 bg-indigo-50/40 p-4 sm:flex-row sm:items-center sm:justify-between",
@@ -42,6 +44,11 @@ export const PGWP_PHASE_STYLES: Record<
 		heroAccent: "text-amber-950",
 		pill: "border-amber-300/80 bg-amber-50 text-amber-950 hover:bg-amber-100/80",
 		compactBorder: "border-amber-300/70 bg-amber-50/50",
+	},
+	critical: {
+		heroAccent: "text-red-900",
+		pill: "border-red-300/80 bg-red-50 text-red-900 hover:bg-red-100/80",
+		compactBorder: "border-red-300/70 bg-red-50/60",
 	},
 	expired: {
 		heroAccent: "text-neutral-800",

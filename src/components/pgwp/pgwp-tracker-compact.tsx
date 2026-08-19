@@ -1,6 +1,7 @@
 import { useState } from "react"
-import { CalendarDays, ChevronDown, ChevronUp } from "lucide-react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 import { PgwpDateField } from "@/components/pgwp/pgwp-date-field"
+import { PgwpMascot } from "@/components/pgwp/pgwp-mascot"
 import { usePgwpTracker } from "@/context/pgwp-tracker-context"
 import { PGWP_COPY } from "@/lib/pgwp-copy"
 import { PGWP_PHASE_STYLES, PGWP_THEME } from "@/lib/pgwp-theme"
@@ -39,12 +40,12 @@ export function PgwpTrackerCompact() {
 		>
 			<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 				<div className="flex min-w-0 items-start gap-3">
-					<span
-						className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-indigo-900/10 text-indigo-900"
-						aria-hidden
-					>
-						<CalendarDays className="size-4" />
-					</span>
+					<PgwpMascot
+						phase={phase}
+						size="md"
+						decorative
+						className="-mt-1"
+					/>
 					<div className="min-w-0 flex-1">
 						<p className={PGWP_THEME.compactTitle}>{PGWP_COPY.compactTitle}</p>
 						{isConfigured ? (

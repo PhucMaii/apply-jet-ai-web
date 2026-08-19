@@ -1,7 +1,10 @@
 import { Link, useLocation } from "react-router-dom"
 import { BrandLogo } from "@/components/brand/brand-logo"
+import { MapleLeafIcon } from "@/components/brand/maple-leaf-icon"
 import { APP_NAME, ROUTES, LINKS } from "@/lib/constants"
 import { useLandingCopy } from "@/context/landing-copy-context"
+import { getMarketingBasePath } from "@/lib/marketing-routes"
+import { LANDING_SECTION_ID } from "@/lib/landing/landing-section"
 
 type FooterItem =
 	| { label: string; to: string }
@@ -30,24 +33,37 @@ function FooterLink({ item }: { item: FooterItem }) {
 
 export function SiteFooter() {
 	const { pathname } = useLocation()
-	const { footer } = useLandingCopy()
-	const isAdsLanding = pathname === ROUTES.adsLanding
-	const basePath = isAdsLanding ? ROUTES.adsLanding : ROUTES.home
+	const { footer, marketingNav } = useLandingCopy()
+	const basePath = getMarketingBasePath(pathname)
+	const hasPricingNav = marketingNav.some(
+		(item) => item.hash === LANDING_SECTION_ID.pricing,
+	)
 
 	const productLinks: FooterItem[] = [
-		{ label: "How it works", to: `${basePath}#how-it-works` },
+		{ label: "How it works", to: `${basePath}#${LANDING_SECTION_ID.howItWorks}` },
+		{
+			label: footer.productLinks.pgwp.label,
+			to: `${basePath}#${footer.productLinks.pgwp.hash}`,
+		},
 		{
 			label: footer.productLinks.features.label,
-			to: footer.productLinks.features.to,
+			to: `${basePath}#${footer.productLinks.features.hash}`,
 		},
 		{
 			label: footer.productLinks.wording.label,
-			to: footer.productLinks.wording.to,
+			to: `${basePath}#${footer.productLinks.wording.hash}`,
+		},
+		{
+			label: footer.productLinks.faq.label,
+			to: `${basePath}#${footer.productLinks.faq.hash}`,
 		},
 	]
 
-	if (!isAdsLanding) {
-		productLinks.push({ label: "Pricing", to: `${ROUTES.home}#pricing` })
+	if (hasPricingNav) {
+		productLinks.push({
+			label: "Pricing",
+			to: `${basePath}#${LANDING_SECTION_ID.pricing}`,
+		})
 	}
 
 	const columns: { title: string; links: FooterItem[] }[] = [
@@ -110,7 +126,8 @@ export function SiteFooter() {
 					<span>
 						© {new Date().getFullYear()} {APP_NAME}. All rights reserved.
 					</span>
-					<span className="text-muted-foreground/80">
+					<span className="inline-flex items-center gap-1.5 text-muted-foreground/80">
+						<MapleLeafIcon className="size-4" />
 						{footer.copyrightNote}
 					</span>
 				</div>

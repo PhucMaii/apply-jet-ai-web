@@ -5,7 +5,10 @@ import { APP_NAME, ROUTES } from "@/lib/constants"
 import { LANDING_PRIMARY_CTA_BUTTON_CLASS } from "@/lib/landing-copy"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { useLandingCopy } from "@/context/landing-copy-context"
-import { isMarketingRoute } from "@/lib/marketing-routes"
+import {
+	getMarketingBasePath,
+	isMarketingRoute,
+} from "@/lib/marketing-routes"
 import { useAuth } from "@/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
@@ -13,23 +16,15 @@ import { cn } from "@/lib/utils"
 export function SiteHeader() {
 	const { pathname } = useLocation()
 	const { user } = useAuth()
-	const { hero } = useLandingCopy()
+	const { hero, marketingNav } = useLandingCopy()
 	const isMarketing = isMarketingRoute(pathname)
-	const isAdsLanding = pathname === ROUTES.adsLanding
-	const basePath = isAdsLanding ? ROUTES.adsLanding : ROUTES.home
+	const basePath = getMarketingBasePath(pathname)
 	const primaryCta = hero.primaryCta
 
-	const nav = isAdsLanding
-		? [
-				{ href: `${basePath}#how-it-works`, label: "How it works" },
-				{ href: `${basePath}#why-wording`, label: "AI tailoring" },
-				{ href: `${basePath}#features`, label: "What you get" },
-			]
-		: [
-				{ href: `${ROUTES.home}#how-it-works`, label: "How it works" },
-				{ href: `${ROUTES.home}#why-wording`, label: "AI tailoring" },
-				{ href: `${ROUTES.home}#pricing`, label: "Pricing" },
-			]
+	const nav = marketingNav.map((item) => ({
+		href: `${basePath}#${item.hash}`,
+		label: item.label,
+	}))
 
 	return (
 		<header
@@ -42,7 +37,7 @@ export function SiteHeader() {
 		>
 			<div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
 				<Link
-					to={isAdsLanding ? ROUTES.adsLanding : ROUTES.home}
+					to={basePath}
 					className={cn(
 						"group flex items-center gap-2.5 font-display text-lg font-semibold tracking-tight",
 						isMarketing ? "text-landing-ink" : "font-bold text-foreground",

@@ -1,13 +1,5 @@
 import { useEffect } from "react"
-import { HeroSection } from "@/components/landing/hero-section"
-import { TrustStrip } from "@/components/landing/trust-strip"
-import { HowItWorks } from "@/components/landing/how-it-works"
-import { ExperienceBulletsSection } from "@/components/landing/experience-bullets-section"
-import { FeaturesSection } from "@/components/landing/features-section"
-import { WhySection } from "@/components/landing/why-section"
-import { TestimonialsSection } from "@/components/landing/testimonials-section"
-import { AuthCtaSection } from "@/components/landing/auth-cta-section"
-import { FinalCta } from "@/components/landing/final-cta"
+import { LandingPageContent } from "@/components/landing/landing-page-content"
 import { RedditAdsPixel } from "@/components/landing/reddit-ads-pixel"
 import { MarketingPageShell } from "@/components/layout/marketing-page-shell"
 import { SiteFooter } from "@/components/layout/site-footer"
@@ -18,8 +10,7 @@ import { useUser } from "../../hooks/useUser"
 
 /**
  * Paid-ad landing page (`/lp/ads`).
- * Same product story as the homepage, free-everywhere messaging, no pricing.
- * Includes Reddit Ads pixel for campaign attribution.
+ * Same Canada / PGWP story as the homepage, free-everywhere messaging, no pricing.
  */
 export function AdsLandingPage() {
 	const { checkAndRegisterVisitor } = useUser()
@@ -51,15 +42,7 @@ export function AdsLandingPage() {
 			<MarketingPageShell className="flex flex-col">
 				<SiteHeader />
 				<main>
-					<HeroSection />
-					<TrustStrip />
-					<HowItWorks />
-					<ExperienceBulletsSection />
-					<FeaturesSection />
-					<WhySection />
-					<TestimonialsSection />
-					<AuthCtaSection />
-					<FinalCta />
+					<LandingPageContent showPricing={false} />
 				</main>
 				<SiteFooter />
 			</MarketingPageShell>

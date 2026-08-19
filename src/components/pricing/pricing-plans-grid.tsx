@@ -1,4 +1,4 @@
-import { LANDING_COPY } from "@/lib/landing-copy"
+import { useLandingCopy } from "@/context/landing-copy-context"
 import {
 	getLandingPlanAction,
 	getProfilePlanAction,
@@ -87,6 +87,7 @@ function PlanGroup({
 
 export function PricingPlansGrid(props: PricingPlansGridProps) {
 	const { variant, className } = props
+	const { pricing } = useLandingCopy()
 	const currentPlanKey =
 		variant === "profile"
 			? resolveCurrentPlanKey(props.subscription?.plan)
@@ -111,7 +112,7 @@ export function PricingPlansGrid(props: PricingPlansGridProps) {
 	return (
 		<div className={cn("space-y-10", className)}>
 			<PlanGroup
-				title={LANDING_COPY.pricing.monthlyLabel}
+				title={pricing.monthlyLabel}
 				plans={MONTHLY_PRICING_PLANS}
 				variant={variant}
 				gridClassName="lg:grid-cols-2"
@@ -119,7 +120,7 @@ export function PricingPlansGrid(props: PricingPlansGridProps) {
 				getAction={getAction}
 			/>
 			<PlanGroup
-				title={LANDING_COPY.pricing.oneTimeLabel}
+				title={pricing.oneTimeLabel}
 				plans={ONE_TIME_PRICING_PLANS}
 				variant={variant}
 				gridClassName="lg:grid-cols-3"
@@ -135,7 +136,8 @@ export function PricingSectionHeader({
 }: {
 	variant: PricingPlanCardVariant
 }) {
-	const { eyebrow, title, description } = LANDING_COPY.pricing
+	const { pricing } = useLandingCopy()
+	const { eyebrow, title, description, currencyNote } = pricing
 	const isLanding = variant === "landing"
 
 	return (
@@ -166,6 +168,9 @@ export function PricingSectionHeader({
 			>
 				{description}
 			</p>
+			{isLanding && currencyNote ? (
+				<p className="mt-2 text-sm text-landing-muted">{currencyNote}</p>
+			) : null}
 		</div>
 	)
 }

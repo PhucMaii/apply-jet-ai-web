@@ -1,4 +1,9 @@
-export type PgwpPhase = "healthy" | "focus" | "urgent" | "expired"
+export type PgwpPhase =
+	| "healthy"
+	| "focus"
+	| "urgent"
+	| "critical"
+	| "expired"
 
 const MS_PER_DAY = 86_400_000
 
@@ -20,6 +25,7 @@ export function getDaysRemaining(pgwpExpiredAt: string): number {
 
 export function getPgwpPhase(daysRemaining: number): PgwpPhase {
 	if (daysRemaining <= 0) return "expired"
+	if (daysRemaining <= 30) return "critical"
 	if (daysRemaining <= 90) return "urgent"
 	if (daysRemaining <= 180) return "focus"
 	return "healthy"

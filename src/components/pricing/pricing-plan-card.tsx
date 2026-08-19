@@ -27,7 +27,7 @@ const CARD_LAYOUT = {
 	badge: "h-6",
 	title: "min-h-8",
 	description: "min-h-[4.5rem]",
-	price: "h-10",
+	price: "min-h-10",
 	featureRow: "min-h-[2.75rem]",
 	ctaBlock: "min-h-[4.25rem]",
 } as const
@@ -142,28 +142,36 @@ export function PricingPlanCard({
 
 			<div
 				className={cn(
-					"flex items-baseline gap-1",
+					"flex flex-col justify-center gap-1",
 					CARD_LAYOUT.price,
 				)}
 			>
-				<span
-					className={cn(
-						"font-display text-3xl font-extrabold leading-none tracking-tight sm:text-4xl",
-						!isLanding && "text-neutral-900",
-					)}
-				>
-					{plan.price}
-				</span>
-				<span
-					className={cn(
-						"text-sm leading-none",
-						isLanding ? "text-muted-foreground" : "text-neutral-500",
-						!plan.period && "invisible",
-					)}
-					aria-hidden={!plan.period}
-				>
-					{plan.period ?? "/month"}
-				</span>
+				<div className="flex items-baseline gap-1">
+					<span
+						className={cn(
+							"font-display text-3xl font-extrabold leading-none tracking-tight sm:text-4xl",
+							!isLanding && "text-neutral-900",
+						)}
+					>
+						{plan.price}
+					</span>
+					<span
+						className={cn(
+							"text-sm leading-none",
+							isLanding ? "text-muted-foreground" : "text-neutral-500",
+							!plan.period && "invisible",
+						)}
+						aria-hidden={!plan.period}
+					>
+						{plan.period ?? "/month"}
+					</span>
+				</div>
+				{isLanding && plan.priceCad ? (
+					<p className="text-xs text-landing-muted">
+						{plan.priceCad}
+						{plan.period ? ` ${plan.period}` : ""}
+					</p>
+				) : null}
 			</div>
 
 			<ul

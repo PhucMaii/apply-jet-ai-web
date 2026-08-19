@@ -1,6 +1,7 @@
 import { motion, useReducedMotion } from "framer-motion"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { CanadaMadeBadge } from "@/components/landing/canada-made-badge"
 import { HeroDemoVideo } from "@/components/landing/hero-demo-video"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { StarRating } from "@/components/landing/star-rating"
@@ -16,6 +17,14 @@ export function HeroSection() {
 		<section className="relative overflow-hidden pt-10 pb-16 sm:pt-14 sm:pb-24 lg:pt-20 lg:pb-28">
 			<div className="mx-auto grid w-full min-w-0 max-w-6xl items-center gap-12 px-4 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:gap-16 xl:gap-20">
 				<div className="min-w-0 max-w-xl lg:max-w-none">
+					<motion.div
+						initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.45, ease: LANDING_EASE_OUT }}
+						className="mb-5"
+					>
+						<CanadaMadeBadge label={hero.canadaMadeLabel} />
+					</motion.div>
 					<motion.h1
 						initial={reduceMotion ? false : { opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}

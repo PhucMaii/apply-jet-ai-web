@@ -19,6 +19,7 @@ export interface PricingPlan {
 	billingType: PricingBillingType
 	name: string
 	price: string
+	priceCad?: string
 	period?: string
 	desc: string
 	features: readonly string[]

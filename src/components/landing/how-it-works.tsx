@@ -4,6 +4,7 @@ import {
 	LANDING_EASE_OUT,
 	landingRevealViewport,
 } from "@/lib/landing-motion"
+import { LANDING_SECTION_ID } from "@/lib/landing/landing-section"
 import { cn } from "@/lib/utils"
 
 const STEP_NUMBERS = ["01", "02", "03", "04"] as const
@@ -14,7 +15,7 @@ export function HowItWorks() {
 
 	return (
 		<section
-			id="how-it-works"
+			id={LANDING_SECTION_ID.howItWorks}
 			className="scroll-mt-24 border-t border-landing-border/70 bg-landing-sand/50 py-16 sm:py-24"
 		>
 			<div className="mx-auto max-w-6xl px-4 sm:px-6">
