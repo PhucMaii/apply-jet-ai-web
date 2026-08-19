@@ -9,12 +9,14 @@ import {
 	UserRound,
 	X,
 } from "lucide-react"
+import { BrandLogo } from "@/components/brand/brand-logo"
+import { PgwpTrackerPill } from "@/components/pgwp/pgwp-tracker-pill"
 import { Button } from "@/components/ui/button"
 import { PlanBadge } from "@/components/layout/plan-badge"
 import { useUserSubscription } from "@/hooks/use-user-subscription"
 import { PAGE_HEADER_COPY } from "@/lib/page-header-copy"
 import { PAGE_HEADER_THEME } from "@/lib/page-header-theme"
-import { APP_NAME, BRAND_LOGO_SRC, ROUTES } from "@/lib/constants"
+import { APP_NAME, ROUTES } from "@/lib/constants"
 import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { cn } from "@/lib/utils"
 
@@ -141,16 +143,7 @@ export function PageHeader({
 			<div className={PAGE_HEADER_THEME.inner}>
 				<div className={PAGE_HEADER_THEME.toolbar}>
 					<Link to={ROUTES.home} className={PAGE_HEADER_THEME.brand}>
-						<span className={PAGE_HEADER_THEME.brandLogo}>
-							<img
-								src={BRAND_LOGO_SRC}
-								alt=""
-								width={36}
-								height={36}
-								className="size-9 object-contain object-center"
-								decoding="async"
-							/>
-						</span>
+						<BrandLogo size="sm" />
 						<span className={PAGE_HEADER_THEME.brandName}>{APP_NAME}</span>
 					</Link>
 
@@ -177,6 +170,7 @@ export function PageHeader({
 					</nav>
 
 					<div className={PAGE_HEADER_THEME.toolbarActions}>
+						<PgwpTrackerPill />
 						{!isLoadingPlan ? <PlanBadge plan={plan} /> : null}
 
 						<div className={PAGE_HEADER_THEME.userChip}>

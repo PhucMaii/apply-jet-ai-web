@@ -4,8 +4,6 @@ export const PAGE_HEADER_THEME = {
 	toolbar:
 		"flex h-14 items-center justify-between gap-3 border-b border-neutral-100 sm:h-16",
 	brand: "flex min-w-0 items-center gap-2.5",
-	brandLogo:
-		"flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-neutral-200",
 	brandName:
 		"truncate font-display text-base font-semibold tracking-tight text-neutral-900",
 	desktopNav: "hidden items-center gap-0.5 md:flex",

@@ -1,9 +1,10 @@
 import { Link } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { ApplicationCreateForm } from "@/components/applications/application-create-form"
+import { BrandLogo } from "@/components/brand/brand-logo"
 import { APPLICATION_CREATE_COPY } from "@/lib/application-create-copy"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
-import { APP_NAME, BRAND_LOGO_SRC, ROUTES } from "@/lib/constants"
+import { APP_NAME, ROUTES } from "@/lib/constants"
 import { useCreateApplication } from "@/hooks/use-create-application"
 import { cn } from "@/lib/utils"
 
@@ -33,16 +34,7 @@ export function ApplicationCreatePage() {
 							{APPLICATION_CREATE_COPY.backLabel}
 						</Link>
 						<div className="flex items-center gap-2">
-							<span className="flex size-9 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-neutral-200">
-								<img
-									src={BRAND_LOGO_SRC}
-									alt=""
-									width={36}
-									height={36}
-									className="size-9 object-contain object-center"
-									decoding="async"
-								/>
-							</span>
+							<BrandLogo size="sm" />
 							<p className={APPLICATIONS_THEME.brandLabel}>{APP_NAME}</p>
 						</div>
 						<div>

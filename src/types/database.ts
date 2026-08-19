@@ -159,6 +159,26 @@ export interface Database {
           created_at?: string;
         }
       >;
+      pgwp_tracker: BaseTable<
+        {
+          id: string;
+          user_id: string;
+          pgwp_expired_at: string;
+          created_at: string;
+        },
+        {
+          id?: string;
+          user_id: string;
+          pgwp_expired_at: string;
+          created_at?: string;
+        },
+        {
+          id?: string;
+          user_id?: string;
+          pgwp_expired_at?: string;
+          created_at?: string;
+        }
+      >;
       user_subscriptions: BaseTable<
         {
           user_id: string;
@@ -582,3 +602,5 @@ export type UserSkillRow = Database["public"]["Tables"]["user_skills"]["Row"];
 export type UserSkillCategoryRow =
   Database["public"]["Tables"]["user_skill_categories"]["Row"];
 export type UserProjectRow = Database["public"]["Tables"]["user_projects"]["Row"];
+export type PgwpTrackerRow =
+  Database["public"]["Tables"]["pgwp_tracker"]["Row"];

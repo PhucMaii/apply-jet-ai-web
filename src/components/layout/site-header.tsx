@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom"
 import { motion } from "framer-motion"
-import { APP_NAME, BRAND_LOGO_SRC, ROUTES } from "@/lib/constants"
+import { BrandLogo } from "@/components/brand/brand-logo"
+import { APP_NAME, ROUTES } from "@/lib/constants"
 import { LANDING_PRIMARY_CTA_BUTTON_CLASS } from "@/lib/landing-copy"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { useLandingCopy } from "@/context/landing-copy-context"
@@ -47,15 +48,8 @@ export function SiteHeader() {
 						isMarketing ? "text-landing-ink" : "font-bold text-foreground",
 					)}
 				>
-					<span className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-white/20">
-						<img
-							src={BRAND_LOGO_SRC}
-							alt=""
-							width={40}
-							height={40}
-							className="size-10 object-contain object-center"
-							decoding="async"
-						/>
+					<span className="relative shrink-0">
+						<BrandLogo size="md" className="relative z-[1]" />
 						<motion.span
 							className="pointer-events-none absolute inset-0 rounded-xl bg-primary/15 opacity-0 transition-opacity group-hover:opacity-100"
 							layoutId="logo-glow"

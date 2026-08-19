@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom"
-import { APP_NAME, BRAND_LOGO_SRC, ROUTES, LINKS } from "@/lib/constants"
+import { BrandLogo } from "@/components/brand/brand-logo"
+import { APP_NAME, ROUTES, LINKS } from "@/lib/constants"
 import { useLandingCopy } from "@/context/landing-copy-context"
 
 type FooterItem =
@@ -79,16 +80,7 @@ export function SiteFooter() {
 				<div className="grid gap-10 md:grid-cols-[1.2fr_2fr]">
 					<div>
 						<div className="flex items-center gap-3">
-							<span className="flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white ring-1 ring-border/60">
-								<img
-									src={BRAND_LOGO_SRC}
-									alt=""
-									width={44}
-									height={44}
-									className="size-11 object-contain object-center"
-									decoding="async"
-								/>
-							</span>
+							<BrandLogo size="lg" />
 							<p className="font-display text-xl font-bold tracking-tight">
 								{APP_NAME}
 							</p>

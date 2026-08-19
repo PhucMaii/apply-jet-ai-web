@@ -155,3 +155,10 @@ export interface TailoredBlockPayload {
 	is_new?: boolean
 	is_removed?: boolean
 }
+
+export interface PGWPTracker {
+	id: string
+	user_id: string
+	created_at: string
+	pgwp_expired_at: string
+}

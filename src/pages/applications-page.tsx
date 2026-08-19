@@ -1,6 +1,7 @@
 import { Loader2 } from "lucide-react"
 import { ApplicationsCardGrid } from "@/components/applications/applications-card-grid"
 import { ApplicationsEmptyState } from "@/components/applications/applications-empty-state"
+import { PgwpTrackerHero } from "@/components/pgwp/pgwp-tracker-hero"
 import { PageHeader } from "@/components/page-header"
 import { useAuth } from "@/context/auth-context"
 import { useApplications } from "@/hooks/use-applications"
@@ -35,6 +36,10 @@ export function ApplicationsPage() {
 			/>
 
 			<main className={APPLICATIONS_THEME.main}>
+				<div className="mb-6">
+					<PgwpTrackerHero />
+				</div>
+
 				{loadError ? (
 					<p className={APPLICATIONS_THEME.error} role="alert">
 						{loadError}

@@ -10,6 +10,7 @@ import {
 } from "@/lib/profile-section"
 import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { PgwpTrackerCompact } from "@/components/pgwp/pgwp-tracker-compact"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card"
 import { cn } from "@/lib/utils"
 import { UserRound } from "lucide-react"
@@ -124,6 +125,8 @@ export function ProfileAutofillWorkspace({
 			</TabsList>
 
 			<div className={DASHBOARD_THEME.contentPanel}>
+				<PgwpTrackerCompact />
+
 				<ResumeSection
 					userId={userId}
 					refetchProfile={refetchProfile}

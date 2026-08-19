@@ -1,7 +1,10 @@
 export const APP_NAME = "ApplyJet AI"
 
-/** Served from `public/logo.png` */
-export const BRAND_LOGO_SRC = "/logo.png"
+/** Brand mark (icon only) — `public/applyjet-mark.svg` */
+export const BRAND_LOGO_SRC = "/applyjet-mark.svg"
+
+/** Full wordmark with tagline — `public/applyjet-logo-full.svg` */
+export const BRAND_LOGO_FULL_SRC = "/applyjet-logo-full.svg"
 
 /** Hero illustration — person celebrating a job offer */
 export const HERO_OFFER_IMAGE_SRC = "/hero-offer-celebration.png"
