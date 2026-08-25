@@ -4,7 +4,7 @@ export const PGWP_THEME = {
 	heroCard:
 		"relative overflow-visible rounded-2xl border border-indigo-200/80 bg-gradient-to-br from-indigo-50 via-white to-indigo-50/40 p-6 shadow-sm sm:p-8",
 	heroIcon:
-		"flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-900/10 text-indigo-900",
+		"flex size-10 shrink-0 items-center justify-center rounded-xl bg-indigo-900/10 text-lg leading-none",
 	heroNumber:
 		"font-display text-6xl font-bold tabular-nums tracking-tight text-indigo-950 sm:text-7xl",
 	heroLabel: "mt-1 text-base font-medium text-indigo-900/80 sm:text-lg",

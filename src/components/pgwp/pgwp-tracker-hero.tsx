@@ -1,10 +1,12 @@
 import { useState } from "react"
-import { CalendarDays, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { BrandLogo } from "@/components/brand/brand-logo"
 import { PgwpDateField } from "@/components/pgwp/pgwp-date-field"
+import { PgwpDaysBadge } from "@/components/pgwp/pgwp-days-badge"
 import { PgwpMascot } from "@/components/pgwp/pgwp-mascot"
 import { usePgwpTracker } from "@/context/pgwp-tracker-context"
 import { PGWP_COPY } from "@/lib/pgwp-copy"
+import { formatPillLabel } from "@/lib/pgwp-display"
 import { PGWP_PHASE_STYLES, PGWP_THEME } from "@/lib/pgwp-theme"
 import { cn } from "@/lib/utils"
 
@@ -18,6 +20,7 @@ export function PgwpTrackerHero() {
 		expiryLabel,
 		message,
 		phase,
+		daysRemaining,
 		tracker,
 		saveExpiryDate,
 	} = usePgwpTracker()
@@ -48,7 +51,7 @@ export function PgwpTrackerHero() {
 				<div className="min-w-0 flex-1">
 					<div className="flex items-start gap-3">
 						<span className={PGWP_THEME.heroIcon} aria-hidden>
-							<CalendarDays className="size-5" />
+							{PGWP_COPY.leaf}
 						</span>
 						<div className="min-w-0 flex-1">
 							{showSetup ? (
@@ -75,6 +78,12 @@ export function PgwpTrackerHero() {
 								</div>
 							) : (
 								<>
+									<PgwpDaysBadge
+										label={formatPillLabel(daysRemaining ?? 0)}
+										phase={phase}
+										size="md"
+										className="mb-3"
+									/>
 									<p
 										className={cn(
 											PGWP_THEME.heroNumber,

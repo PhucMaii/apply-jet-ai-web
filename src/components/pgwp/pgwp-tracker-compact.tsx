@@ -1,9 +1,11 @@
 import { useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 import { PgwpDateField } from "@/components/pgwp/pgwp-date-field"
+import { PgwpDaysBadge } from "@/components/pgwp/pgwp-days-badge"
 import { PgwpMascot } from "@/components/pgwp/pgwp-mascot"
 import { usePgwpTracker } from "@/context/pgwp-tracker-context"
 import { PGWP_COPY } from "@/lib/pgwp-copy"
+import { formatPillLabel } from "@/lib/pgwp-display"
 import { PGWP_PHASE_STYLES, PGWP_THEME } from "@/lib/pgwp-theme"
 import { cn } from "@/lib/utils"
 
@@ -16,6 +18,7 @@ export function PgwpTrackerCompact() {
 		expiryLabel,
 		tracker,
 		phase,
+		daysRemaining,
 		saveExpiryDate,
 	} = usePgwpTracker()
 	const [isExpanded, setIsExpanded] = useState(false)
@@ -49,11 +52,18 @@ export function PgwpTrackerCompact() {
 					<div className="min-w-0 flex-1">
 						<p className={PGWP_THEME.compactTitle}>{PGWP_COPY.compactTitle}</p>
 						{isConfigured ? (
-							<p className={cn(PGWP_THEME.compactMeta, "mt-0.5")}>
-								{daysLabel}
-								<span className="text-indigo-900/40"> · </span>
-								{PGWP_COPY.expiryPrefix} {expiryLabel}
-							</p>
+							<div className="mt-1.5 flex flex-wrap items-center gap-2">
+								<PgwpDaysBadge
+									label={formatPillLabel(daysRemaining ?? 0)}
+									phase={phase}
+									size="sm"
+								/>
+								<p className={PGWP_THEME.compactMeta}>
+									{daysLabel}
+									<span className="text-indigo-900/40"> · </span>
+									{PGWP_COPY.expiryPrefix} {expiryLabel}
+								</p>
+							</div>
 						) : (
 							<p className={cn(PGWP_THEME.compactMeta, "mt-0.5")}>
 								{PGWP_COPY.compactUnset}

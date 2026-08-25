@@ -1,19 +1,28 @@
 import type { PgwpPhase } from "@/lib/pgwp-display"
 
+export const PGWP_LEAF = "🍁"
+
+export function withPgwpLeaf(text: string): string {
+	if (text.startsWith(PGWP_LEAF)) return text
+	return `${PGWP_LEAF} ${text}`
+}
+
 export const PGWP_COPY = {
-	emptyTitle: "Know your PGWP timeline",
+	leaf: PGWP_LEAF,
+	emptyTitle: `${PGWP_LEAF} Know your PGWP timeline`,
 	emptyDescription:
 		"Add your expiry date once — we’ll keep it visible while you apply. Most of us only check when panic hits.",
 	emptyCta: "Save expiry date",
 	emptyHint: "Find this on your PGWP letter or IRCC account.",
+	expiryDateLabel: `${PGWP_LEAF} PGWP expiry date`,
 	expiryPrefix: "Expires",
 	updateDate: "Update date",
 	cancelEdit: "Cancel",
 	saveDate: "Save",
 	saving: "Saving…",
 	pillUnset: "Set PGWP date",
-	compactUnset: "Add your PGWP expiry date",
-	compactTitle: "PGWP timeline",
+	compactUnset: `${PGWP_LEAF} Add your PGWP expiry date`,
+	compactTitle: `${PGWP_LEAF} PGWP timeline`,
 	watermark: "ApplyJet",
 } as const
 

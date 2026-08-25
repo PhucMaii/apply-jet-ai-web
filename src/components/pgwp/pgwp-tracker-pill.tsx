@@ -1,5 +1,4 @@
 import { Link, useLocation } from "react-router-dom"
-import { CalendarDays } from "lucide-react"
 import { usePgwpTracker } from "@/context/pgwp-tracker-context"
 import { PGWP_COPY } from "@/lib/pgwp-copy"
 import { formatPillLabel } from "@/lib/pgwp-display"
@@ -20,7 +19,6 @@ export function PgwpTrackerPill() {
 		: `${ROUTES.applications}#pgwp-tracker`
 
 	const phaseStyles = phase ? PGWP_PHASE_STYLES[phase] : null
-
 	const label = isConfigured
 		? formatPillLabel(daysRemaining ?? 0)
 		: PGWP_COPY.pillUnset
@@ -32,19 +30,27 @@ export function PgwpTrackerPill() {
 			: PGWP_THEME.pillUnset,
 	)
 
+	const content = (
+		<>
+			<span aria-hidden>{PGWP_COPY.leaf}</span>
+			<span>{label}</span>
+		</>
+	)
+
 	if (isApplications || isProfile) {
 		return (
-			<a href={isProfile ? "#pgwp-tracker-compact" : "#pgwp-tracker"} className={className}>
-				<CalendarDays className="size-3" aria-hidden />
-				<span>{label}</span>
+			<a
+				href={isProfile ? "#pgwp-tracker-compact" : "#pgwp-tracker"}
+				className={className}
+			>
+				{content}
 			</a>
 		)
 	}
 
 	return (
 		<Link to={href} className={className}>
-			<CalendarDays className="size-3" aria-hidden />
-			<span>{label}</span>
+			{content}
 		</Link>
 	)
 }

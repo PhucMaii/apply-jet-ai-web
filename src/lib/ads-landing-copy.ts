@@ -5,6 +5,7 @@ import {
 	LANDING_PRIMARY_CTA,
 	type LandingCopy,
 } from "@/lib/landing-copy"
+import { withPgwpLeaf } from "@/lib/pgwp-copy"
 
 const ADS_NO_CREDIT_CARD_NOTE =
 	"100% free · PGWP tracker included · No credit card" as const
@@ -35,14 +36,14 @@ export const ADS_LANDING_COPY: LandingCopy = {
 		},
 	},
 	trustStrip: [
-		"PGWP countdown—free on your dashboard",
+		withPgwpLeaf("PGWP countdown—free on your dashboard"),
 		"Written for Canadian employers and ATS",
 		"Free live score vs any job posting",
 		"Resume help only — not immigration advice",
 	],
 	marketingNav: [
 		{ hash: LANDING_SECTION_ID.howItWorks, label: "How it works" },
-		{ hash: LANDING_SECTION_ID.pgwpTracker, label: "PGWP tracker" },
+		{ hash: LANDING_SECTION_ID.pgwpTracker, label: withPgwpLeaf("PGWP tracker") },
 		{ hash: LANDING_SECTION_ID.whyWording, label: "AI tailoring" },
 		{ hash: LANDING_SECTION_ID.features, label: "What you get" },
 		{ hash: LANDING_SECTION_ID.faq, label: "FAQ" },
@@ -58,7 +59,7 @@ export const ADS_LANDING_COPY: LandingCopy = {
 				body: "Sign up with email or Google. Your free resume workspace is ready right away—nothing to install, nothing to buy.",
 			},
 			{
-				title: "Add your PGWP expiry date",
+				title: withPgwpLeaf("Add your PGWP expiry date"),
 				body: "Enter it once, free. You’ll see days remaining while you apply—so the window stays visible.",
 			},
 			{
@@ -89,7 +90,7 @@ export const ADS_LANDING_COPY: LandingCopy = {
 		with: {
 			title: "Free for you—built for this search in Canada",
 			items: [
-				"PGWP tracker free on the page you use every day",
+				withPgwpLeaf("PGWP tracker free on your dashboard"),
 				"Free live scoring against each job description",
 				"Free suggestions and free AI to match Canadian postings",
 				"Cover letters and hiring contacts included so you can apply smarter",

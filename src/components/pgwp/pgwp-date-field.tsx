@@ -46,7 +46,7 @@ export function PgwpDateField({
 		>
 			<div className="min-w-0 flex-1 space-y-1.5">
 				<Label htmlFor="pgwp-expiry-date" className="text-sm text-indigo-950/80">
-					PGWP expiry date
+					{PGWP_COPY.expiryDateLabel}
 				</Label>
 				<Input
 					id="pgwp-expiry-date"

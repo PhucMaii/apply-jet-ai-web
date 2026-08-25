@@ -1,5 +1,6 @@
 import { LANDING_SECTION_ID } from "@/lib/landing/landing-section"
 import type { ExperienceBulletTierKey } from "@/lib/landing/landing-section"
+import { withPgwpLeaf } from "@/lib/pgwp-copy"
 
 export type { ExperienceBulletTierKey } from "@/lib/landing/landing-section"
 
@@ -92,14 +93,14 @@ export const LANDING_COPY = {
 		},
 	},
 	trustStrip: [
-		"PGWP countdown on your dashboard",
+		withPgwpLeaf("PGWP countdown on your dashboard"),
 		"Written for Canadian employers and ATS",
 		"Free live score vs any job posting",
 		"Resume help only — not immigration advice",
 	],
 	marketingNav: [
 		{ hash: LANDING_SECTION_ID.howItWorks, label: "How it works" },
-		{ hash: LANDING_SECTION_ID.pgwpTracker, label: "PGWP tracker" },
+		{ hash: LANDING_SECTION_ID.pgwpTracker, label: withPgwpLeaf("PGWP tracker") },
 		{ hash: LANDING_SECTION_ID.whyWording, label: "AI tailoring" },
 		{ hash: LANDING_SECTION_ID.features, label: "What you get" },
 		{ hash: LANDING_SECTION_ID.pricing, label: "Pricing" },
@@ -107,13 +108,14 @@ export const LANDING_COPY = {
 	],
 	pgwpFeature: {
 		sectionId: LANDING_SECTION_ID.pgwpTracker,
-		eyebrow: "PGWP tracker",
+		eyebrow: withPgwpLeaf("PGWP tracker"),
 		title: "See your days left every time you sit down to apply.",
 		description:
 			"Add your PGWP expiry date once. We keep it visible on your applications page—and as a small reminder in the header—so the clock stays honest without taking over your day. The beaver beside your countdown picks up speed as the window gets shorter. It’s a planning aid, not a status check with IRCC.",
 		preview: {
 			daysValue: "142",
 			daysLabel: "days left on your PGWP",
+			daysBadge: "142d left",
 			expiryLabel: "Expires August 18, 2027",
 			message: "Your window is open — keep building momentum.",
 			mascotPhase: "focus" as const,
@@ -150,7 +152,7 @@ export const LANDING_COPY = {
 				body: "Sign up with email or Google. Your resume workspace is ready right away—nothing to install.",
 			},
 			{
-				title: "Add your PGWP expiry date",
+				title: withPgwpLeaf("Add your PGWP expiry date"),
 				body: "Enter it once. You’ll see days remaining while you apply—so the window stays visible, not something you check in a panic.",
 			},
 			{
@@ -287,7 +289,7 @@ export const LANDING_COPY = {
 			"Build and edit at no cost. Keep your PGWP date in view. Score against Canadian job descriptions, get free suggestions, try AI when you want a rewrite, then generate cover letters and find hiring contacts.",
 		items: [
 			{
-				title: "PGWP tracker in your dashboard",
+				title: withPgwpLeaf("PGWP tracker in your dashboard"),
 				body: "Save your expiry date once. See days remaining on Applications and a compact reminder in the header while you apply.",
 				className: "md:col-span-2",
 				icon: "calendar" as const,
@@ -400,7 +402,7 @@ export const LANDING_COPY = {
 				period: "/month",
 				desc: "Free forever builder—plus PGWP tracker, free live scoring, match suggestions, and AI tries to start.",
 				features: [
-					"PGWP tracker",
+					withPgwpLeaf("PGWP tracker"),
 					"Resume builder—free forever",
 					"Free live score vs job description",
 					"Free core match suggestions",
@@ -536,7 +538,7 @@ export const LANDING_COPY = {
 				hash: LANDING_SECTION_ID.whyWording,
 			},
 			pgwp: {
-				label: "PGWP tracker",
+				label: withPgwpLeaf("PGWP tracker"),
 				hash: LANDING_SECTION_ID.pgwpTracker,
 			},
 			faq: {
