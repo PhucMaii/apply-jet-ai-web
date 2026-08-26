@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom"
 import { BrandLogo } from "@/components/brand/brand-logo"
 import { MapleLeafIcon } from "@/components/brand/maple-leaf-icon"
-import { APP_NAME, ROUTES, LINKS } from "@/lib/constants"
+import { APP_NAME, ROUTES, LINKS, blogCategoryPath } from "@/lib/constants"
+import { BLOG_CATEGORY_SLUG } from "@/lib/blog"
 import { useLandingCopy } from "@/context/landing-copy-context"
 import { getMarketingBasePath } from "@/lib/marketing-routes"
 import { LANDING_SECTION_ID } from "@/lib/landing/landing-section"
@@ -36,7 +37,7 @@ export function SiteFooter() {
 	const { footer, marketingNav } = useLandingCopy()
 	const basePath = getMarketingBasePath(pathname)
 	const hasPricingNav = marketingNav.some(
-		(item) => item.hash === LANDING_SECTION_ID.pricing,
+		(item) => item.hash === LANDING_SECTION_ID.howItWorks,
 	)
 
 	const productLinks: FooterItem[] = [
@@ -72,6 +73,24 @@ export function SiteFooter() {
 			links: productLinks,
 		},
 		{
+			title: "Resources",
+			links: [
+				{ label: "Blog", to: ROUTES.blog },
+				{
+					label: "ATS Resume",
+					to: blogCategoryPath(BLOG_CATEGORY_SLUG.atsResume),
+				},
+				{
+					label: "PGWP Guide",
+					to: blogCategoryPath(BLOG_CATEGORY_SLUG.pgwpGuide),
+				},
+				{
+					label: "Tool Comparison",
+					to: blogCategoryPath(BLOG_CATEGORY_SLUG.toolComparison),
+				},
+			],
+		},
+		{
 			title: "Account",
 			links: [
 				{ label: "Sign up", to: ROUTES.signup },
@@ -105,7 +124,7 @@ export function SiteFooter() {
 							{footer.tagline}
 						</p>
 					</div>
-					<div className="grid grid-cols-2 gap-8 sm:grid-cols-3">
+					<div className="grid grid-cols-2 gap-8 sm:grid-cols-2 lg:grid-cols-4">
 						{columns.map((col) => (
 							<div key={col.title}>
 								<p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">

@@ -25,10 +25,21 @@ export const ROUTES = {
 	terms: "/terms",
 	support: "/support",
 	adsLanding: "/lp/ads",
+	blog: "/blog",
+	blogCategory: "/blog/category/:categorySlug",
+	blogPost: "/blog/:slug",
 } as const
 
 export function applicationDetailPath(applicationId: string) {
 	return `/applications/${applicationId}`
+}
+
+export function blogPostPath(slug: string) {
+	return `/blog/${slug}`
+}
+
+export function blogCategoryPath(categorySlug: string) {
+	return `/blog/category/${categorySlug}`
 }
 
 /** Supabase Edge Function names for Stripe billing */

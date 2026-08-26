@@ -102,9 +102,6 @@ export const LANDING_COPY = {
 		{ hash: LANDING_SECTION_ID.howItWorks, label: "How it works" },
 		{ hash: LANDING_SECTION_ID.pgwpTracker, label: withPgwpLeaf("PGWP tracker") },
 		{ hash: LANDING_SECTION_ID.whyWording, label: "AI tailoring" },
-		{ hash: LANDING_SECTION_ID.features, label: "What you get" },
-		{ hash: LANDING_SECTION_ID.pricing, label: "Pricing" },
-		{ hash: LANDING_SECTION_ID.faq, label: "FAQ" },
 	],
 	pgwpFeature: {
 		sectionId: LANDING_SECTION_ID.pgwpTracker,

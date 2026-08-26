@@ -12,6 +12,9 @@ import { ProfilePage } from "@/pages/profile-page"
 import { PrivacyPage } from "@/pages/privacy-page"
 import { TermsPage } from "@/pages/terms-page"
 import { SupportPage } from "@/pages/support-page"
+import { BlogPage } from "@/pages/blog-page"
+import { BlogCategoryPage } from "@/pages/blog-category-page"
+import { BlogPostPage } from "@/pages/blog-post-page"
 import { AuthCallbackPage } from "@/pages/auth-callback-page"
 
 export function AppRoutes() {
@@ -25,6 +28,9 @@ export function AppRoutes() {
 			<Route path={ROUTES.privacy} element={<PrivacyPage />} />
 			<Route path={ROUTES.terms} element={<TermsPage />} />
 			<Route path={ROUTES.support} element={<SupportPage />} />
+			<Route path={ROUTES.blog} element={<BlogPage />} />
+			<Route path={ROUTES.blogCategory} element={<BlogCategoryPage />} />
+			<Route path={ROUTES.blogPost} element={<BlogPostPage />} />
 			<Route
 				path={ROUTES.applications}
 				element={

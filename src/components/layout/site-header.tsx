@@ -82,6 +82,15 @@ export function SiteHeader() {
 						className="hidden sm:inline-flex"
 						asChild
 					>
+						<Link to={ROUTES.blog}>Blog</Link>
+					</Button>
+					<Button
+						variant="ghost"
+						surface={isMarketing ? "light" : "dark"}
+						size="sm"
+						className="hidden sm:inline-flex"
+						asChild
+					>
 						<Link to={ROUTES.support}>Support</Link>
 					</Button>
 					{user ? (
