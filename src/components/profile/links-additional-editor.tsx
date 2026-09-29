@@ -43,7 +43,7 @@ export function LinksAdditionalEditor({
 	const isHydratedRef = useRef(false)
 
 	const { control, register, handleSubmit, formState: { isDirty } } = useForm<UserAdditionalInfoRow>({
-		defaultValues: additionalInfo ?? { languages: "", certifications: "" },
+		defaultValues: additionalInfo || { languages: [], certifications: [] },
 		mode: "onTouched",
 	})
 

@@ -42,10 +42,10 @@ export function emptyWorkExperience(userId: string): UserWorkExperienceRow {
 		start_date: null,
 		end_date: null,
 		currently_working: false,
-		description: null,
+		description: "",
 		created_at: "",
-		company: null,
-		title: null,
+		company: "",
+		title: "",
 		employment_type: null,
 		updated_at: "",
 	}
@@ -55,21 +55,21 @@ export function emptyEducation(userId: string): UserEducationRow {
 	return {
 		id: "",
 		user_id: userId,
-		degree: null,
+		degree: "",
 		field_of_study: null,
 		start_date: null,
 		end_date: null,
 		gpa: null,
-		description: null,
+		description: "",
 		created_at: "",
-		school: null,
+		school: "",
 		updated_at: "",
 	}
 }
 
 export function emptyProject(userId: string): UserProjectRow {
 	return {
-		id: "",
+		id: 0,
 		user_id: userId,
 		project_name: "",
 		start_date: "",

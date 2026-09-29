@@ -57,7 +57,7 @@ export function filterApplicationsByStatus(
 	resolveStatus: (raw: string) => ApplicationStatus,
 ): ApplicationWithDocuments[] {
 	if (statusFilter === "all") return rows
-	return rows.filter((row) => resolveStatus(row.status) === statusFilter)
+	return rows.filter((row) => resolveStatus(row.status || "pending") === statusFilter)
 }
 
 export function countApplicationsByStatus(
@@ -73,7 +73,7 @@ export function countApplicationsByStatus(
 	}
 
 	for (const row of rows) {
-		const status = resolveStatus(row.status)
+		const status = resolveStatus(row.status || "pending")
 		counts[status] += 1
 	}
 

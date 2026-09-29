@@ -124,16 +124,3 @@ Deno.serve(async (req) => {
 
   return jsonResponse({ message: "First-application email sent" });
 })
-
-/* To invoke locally:
-
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/email-after-first-application' \
-    --header 'Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImI4MTI2OWYxLTIxZDgtNGYyZS1iNzE5LWMyMjQwYTg0MGQ5MCIsInR5cCI6ImFub24iLCJleHAiOjIxMDA0MDI4NDh9.9QF-IhZ4xAxc5sompzsLL1MjZrbgVtGR1DvpwyjGM3vUlzJ7hj-74hT3tKUZIVlviRT94cLus-3kW5WGIr0rdQ' \
-    --header 'Content-Type: application/json' \
-    --header 'X-Secret-Key: YOUR_SECRET' \
-    --data '{"userId":"USER_UUID"}'
-
-*/

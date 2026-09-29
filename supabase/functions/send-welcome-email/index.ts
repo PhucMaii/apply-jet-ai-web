@@ -91,15 +91,3 @@ Deno.serve(async (req) => {
 
   return jsonResponse({ message: "Welcome email sent" });
 })
-
-/* To invoke locally:
-
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/send-welcome-email' \
-    --header 'Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImI4MTI2OWYxLTIxZDgtNGYyZS1iNzE5LWMyMjQwYTg0MGQ5MCIsInR5cCI6ImFub24iLCJleHAiOjIxMDAyMzUzNjl9.9Geddt1-3mfpNmtZCXvCj2xRX2U6Nj__pG4Ds_J6gaP0Vyiff9ws9ENqP4PoQ1Ay-Z7e2NRE705TGdH9iMRCxA' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
-
-*/

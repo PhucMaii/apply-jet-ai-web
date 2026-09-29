@@ -52,7 +52,7 @@ export function ApplicationCard({
 	const { hasCover } = getApplicationDocumentFlags(app)
 	const descriptionPreview = getJobDescriptionPreview(app.job_description)
 	const companyInitials = getApplicationCompanyInitials(app.company_name)
-	const addedLabel = formatApplicationAddedRelative(app.created_at)
+	const addedLabel = formatApplicationAddedRelative(app.created_at || "")
 	const jobTitle = app.job_title?.trim() || "Untitled role"
 	const companyName = app.company_name?.trim() || "Unknown company"
 
@@ -193,8 +193,8 @@ export function ApplicationCard({
 
 					<DeleteApplicationControl
 						applicationId={app.id}
-						jobTitle={app.job_title}
-						companyName={app.company_name}
+						jobTitle={app.job_title || ""}
+						companyName={app.company_name || ""}
 						isDeleting={isDeleting}
 						onDelete={onDelete}
 						variant="table"

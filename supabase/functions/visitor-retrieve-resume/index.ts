@@ -39,15 +39,3 @@ Deno.serve(async (req: any) => {
 
   return jsonResponse({ resume }, 200);
 });
-
-/* To invoke locally:
-
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/visitor-retrieve-resume' \
-    --header 'Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImI4MTI2OWYxLTIxZDgtNGYyZS1iNzE5LWMyMjQwYTg0MGQ5MCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjIwOTk0MzI1NDN9.MdFWDJIpz8kqNYjImXVqfDPuqHiL-sptpjdVOpn6Dnt6BHrzx5ZUk_6AnCgzxVNSiQDqVzGF1zdnftqk8cGOKw' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
-
-*/

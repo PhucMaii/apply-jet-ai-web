@@ -38,7 +38,7 @@ export function ProjectRowEditor({
 	})
 
 	const handleValidSave = async (data: UserProjectRow) => {
-		const result = await onSave(row.id, data)
+		const result = await onSave(row.id.toString(), data)
 		if (result.success) {
 			toast.success(result.message)
 			return
@@ -96,7 +96,7 @@ export function ProjectRowEditor({
 			<ConfirmModal
 				isOpen={isOpenConfirmRemove}
 				onClose={() => setIsOpenConfirmRemove(false)}
-				onConfirm={() => onRemove(row.id)}
+				onConfirm={() => onRemove(row.id.toString())}
 				title="Remove project"
 				message="Are you sure you want to remove this project? This action cannot be undone."
 				successMessage="Project removed successfully"

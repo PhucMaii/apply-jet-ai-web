@@ -13,8 +13,8 @@ export function toApplicationDetailForm(
 ): ApplicationDetailForm {
 	return {
 		id: row.id,
-		jobTitle: row.job_title,
-		companyName: row.company_name,
+		jobTitle: row.job_title ?? "",
+		companyName: row.company_name ?? "",
 		jobUrl: row.job_url ?? "",
 		jobDescription: row.job_description ?? "",
 	}

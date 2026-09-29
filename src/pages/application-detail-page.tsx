@@ -109,8 +109,8 @@ export function ApplicationDetailPage() {
 			<main className="flex min-h-0 flex-1 flex-col">
 				<ApplicationDetailDocuments
 					form={form}
-					status={resolveStatus(record.status)}
-					createdAt={record.created_at}
+					status={resolveStatus(record.status || "pending")}
+					createdAt={record.created_at || ""}
 					generatedResume={record.generatedResume}
 					generatedCoverLetter={record.generatedCoverLetter}
 					recruiterEmails={record.recruiterEmails}

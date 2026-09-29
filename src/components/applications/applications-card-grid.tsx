@@ -117,7 +117,7 @@ export function ApplicationsCardGrid({
 			) : (
 				<div className={APPLICATIONS_THEME.applicationCardGrid}>
 					{visibleRows.map((app) => {
-						const status = resolveStatus(app.status)
+						const status = resolveStatus(app.status || "")
 						return (
 							<ApplicationCard
 								key={app.id}

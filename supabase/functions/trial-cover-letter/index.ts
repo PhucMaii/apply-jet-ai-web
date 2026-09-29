@@ -65,15 +65,3 @@ Deno.serve(async (req) => {
     { headers: { "Content-Type": "application/json" } },
   )
 })
-
-/* To invoke locally:
-
-  1. Run `supabase start` (see: https://supabase.com/docs/reference/cli/supabase-start)
-  2. Make an HTTP request:
-
-  curl -i --location --request POST 'http://127.0.0.1:54321/functions/v1/trial-cover-letter' \
-    --header 'Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImI4MTI2OWYxLTIxZDgtNGYyZS1iNzE5LWMyMjQwYTg0MGQ5MCIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjIwOTkyMjY4Njd9.jKL6VHHIZs-05PQ1mnIqOia1A2TzkmfrA5mjofoXazGKhx3iSDgA_zFOgjRkO-CvQUkuh547m74KY0AOTRKQVA' \
-    --header 'Content-Type: application/json' \
-    --data '{"name":"Functions"}'
-
-*/
