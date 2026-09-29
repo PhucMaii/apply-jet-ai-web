@@ -26,10 +26,11 @@ export function emptyProfileRow(id: string, authEmail: string): UserProfileRow {
 		postal_code: null,
 		expected_salary: null,
 		summary: null,
+		target_role: null,
+		plan_type: null,
 		onboarding_tour_status: null,
 		onboarding_current_step: null,
 		created_at: new Date().toISOString(),
-		updated_at: new Date().toISOString(),
 	}
 }
 

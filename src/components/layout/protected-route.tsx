@@ -5,6 +5,7 @@ import { PgwpTrackerProvider } from "@/context/pgwp-tracker-context"
 import { ResumeUploadBanner } from "@/components/layout/resume-upload-banner"
 import { useAuth } from "@/context/auth-context"
 import { ROUTES } from "@/lib/constants"
+import { FEATURES } from "@/lib/features"
 import { Loader2 } from "lucide-react"
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
@@ -48,12 +49,16 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 		)
 	}
 
-	return (
-		<PgwpTrackerProvider>
-			<OnboardingProvider>
-				<ResumeUploadBanner />
-				{children}
-			</OnboardingProvider>
-		</PgwpTrackerProvider>
+	const appTree = (
+		<OnboardingProvider>
+			<ResumeUploadBanner />
+			{children}
+		</OnboardingProvider>
 	)
+
+	if (!FEATURES.pgwp) {
+		return appTree
+	}
+
+	return <PgwpTrackerProvider>{appTree}</PgwpTrackerProvider>
 }

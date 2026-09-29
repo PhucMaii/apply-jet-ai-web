@@ -22,7 +22,7 @@ import type {
   UserSkillRow,
   UserWorkExperienceRow,
 } from "@/types/database";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AsyncResultMsg } from "@/types/types";
 
 function stringToTagList(s: string): string[] {
@@ -34,6 +34,7 @@ function stringToTagList(s: string): string[] {
 
 export function useProfilePage() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState("profile");
   const [billingBusy, setBillingBusy] = useState(false);
@@ -233,6 +234,7 @@ export function useProfilePage() {
         full_name: fullName || null,
         first_name: updatedProfile.first_name?.trim() || null,
         last_name: updatedProfile.last_name?.trim() || null,
+        target_role: updatedProfile.target_role?.trim() || null,
         phone: updatedProfile.phone?.trim() || null,
         address_line1: updatedProfile.address_line1?.trim() || null,
         address_line2: updatedProfile.address_line2?.trim() || null,
@@ -258,6 +260,7 @@ export function useProfilePage() {
         return { success: false, message: upErr.message };
       }
 
+      void queryClient.invalidateQueries({ queryKey: ["user-target-role"] });
       void refetchProfile();
       return { success: true, message: "Profile Saved Successfully" };
     } catch (err) {
@@ -301,9 +304,15 @@ export function useProfilePage() {
 
   const saveExperience = useCallback(
     async (experienceId: string, patch: Partial<UserWorkExperienceRow>) => {
+      const submittedPatch = {
+        ...patch,
+        start_date: patch.start_date === "" ? null : patch.start_date,
+        end_date: patch.end_date === "" ? null : patch.end_date,
+      }
+      console.log("submittedPatch", submittedPatch);
       const { error: upErr } = await supabase
         .from("user_work_experiences")
-        .update(patch)
+        .update(submittedPatch)
         .eq("id", experienceId);
 
       if (upErr) {
@@ -466,8 +475,8 @@ export function useProfilePage() {
 
       const payload = {
         user_id: user.id,
-        languages: stringToTagList(additionalInfo?.languages ?? ""),
-        certifications: stringToTagList(additionalInfo?.certifications ?? ""),
+        languages: stringToTagList(additionalInfo?.languages?.join(",") ?? ""),
+        certifications: stringToTagList(additionalInfo?.certifications?.join(",") ?? ""),
       };
 
       const { error: upErr } = await supabase

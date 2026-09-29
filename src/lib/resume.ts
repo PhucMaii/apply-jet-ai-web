@@ -358,7 +358,16 @@ export const buildAppResumeSections = (appResumeId: string, hasUserExperiences: 
   return sections;
 }
 
-export const buildHeaderBlock = (appResumeId: string,appResumeSectionId: string, job_title: string, userData: UserProfileRow, userLinksArray: UserLinkRow[]) => {
+export const buildHeaderBlock = (
+  appResumeId: string,
+  appResumeSectionId: string,
+  job_title: string,
+  userData: UserProfileRow,
+  userLinksArray: UserLinkRow[],
+) => {
+  const headline =
+    job_title.trim() || userData.target_role?.trim() || ""
+
   const headerBlocks = [
     {
       app_resume_id: appResumeId,
@@ -379,7 +388,7 @@ export const buildHeaderBlock = (appResumeId: string,appResumeSectionId: string,
       section_id: appResumeSectionId,
       block_type: "rich_text",
       content_json: {
-        text: job_title,
+        text: headline,
       },
       sort_key: 1,
       style_json: {

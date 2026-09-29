@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header"
 import { useAuth } from "@/context/auth-context"
 import { useApplications } from "@/hooks/use-applications"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
+import { FEATURES } from "@/lib/features"
 import { PAGE_HEADER_COPY } from "@/lib/page-header-copy"
 
 export function ApplicationsPage() {
@@ -36,9 +37,11 @@ export function ApplicationsPage() {
 			/>
 
 			<main className={APPLICATIONS_THEME.main}>
-				<div className="mb-6">
-					<PgwpTrackerHero />
-				</div>
+				{FEATURES.pgwp ? (
+					<div className="mb-6">
+						<PgwpTrackerHero />
+					</div>
+				) : null}
 
 				{loadError ? (
 					<p className={APPLICATIONS_THEME.error} role="alert">

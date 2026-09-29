@@ -1,6 +1,7 @@
 export const PROFILE_FORM_IDS = {
 	firstName: "profile-first-name",
 	lastName: "profile-last-name",
+	targetRole: "profile-target-role",
 	email: "profile-email",
 	phone: "profile-phone",
 	address1: "profile-address-1",

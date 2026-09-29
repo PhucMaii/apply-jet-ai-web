@@ -8,6 +8,7 @@ import { SignupPage } from "@/pages/signup-page"
 import { ApplicationsPage } from "@/pages/applications-page"
 import { ApplicationCreatePage } from "@/pages/application-create-page"
 import { ApplicationDetailPage } from "@/pages/application-detail-page"
+import { JobsPage } from "@/pages/jobs-page"
 import { ProfilePage } from "@/pages/profile-page"
 import { PrivacyPage } from "@/pages/privacy-page"
 import { TermsPage } from "@/pages/terms-page"
@@ -55,6 +56,7 @@ export function AppRoutes() {
 					</ProtectedRoute>
 				}
 			/>
+			<Route path={ROUTES.jobs} element={<JobsPage />} />
 			<Route
 				path={ROUTES.profile}
 				element={

@@ -145,6 +145,19 @@ export function ProfileContactEditor({
 			</div>
 
 			<div className="space-y-2">
+				<Label htmlFor={formIds.targetRole} className={fieldLabelClass}>
+					Target role
+				</Label>
+				<Input
+					id={formIds.targetRole}
+					className={fieldInputClass}
+					placeholder="Frontend Developer"
+					autoComplete="organization-title"
+					{...register("target_role")}
+				/>
+			</div>
+
+			<div className="space-y-2">
 				<Label htmlFor={formIds.email} className={fieldLabelClass}>
 					Email (autofill)
 				</Label>

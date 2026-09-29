@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 import { Link, useLocation } from "react-router-dom"
 import type { LucideIcon } from "lucide-react"
 import {
+	BriefcaseBusiness,
 	LayoutList,
 	LogOut,
 	Menu,
@@ -17,14 +18,16 @@ import { useUserSubscription } from "@/hooks/use-user-subscription"
 import { PAGE_HEADER_COPY } from "@/lib/page-header-copy"
 import { PAGE_HEADER_THEME } from "@/lib/page-header-theme"
 import { APP_NAME, ROUTES } from "@/lib/constants"
+import { FEATURES } from "@/lib/features"
 import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { cn } from "@/lib/utils"
 
 export interface PageHeaderProps {
 	title: string
-	userEmail: string | undefined
-	accountInitials: string
-	onSignOut: () => void | Promise<void>
+	userEmail?: string
+	accountInitials?: string
+	onSignOut?: () => void | Promise<void>
+	isAuthenticated?: boolean
 }
 
 interface NavItem {
@@ -42,6 +45,12 @@ const MAIN_NAV: NavItem[] = [
 		isActive: (pathname) =>
 			pathname === ROUTES.applications ||
 			pathname.startsWith(`${ROUTES.applications}/`),
+	},
+	{
+		label: PAGE_HEADER_COPY.jobs,
+		href: ROUTES.jobs,
+		icon: BriefcaseBusiness,
+		isActive: (pathname) => pathname === ROUTES.jobs,
 	},
 	{
 		label: PAGE_HEADER_COPY.profile,
@@ -104,8 +113,9 @@ function MobileNavPill({
 export function PageHeader({
 	title,
 	userEmail,
-	accountInitials,
+	accountInitials = "?",
 	onSignOut,
+	isAuthenticated = true,
 }: PageHeaderProps) {
 	const { pathname } = useLocation()
 	const { plan, isLoading: isLoadingPlan } = useUserSubscription()
@@ -137,6 +147,9 @@ export function PageHeader({
 	}, [isMenuOpen])
 
 	const closeMenu = () => setIsMenuOpen(false)
+	const navItems = isAuthenticated
+		? MAIN_NAV
+		: MAIN_NAV.filter((item) => item.href === ROUTES.jobs)
 
 	return (
 		<header className={PAGE_HEADER_THEME.root}>
@@ -151,7 +164,7 @@ export function PageHeader({
 						className={PAGE_HEADER_THEME.desktopNav}
 						aria-label="Main navigation"
 					>
-						{MAIN_NAV.map((item) => (
+						{navItems.map((item) => (
 							<NavLink
 								key={item.href}
 								item={item}
@@ -170,125 +183,152 @@ export function PageHeader({
 					</nav>
 
 					<div className={PAGE_HEADER_THEME.toolbarActions}>
-						<PgwpTrackerPill />
-						{!isLoadingPlan ? <PlanBadge plan={plan} /> : null}
+						{isAuthenticated ? (
+							<>
+								{FEATURES.pgwp ? <PgwpTrackerPill /> : null}
+								{!isLoadingPlan ? <PlanBadge plan={plan} /> : null}
 
-						<div className={PAGE_HEADER_THEME.userChip}>
-							<span
-								className={PAGE_HEADER_THEME.userAvatar}
-								aria-hidden
-							>
-								{accountInitials}
-							</span>
-							<span className={PAGE_HEADER_THEME.userEmail}>
-								{userEmail ?? PAGE_HEADER_COPY.signedInFallback}
-							</span>
-						</div>
+								<div className={PAGE_HEADER_THEME.userChip}>
+									<span
+										className={PAGE_HEADER_THEME.userAvatar}
+										aria-hidden
+									>
+										{accountInitials}
+									</span>
+									<span className={PAGE_HEADER_THEME.userEmail}>
+										{userEmail ?? PAGE_HEADER_COPY.signedInFallback}
+									</span>
+								</div>
 
-						<Button
-							size="sm"
-							className="hidden gap-1.5 sm:inline-flex"
-							asChild
-						>
-							<Link
-								to={ROUTES.applicationCreate}
-								data-tour={TOUR_TARGET.newApplication}
-							>
-								<Plus className="size-4" aria-hidden />
-								<span className="hidden lg:inline">
-									{PAGE_HEADER_COPY.newApplication}
-								</span>
-								<span className="lg:hidden">New</span>
-							</Link>
-						</Button>
-
-						<div className="relative md:hidden" ref={menuRef}>
-							<Button
-								type="button"
-								variant="outline"
-								size="icon"
-								className={PAGE_HEADER_THEME.menuButton}
-								onClick={() => setIsMenuOpen((open) => !open)}
-								aria-expanded={isMenuOpen}
-								aria-haspopup="menu"
-								aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-							>
-								{isMenuOpen ? (
-									<X className="size-4" aria-hidden />
-								) : (
-									<Menu className="size-4" aria-hidden />
-								)}
-							</Button>
-
-							{isMenuOpen ? (
-								<div
-									className={PAGE_HEADER_THEME.menuPanel}
-									role="menu"
+								<Button
+									size="sm"
+									className="hidden gap-1.5 sm:inline-flex"
+									asChild
 								>
 									<Link
 										to={ROUTES.applicationCreate}
-										className={PAGE_HEADER_THEME.menuItem}
-										role="menuitem"
 										data-tour={TOUR_TARGET.newApplication}
-										onClick={closeMenu}
 									>
-										<Plus className="size-4 shrink-0" aria-hidden />
-										{PAGE_HEADER_COPY.newApplication}
+										<Plus className="size-4" aria-hidden />
+										<span className="hidden lg:inline">
+											{PAGE_HEADER_COPY.newApplication}
+										</span>
+										<span className="lg:hidden">New</span>
 									</Link>
-									<div className={PAGE_HEADER_THEME.menuDivider} />
-									{MAIN_NAV.map((item) => {
-										const Icon = item.icon
-										return (
+								</Button>
+
+								<div className="relative md:hidden" ref={menuRef}>
+									<Button
+										type="button"
+										variant="outline"
+										size="icon"
+										className={PAGE_HEADER_THEME.menuButton}
+										onClick={() => setIsMenuOpen((open) => !open)}
+										aria-expanded={isMenuOpen}
+										aria-haspopup="menu"
+										aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+									>
+										{isMenuOpen ? (
+											<X className="size-4" aria-hidden />
+										) : (
+											<Menu className="size-4" aria-hidden />
+										)}
+									</Button>
+
+									{isMenuOpen ? (
+										<div
+											className={PAGE_HEADER_THEME.menuPanel}
+											role="menu"
+										>
 											<Link
-												key={item.href}
-												to={item.href}
-												className={cn(
-													PAGE_HEADER_THEME.menuItem,
-													item.isActive(pathname) &&
-														"bg-neutral-50 text-neutral-900",
-												)}
+												to={ROUTES.applicationCreate}
+												className={PAGE_HEADER_THEME.menuItem}
 												role="menuitem"
-												data-tour={
-													item.href === ROUTES.applications
-														? TOUR_TARGET.navApplications
-														: undefined
-												}
+												data-tour={TOUR_TARGET.newApplication}
 												onClick={closeMenu}
 											>
-												<Icon className="size-4 shrink-0" aria-hidden />
-												{item.label}
+												<Plus className="size-4 shrink-0" aria-hidden />
+												{PAGE_HEADER_COPY.newApplication}
 											</Link>
-										)
-									})}
-									<div className={PAGE_HEADER_THEME.menuDivider} />
-									<button
-										type="button"
-										className={cn(
-											PAGE_HEADER_THEME.menuItem,
-											PAGE_HEADER_THEME.menuItemDanger,
-										)}
-										role="menuitem"
-										onClick={() => {
-											closeMenu()
-											void onSignOut()
-										}}
-									>
-										<LogOut className="size-4 shrink-0" aria-hidden />
-										{PAGE_HEADER_COPY.logOut}
-									</button>
+											<div className={PAGE_HEADER_THEME.menuDivider} />
+											{navItems.map((item) => {
+												const Icon = item.icon
+												return (
+													<Link
+														key={item.href}
+														to={item.href}
+														className={cn(
+															PAGE_HEADER_THEME.menuItem,
+															item.isActive(pathname) &&
+																"bg-neutral-50 text-neutral-900",
+														)}
+														role="menuitem"
+														data-tour={
+															item.href === ROUTES.applications
+																? TOUR_TARGET.navApplications
+																: undefined
+														}
+														onClick={closeMenu}
+													>
+														<Icon className="size-4 shrink-0" aria-hidden />
+														{item.label}
+													</Link>
+												)
+											})}
+											<div className={PAGE_HEADER_THEME.menuDivider} />
+											{onSignOut ? (
+												<button
+													type="button"
+													className={cn(
+														PAGE_HEADER_THEME.menuItem,
+														PAGE_HEADER_THEME.menuItemDanger,
+													)}
+													role="menuitem"
+													onClick={() => {
+														closeMenu()
+														void onSignOut()
+													}}
+												>
+													<LogOut className="size-4 shrink-0" aria-hidden />
+													{PAGE_HEADER_COPY.logOut}
+												</button>
+											) : null}
+										</div>
+									) : null}
 								</div>
-							) : null}
-						</div>
 
-						<Button
-							variant="ghost"
-							size="icon"
-							className="hidden text-neutral-500 hover:text-neutral-900 md:inline-flex"
-							onClick={() => void onSignOut()}
-							aria-label={PAGE_HEADER_COPY.logOut}
-						>
-							<LogOut className="size-4" aria-hidden />
-						</Button>
+								{onSignOut ? (
+									<Button
+										variant="ghost"
+										size="icon"
+										className="hidden text-neutral-500 hover:text-neutral-900 md:inline-flex"
+										onClick={() => void onSignOut()}
+										aria-label={PAGE_HEADER_COPY.logOut}
+									>
+										<LogOut className="size-4" aria-hidden />
+									</Button>
+								) : null}
+							</>
+						) : (
+							<>
+								<Button variant="ghost" size="sm" asChild>
+									<Link
+										to={ROUTES.login}
+										state={{ from: pathname }}
+									>
+										{PAGE_HEADER_COPY.logIn}
+									</Link>
+								</Button>
+								<Button size="sm" asChild>
+									<Link
+										to={ROUTES.signup}
+										state={{ from: pathname }}
+									>
+										{PAGE_HEADER_COPY.signUp}
+									</Link>
+								</Button>
+							</>
+						)}
 					</div>
 				</div>
 
@@ -296,43 +336,55 @@ export function PageHeader({
 					<div className={PAGE_HEADER_THEME.heroRow}>
 						<div className={PAGE_HEADER_THEME.heroText}>
 							<h1 className={PAGE_HEADER_THEME.title}>{title}</h1>
-							<p className={cn(PAGE_HEADER_THEME.metaEmail, "mt-2 sm:hidden")}>
-								{userEmail ?? PAGE_HEADER_COPY.signedInFallback}
-							</p>
+							{isAuthenticated ? (
+								<p className={cn(PAGE_HEADER_THEME.metaEmail, "mt-2 sm:hidden")}>
+									{userEmail ?? PAGE_HEADER_COPY.signedInFallback}
+								</p>
+							) : null}
 						</div>
 
-						<Button
-							size="lg"
-							className="w-full shrink-0 gap-2 sm:hidden"
-							asChild
-						>
-							<Link
-								to={ROUTES.applicationCreate}
-								data-tour={TOUR_TARGET.newApplication}
+						{isAuthenticated ? (
+							<Button
+								size="lg"
+								className="w-full shrink-0 gap-2 sm:hidden"
+								asChild
 							>
-								<Plus className="size-4" aria-hidden />
-								{PAGE_HEADER_COPY.newApplication}
-							</Link>
-						</Button>
+								<Link
+									to={ROUTES.applicationCreate}
+									data-tour={TOUR_TARGET.newApplication}
+								>
+									<Plus className="size-4" aria-hidden />
+									{PAGE_HEADER_COPY.newApplication}
+								</Link>
+							</Button>
+						) : (
+							<Button size="lg" className="w-full shrink-0 sm:hidden" asChild>
+								<Link to={ROUTES.signup} state={{ from: pathname }}>
+									{PAGE_HEADER_COPY.signUp}
+								</Link>
+							</Button>
+						)}
 					</div>
 
-					<nav
-						className={PAGE_HEADER_THEME.mobileNav}
-						aria-label="Quick navigation"
-					>
-						{MAIN_NAV.map((item) => (
-							<MobileNavPill
-								key={item.href}
-								item={item}
-								isActive={item.isActive(pathname)}
-								tourTarget={
-									item.href === ROUTES.applications
-										? TOUR_TARGET.navApplications
-										: undefined
-								}
-							/>
-						))}
-					</nav>
+					{navItems.length > 1 ? (
+						<nav
+							className={PAGE_HEADER_THEME.mobileNav}
+							aria-label="Quick navigation"
+						>
+							{navItems.map((item) => (
+								<MobileNavPill
+									key={item.href}
+									item={item}
+									isActive={item.isActive(pathname)}
+									tourTarget={
+										item.href === ROUTES.applications
+											? TOUR_TARGET.navApplications
+											: undefined
+									}
+								/>
+							))}
+						</nav>
+					) : null}
 				</div>
 			</div>
 		</header>

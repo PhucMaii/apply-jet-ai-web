@@ -3,15 +3,16 @@ import { BlogCategoryNav } from "@/components/blog/blog-category-nav"
 import { BlogPageShell } from "@/components/blog/blog-page-shell"
 import { BlogPostCard } from "@/components/blog/blog-post-card"
 import {
-	BLOG_CATEGORIES,
 	BLOG_INDEX_META,
 	getAllBlogPosts,
+	getVisibleBlogCategories,
 } from "@/lib/blog"
 import { useDocumentMeta } from "@/lib/use-document-meta"
 import { cn } from "@/lib/utils"
 
 export function BlogPage() {
 	const posts = getAllBlogPosts()
+	const categories = getVisibleBlogCategories()
 	useDocumentMeta(BLOG_INDEX_META)
 
 	return (
@@ -40,7 +41,7 @@ export function BlogPage() {
 							ApplyJet Blog
 						</h1>
 						<p className="mt-3 max-w-2xl text-sm leading-relaxed text-landing-muted sm:text-base">
-							Straight-talk guides on ATS resumes, the Canadian tech job market, and PGWP timelines for international grads. Job-hunt advice only, not immigration advice.
+							Straight-talk guides on ATS resumes, job search tools, and applying smarter.
 						</p>
 					</div>
 				</div>
@@ -56,12 +57,12 @@ export function BlogPage() {
 							Browse by topic
 						</h2>
 						<p className="mt-1 text-sm text-landing-muted">
-							Five categories. Pick what you need this week.
+							Pick what you need this week.
 						</p>
 					</div>
 				</div>
 				<div className="mt-4">
-					<BlogCategoryNav categories={BLOG_CATEGORIES} />
+					<BlogCategoryNav categories={categories} />
 				</div>
 			</section>
 

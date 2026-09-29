@@ -15,6 +15,21 @@ import { APP_RESUME_SECTION_TYPE, APP_RESUME_STATUS } from "@/lib/enums/resume";
 import { buildAppResumeSections, buildHeaderBlock, getUserProfile } from "@/lib/resume";
 import { descriptionStringToBullets } from "@/components/applications/resume-builder/app-resume-utils";
 
+function validateFormValues(values: CreateApplicationForm): CreateApplicationFieldErrors {
+  const errors: CreateApplicationFieldErrors = {};
+  if (!values.companyName.trim()) {
+    errors.companyName = APPLICATION_CREATE_VALIDATION.companyNameRequired;
+  }
+  if (!values.jobTitle.trim()) {
+    errors.jobTitle = APPLICATION_CREATE_VALIDATION.jobTitleRequired;
+  }
+  if (!values.jobDescription.trim()) {
+    errors.jobDescription =
+      APPLICATION_CREATE_VALIDATION.jobDescriptionRequired;
+  }
+  return errors;
+}
+
 export function useCreateApplication() {
   const { user } = useAuth();
   const { sendFirstApplicationEmail } = useEmail();
@@ -42,18 +57,8 @@ export function useCreateApplication() {
     });
   }
 
-  function validateForm(): boolean {
-    const errors: CreateApplicationFieldErrors = {};
-    if (!form.companyName.trim()) {
-      errors.companyName = APPLICATION_CREATE_VALIDATION.companyNameRequired;
-    }
-    if (!form.jobTitle.trim()) {
-      errors.jobTitle = APPLICATION_CREATE_VALIDATION.jobTitleRequired;
-    }
-    if (!form.jobDescription.trim()) {
-      errors.jobDescription =
-        APPLICATION_CREATE_VALIDATION.jobDescriptionRequired;
-    }
+  function validateForm(values: CreateApplicationForm = form): boolean {
+    const errors = validateFormValues(values);
     setFieldErrors(errors);
     return Object.keys(errors).length === 0;
   }
@@ -66,10 +71,19 @@ export function useCreateApplication() {
     return count === 0;
   };
 
-  async function submit() {
+  async function submit(options?: {
+    noNavigate?: boolean;
+    formOverride?: CreateApplicationForm;
+  }) {
     if (!user) return;
     setError(null);
-    if (!validateForm()) return;
+
+    const values = options?.formOverride ?? form;
+    if (!validateForm(values)) return;
+
+    if (options?.formOverride) {
+      setForm(options.formOverride);
+    }
 
     setSubmitting(true);
     try {
@@ -82,10 +96,10 @@ export function useCreateApplication() {
         .from("applications")
         .insert({
           user_id: user.id,
-          company_name: form.companyName.trim(),
-          job_title: form.jobTitle.trim(),
-          job_url: form.jobUrl.trim() || null,
-          job_description: form.jobDescription.trim() || null,
+          company_name: values.companyName.trim(),
+          job_title: values.jobTitle.trim(),
+          job_url: values.jobUrl.trim() || null,
+          job_description: values.jobDescription.trim() || null,
           status: "Generated",
         })
         .select("id")
@@ -105,9 +119,13 @@ export function useCreateApplication() {
         return;
       }
 
-      await initializeAppResume(user.id, data.id);
+      await initializeAppResume(user.id, data.id, values.jobTitle.trim());
 
-      navigate(applicationDetailPath(data.id));
+      if (!options?.noNavigate) {
+        navigate(applicationDetailPath(data.id));
+      }
+
+      return data.id;
     } catch (err) {
       console.error("Something went wrong creating application:", err);
       setError(
@@ -118,7 +136,11 @@ export function useCreateApplication() {
     }
   }
 
-  const initializeAppResume = async (userId: string, applicationId: string) => {
+  const initializeAppResume = async (
+    userId: string,
+    applicationId: string,
+    jobTitle: string = form.jobTitle.trim(),
+  ) => {
     const {
       userData,
       userLinksArray,
@@ -174,7 +196,7 @@ export function useCreateApplication() {
 
     // Create app resume block
     // Header block
-    const headerBlocks = buildHeaderBlock(appResumeData.id, idsMap.get(APP_RESUME_SECTION_TYPE.HEADER)!, form.jobTitle.trim(), userData, userLinksArray);
+    const headerBlocks = buildHeaderBlock(appResumeData.id, idsMap.get(APP_RESUME_SECTION_TYPE.HEADER)!, jobTitle, userData, userLinksArray);
     await Promise.all(
       headerBlocks.map(async (block) => {
         const { data: appResumeBlockData, error: appResumeBlockError } =

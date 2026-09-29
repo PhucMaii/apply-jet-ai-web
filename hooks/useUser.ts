@@ -11,6 +11,7 @@ export type InitialUserPayload = {
   full_name?: string | null;
   first_name?: string | null;
   last_name?: string | null;
+  target_role?: string | null;
 };
 
 export const useUser = () => {
@@ -38,6 +39,7 @@ export const useUser = () => {
             email: userData.email || null,
             first_name: userData.first_name ?? null,
             last_name: userData.last_name ?? null,
+            target_role: userData.target_role?.trim() || null,
             onboarding_tour_status: "pending",
             onboarding_current_step: "welcome",
           })

@@ -99,10 +99,26 @@ export const LANDING_COPY = {
 		"Resume help only — not immigration advice",
 	],
 	marketingNav: [
+		{ hash: LANDING_SECTION_ID.jobsPreview, label: "Open jobs" },
 		{ hash: LANDING_SECTION_ID.howItWorks, label: "How it works" },
 		{ hash: LANDING_SECTION_ID.pgwpTracker, label: withPgwpLeaf("PGWP tracker") },
 		{ hash: LANDING_SECTION_ID.whyWording, label: "AI tailoring" },
 	],
+	jobsPreview: {
+		sectionId: LANDING_SECTION_ID.jobsPreview,
+		eyebrow: "Open jobs",
+		title: "Browse real openings—free, no account required.",
+		description:
+			"Search live roles by title and location. When one fits, tailor your resume to the posting and apply with a stronger packet.",
+		browseCta: "Browse all jobs",
+		browseGhostCta: "Explore openings",
+		browseHint: "Free to explore. Sign up only when you’re ready to tailor.",
+		nearYouLabel: (place: string) => `Near ${place}`,
+		fallbackLabel: "Openings in the US & Canada",
+		loadingLabel: "Loading openings…",
+		emptyTitle: "New roles are on the way",
+		emptyBody: "Check the jobs board for the latest openings.",
+	},
 	pgwpFeature: {
 		sectionId: LANDING_SECTION_ID.pgwpTracker,
 		eyebrow: withPgwpLeaf("PGWP tracker"),

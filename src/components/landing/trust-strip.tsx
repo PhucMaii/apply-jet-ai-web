@@ -1,10 +1,8 @@
-import { MapleLeafIcon } from "@/components/brand/maple-leaf-icon"
-import { CANADA_RED } from "@/lib/canada-brand"
+import { Sparkles, FileUp, Briefcase, Mail } from "lucide-react"
 import { motion } from "framer-motion"
-import { FileUp, Briefcase, Mail } from "lucide-react"
 import { useLandingCopy } from "@/context/landing-copy-context"
 
-const trustIcons = [MapleLeafIcon, FileUp, Briefcase, Mail] as const
+const trustIcons = [Sparkles, FileUp, Briefcase, Mail] as const
 
 export function TrustStrip() {
 	const { trustStrip } = useLandingCopy()
@@ -24,22 +22,8 @@ export function TrustStrip() {
 								viewport={{ once: true }}
 								transition={{ delay: 0.05 * index, duration: 0.4 }}
 							>
-								<span
-									className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary ring-1 ring-primary/25"
-									style={
-										index === 0
-											? {
-													backgroundColor: `${CANADA_RED}14`,
-													color: CANADA_RED,
-													boxShadow: `inset 0 0 0 1px ${CANADA_RED}40`,
-												}
-											: undefined
-									}
-								>
-									<Icon
-										className={index === 0 ? "size-5" : "size-4"}
-										aria-hidden
-									/>
+								<span className="flex size-9 items-center justify-center rounded-md bg-primary/10 text-primary ring-1 ring-primary/25">
+									<Icon className="size-4" aria-hidden />
 								</span>
 								<p className="text-sm font-medium text-muted-foreground">
 									{label}

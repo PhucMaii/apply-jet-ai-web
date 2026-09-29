@@ -1,5 +1,6 @@
 export const LANDING_SECTION_ID = {
 	howItWorks: "how-it-works",
+	jobsPreview: "open-jobs",
 	pgwpTracker: "pgwp-tracker",
 	whyWording: "why-wording",
 	builtForCanada: "built-for-canada",

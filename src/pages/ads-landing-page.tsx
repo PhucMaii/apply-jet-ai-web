@@ -6,14 +6,16 @@ import { SiteFooter } from "@/components/layout/site-footer"
 import { SiteHeader } from "@/components/layout/site-header"
 import { LandingCopyProvider } from "@/context/landing-copy-context"
 import { ADS_LANDING_COPY } from "@/lib/ads-landing-copy"
+import { applyLandingFeatureFlags } from "@/lib/landing-copy-features"
 import { useUser } from "../../hooks/useUser"
 
 /**
  * Paid-ad landing page (`/lp/ads`).
- * Same Canada / PGWP story as the homepage, free-everywhere messaging, no pricing.
+ * Free-everywhere messaging, jobs-focused when PGWP is disabled.
  */
 export function AdsLandingPage() {
 	const { checkAndRegisterVisitor } = useUser()
+	const landingCopy = applyLandingFeatureFlags(ADS_LANDING_COPY)
 
 	useEffect(() => {
 		if (checkAndRegisterVisitor) {
@@ -23,10 +25,10 @@ export function AdsLandingPage() {
 
 	useEffect(() => {
 		const previousTitle = document.title
-		document.title = ADS_LANDING_COPY.meta.title
+		document.title = landingCopy.meta.title
 		const description = document.querySelector('meta[name="description"]')
 		const previousDescription = description?.getAttribute("content") ?? null
-		description?.setAttribute("content", ADS_LANDING_COPY.meta.description)
+		description?.setAttribute("content", landingCopy.meta.description)
 
 		return () => {
 			document.title = previousTitle
@@ -34,7 +36,7 @@ export function AdsLandingPage() {
 				description.setAttribute("content", previousDescription)
 			}
 		}
-	}, [])
+	}, [landingCopy.meta.description, landingCopy.meta.title])
 
 	return (
 		<LandingCopyProvider copy={ADS_LANDING_COPY}>

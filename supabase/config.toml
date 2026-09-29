@@ -110,3 +110,68 @@ entrypoint = "./functions/increment-usage/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/increment-usage/*.html" ]
+[functions.poll-greenhouse]
+enabled = true
+verify_jwt = false
+import_map = "./functions/poll-greenhouse/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/poll-greenhouse/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/poll-greenhouse/*.html" ]
+
+[functions.poll-lever]
+enabled = true
+verify_jwt = false
+import_map = "./functions/poll-lever/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/poll-lever/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/poll-lever/*.html" ]
+
+[functions.poll-ashby]
+enabled = true
+verify_jwt = false
+import_map = "./functions/poll-ashby/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/poll-ashby/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/poll-ashby/*.html" ]
+
+[functions.poll-workable]
+enabled = true
+verify_jwt = false
+import_map = "./functions/poll-workable/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/poll-workable/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/poll-workable/*.html" ]
+
+[functions.create-tailored-application]
+enabled = true
+verify_jwt = true
+import_map = "./functions/create-tailored-application/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/create-tailored-application/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/create-tailored-application/*.html" ]
+
+[functions.poll-smartrecruiters]
+enabled = true
+verify_jwt = false
+import_map = "./functions/poll-smartrecruiters/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/poll-smartrecruiters/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/poll-smartrecruiters/*.html" ]

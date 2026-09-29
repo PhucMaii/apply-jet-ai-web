@@ -35,8 +35,7 @@ export function BlogPostPage() {
 	useDocumentMeta({
 		title: post?.seoTitle ?? "Blog | ApplyJet",
 		description:
-			post?.seoDescription ??
-			"Guides for Canadian job seekers and PGWP holders.",
+			post?.seoDescription ?? "Guides for job seekers.",
 	})
 
 	if (!post) {
@@ -123,9 +122,8 @@ export function BlogPostPage() {
 					Build a resume that fits the job—free
 				</h2>
 				<p className="mt-2 max-w-xl text-sm leading-relaxed text-landing-muted">
-					Score your resume live against a Canadian job description, keep your
-					PGWP window visible, and apply with clearer bullets. Job applications
-					only—not immigration advice.
+					Score your resume live against a job description, tailor your
+					bullets, and apply with a stronger packet.
 				</p>
 				<Button
 					size="lg"

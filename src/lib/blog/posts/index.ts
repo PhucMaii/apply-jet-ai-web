@@ -5,7 +5,12 @@ import { CANADA_JOB_MARKET_POST } from "@/lib/blog/posts/canada-job-market-2026"
 import { TECH_RECRUITERS_POST } from "@/lib/blog/posts/canadian-tech-recruiters"
 import { PGWP_CALM_GUIDE_POST } from "@/lib/blog/posts/pgwp-explained-calmly"
 import { TOOL_COMPARISON_POST } from "@/lib/blog/posts/applyjet-vs-simplify-vs-teal"
-import type { BlogCategorySlug, BlogPost } from "@/lib/blog/types"
+import {
+	BLOG_CATEGORY_SLUG,
+	type BlogCategorySlug,
+	type BlogPost,
+} from "@/lib/blog/types"
+import { FEATURES } from "@/lib/features"
 
 /** Single registry — add new posts here to publish. */
 export const BLOG_POSTS: readonly BlogPost[] = [
@@ -21,19 +26,35 @@ function byNewest(a: BlogPost, b: BlogPost): number {
 	return b.publishedAt.localeCompare(a.publishedAt)
 }
 
+function isVisibleBlogPost(post: BlogPost): boolean {
+	if (FEATURES.pgwp) return true
+	if (
+		post.categorySlug === BLOG_CATEGORY_SLUG.pgwpGuide ||
+		post.categorySlug === BLOG_CATEGORY_SLUG.canadaJobMarket ||
+		post.categorySlug === BLOG_CATEGORY_SLUG.techRecruiters
+	) {
+		return false
+	}
+	return !/canada|canadian|pgwp/i.test(
+		`${post.slug} ${post.title} ${post.tags.join(" ")}`,
+	)
+}
+
 export function getAllBlogPosts(): BlogPost[] {
-	return [...BLOG_POSTS].sort(byNewest)
+	return [...BLOG_POSTS].filter(isVisibleBlogPost).sort(byNewest)
 }
 
 export function getBlogPostBySlug(slug: string): BlogPost | undefined {
-	return BLOG_POSTS.find((post) => post.slug === slug)
+	const post = BLOG_POSTS.find((entry) => entry.slug === slug)
+	if (!post || !isVisibleBlogPost(post)) return undefined
+	return post
 }
 
 export function getBlogPostsByCategory(
 	categorySlug: BlogCategorySlug,
 ): BlogPost[] {
 	return BLOG_POSTS.filter(
-		(post) => post.categorySlug === categorySlug,
+		(post) => post.categorySlug === categorySlug && isVisibleBlogPost(post),
 	).sort(byNewest)
 }
 
@@ -60,7 +81,7 @@ export function getBlogPostCategory(post: BlogPost) {
 }
 
 export const BLOG_INDEX_META = {
-	title: "ApplyJet Blog — ATS Resumes, PGWP & Canadian Job Search",
+	title: "ApplyJet Blog — ATS Resumes & Job Search",
 	description:
-		"Guides for international grads and PGWP holders in Canada: ATS resumes, the job market, calm PGWP explainers, tech recruiting, and tool comparisons.",
+		"Guides for job seekers: ATS resumes, tool comparisons, and applying smarter.",
 } as const

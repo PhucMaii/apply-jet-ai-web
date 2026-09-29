@@ -11,7 +11,8 @@ import {
 import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { PgwpTrackerCompact } from "@/components/pgwp/pgwp-tracker-compact"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../ui/card"
+import { FEATURES } from "@/lib/features"
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card"
 import { cn } from "@/lib/utils"
 import { UserRound } from "lucide-react"
 import { ProfileContactEditor } from "./contact-editor"
@@ -125,7 +126,7 @@ export function ProfileAutofillWorkspace({
 			</TabsList>
 
 			<div className={DASHBOARD_THEME.contentPanel}>
-				<PgwpTrackerCompact />
+				{FEATURES.pgwp ? <PgwpTrackerCompact /> : null}
 
 				<ResumeSection
 					userId={userId}
@@ -151,16 +152,6 @@ export function ProfileAutofillWorkspace({
 									Contact &amp; application details
 								</span>
 							</CardTitle>
-							<CardDescription
-								className={cn(
-									"pl-[3.25rem] text-pretty leading-relaxed",
-									DASHBOARD_THEME.cardDescription,
-								)}
-							>
-								We use this information for autofill in job applications.
-								Your login email is managed by your auth provider; you can
-								store a different contact email below if needed.
-							</CardDescription>
 						</CardHeader>
 						<CardContent className="bg-white">
 							<ProfileContactEditor

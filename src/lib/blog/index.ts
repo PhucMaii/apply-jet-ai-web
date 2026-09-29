@@ -3,6 +3,7 @@ export type { BlogAuthor } from "@/lib/blog/author"
 export {
 	BLOG_CATEGORIES,
 	getBlogCategory,
+	getVisibleBlogCategories,
 	isBlogCategorySlug,
 } from "@/lib/blog/categories"
 export {

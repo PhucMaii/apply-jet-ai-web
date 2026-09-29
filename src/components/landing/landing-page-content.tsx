@@ -6,11 +6,13 @@ import { FeaturesSection } from "@/components/landing/features-section"
 import { FinalCta } from "@/components/landing/final-cta"
 import { HeroSection } from "@/components/landing/hero-section"
 import { HowItWorks } from "@/components/landing/how-it-works"
+import { JobsPreviewSection } from "@/components/landing/jobs-preview-section"
 import { PgwpFeatureSection } from "@/components/landing/pgwp-feature-section"
 import { PricingSection } from "@/components/landing/pricing-section"
 import { TestimonialsSection } from "@/components/landing/testimonials-section"
 import { TrustStrip } from "@/components/landing/trust-strip"
 import { WhySection } from "@/components/landing/why-section"
+import { FEATURES } from "@/lib/features"
 
 interface LandingPageContentProps {
 	showPricing?: boolean
@@ -23,10 +25,11 @@ export function LandingPageContent({
 		<>
 			<HeroSection />
 			<TrustStrip />
-			<PgwpFeatureSection />
+			<JobsPreviewSection />
+			{FEATURES.pgwp ? <PgwpFeatureSection /> : null}
 			<HowItWorks />
 			<ExperienceBulletsSection />
-			<BuiltForCanadaSection />
+			{FEATURES.pgwp ? <BuiltForCanadaSection /> : null}
 			<FeaturesSection />
 			<WhySection />
 			<TestimonialsSection />

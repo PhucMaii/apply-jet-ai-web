@@ -17,7 +17,7 @@ type BuildPromptForTrialParams = {
   jdText: string;
 };
 
-const GEMINI_MODEL = "gemini-3.1-flash-lite";
+const GEMINI_MODEL = "gemini-3.8-flash";
 const GEMINI_URL = (apiKey: string) =>
   `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
 

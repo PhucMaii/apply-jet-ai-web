@@ -5,9 +5,13 @@ export const PAGE_HEADER_COPY = {
 	applicationsTitle: "Applications",
 	applicationsDescription:
 		"Track applications, generate documents, and manage your pipeline.",
+	jobsTitle: "Jobs",
 	newApplication: "New application",
 	applications: "Applications",
+	jobs: "Jobs",
 	profile: "Profile",
 	logOut: "Log out",
+	logIn: "Log in",
+	signUp: "Sign up",
 	signedInFallback: "Signed in",
 } as const

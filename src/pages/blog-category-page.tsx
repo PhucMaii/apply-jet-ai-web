@@ -4,9 +4,9 @@ import { BlogCategoryNav } from "@/components/blog/blog-category-nav"
 import { BlogPageShell } from "@/components/blog/blog-page-shell"
 import { BlogPostCard } from "@/components/blog/blog-post-card"
 import {
-	BLOG_CATEGORIES,
 	getBlogCategory,
 	getBlogPostsByCategory,
+	getVisibleBlogCategories,
 	isBlogCategorySlug,
 } from "@/lib/blog"
 import { ROUTES } from "@/lib/constants"
@@ -22,8 +22,7 @@ export function BlogCategoryPage() {
 	useDocumentMeta({
 		title: category?.seoTitle ?? "Blog | ApplyJet",
 		description:
-			category?.seoDescription ??
-			"Guides for Canadian job seekers and PGWP holders.",
+			category?.seoDescription ?? "Guides for job seekers.",
 	})
 
 	if (!isValid || !category) {
@@ -57,7 +56,7 @@ export function BlogCategoryPage() {
 
 			<div className="mt-8">
 				<BlogCategoryNav
-					categories={BLOG_CATEGORIES}
+					categories={getVisibleBlogCategories()}
 					activeSlug={category.slug}
 				/>
 			</div>

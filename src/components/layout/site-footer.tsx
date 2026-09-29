@@ -4,6 +4,7 @@ import { MapleLeafIcon } from "@/components/brand/maple-leaf-icon"
 import { APP_NAME, ROUTES, LINKS, blogCategoryPath } from "@/lib/constants"
 import { BLOG_CATEGORY_SLUG } from "@/lib/blog"
 import { useLandingCopy } from "@/context/landing-copy-context"
+import { FEATURES } from "@/lib/features"
 import { getMarketingBasePath } from "@/lib/marketing-routes"
 import { LANDING_SECTION_ID } from "@/lib/landing/landing-section"
 
@@ -42,10 +43,14 @@ export function SiteFooter() {
 
 	const productLinks: FooterItem[] = [
 		{ label: "How it works", to: `${basePath}#${LANDING_SECTION_ID.howItWorks}` },
-		{
-			label: footer.productLinks.pgwp.label,
-			to: `${basePath}#${footer.productLinks.pgwp.hash}`,
-		},
+		...(FEATURES.pgwp
+			? [
+					{
+						label: footer.productLinks.pgwp.label,
+						to: `${basePath}#${footer.productLinks.pgwp.hash}`,
+					} satisfies FooterItem,
+				]
+			: []),
 		{
 			label: footer.productLinks.features.label,
 			to: `${basePath}#${footer.productLinks.features.hash}`,
@@ -80,10 +85,14 @@ export function SiteFooter() {
 					label: "ATS Resume",
 					to: blogCategoryPath(BLOG_CATEGORY_SLUG.atsResume),
 				},
-				{
-					label: "PGWP Guide",
-					to: blogCategoryPath(BLOG_CATEGORY_SLUG.pgwpGuide),
-				},
+				...(FEATURES.pgwp
+					? [
+							{
+								label: "PGWP Guide",
+								to: blogCategoryPath(BLOG_CATEGORY_SLUG.pgwpGuide),
+							} satisfies FooterItem,
+						]
+					: []),
 				{
 					label: "Tool Comparison",
 					to: blogCategoryPath(BLOG_CATEGORY_SLUG.toolComparison),
@@ -146,7 +155,7 @@ export function SiteFooter() {
 						© {new Date().getFullYear()} {APP_NAME}. All rights reserved.
 					</span>
 					<span className="inline-flex items-center gap-1.5 text-muted-foreground/80">
-						<MapleLeafIcon className="size-4" />
+						{FEATURES.pgwp ? <MapleLeafIcon className="size-4" /> : null}
 						{footer.copyrightNote}
 					</span>
 				</div>

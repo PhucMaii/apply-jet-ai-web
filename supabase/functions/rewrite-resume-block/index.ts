@@ -7,7 +7,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { jsonResponse, STRIPE_FUNCTION_CORS } from "../_shared/stripe-cors.ts";
+import { jsonResponse } from "../_shared/stripe-cors.ts";
 import { createHash } from "node:crypto";
 
 declare const Deno: {
@@ -15,9 +15,27 @@ declare const Deno: {
   env: { get: (name: string) => string | undefined };
 };
 
-const GEMINI_MODEL = "gemini-3.1-flash-lite";
-const GEMINI_URL = (apiKey: string) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${encodeURIComponent(apiKey)}`;
+const GEMINI_PRIMARY_MODEL = "gemini-3.8-flash";
+const GEMINI_FAILOVER_MODEL = "gemini-3.1-flash-lite";
+const GEMINI_MODELS = [GEMINI_PRIMARY_MODEL, GEMINI_FAILOVER_MODEL] as const;
+const GEMINI_MAX_ATTEMPTS_PER_MODEL = 2;
+
+const geminiGenerateUrl = (model: string, apiKey: string) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+
+function isRetryableGeminiStatus(status: number): boolean {
+  return status === 429 || status === 503 || status === 500;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function backoffMs(attempt: number): number {
+  const base = 500 * 2 ** attempt;
+  const jitter = Math.floor(Math.random() * 250);
+  return base + jitter;
+}
 
 const MAX_NEW_BULLETS = 2;
 const MAX_REMOVED_BULLETS = 2;
@@ -106,7 +124,6 @@ Deno.serve(async (req: Request) => {
     let body: RewriteResumeBlockBody;
     try {
       body = await req.json();
-      console.log("body", body);
       if (!body?.userId || !body?.blockId || !body?.appResumeId || !body?.jdText) {
         console.error("Something went wrong: missing required rewrite-resume-block fields", {
           bodyKeys: Object.keys(body ?? {}),
@@ -517,149 +534,197 @@ function getTypeGuidance(blockType: string, sectionType: string): string {
   }
 }
 
-  async function callGeminiForRewrite(
+async function callGeminiForRewrite(
   apiKey: string,
   prompt: string,
   appResumeId: string,
   blockId: string,
 ): Promise<GeminiRewritePayload | null> {
-  let response: Response;
-  try {
-    response = await fetch(GEMINI_URL(apiKey), {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.35,
-          maxOutputTokens: 4096,
-          responseMimeType: "application/json",
-        },
-      }),
-    });
-  } catch (fetchError) {
-    console.error(
-      "Something went wrong fetching Gemini for rewrite-resume-block:",
-      fetchError,
-    );
-    return null;
-  }
+  const requestBody = JSON.stringify({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.35,
+      maxOutputTokens: 4096,
+      responseMimeType: "application/json",
+    },
+  });
 
-  if (!response.ok) {
-    const details = await response.text();
-    console.error("Something went wrong calling Gemini:", {
-      status: response.status,
-      statusText: response.statusText,
-      details,
-    });
-    return null;
-  }
+  for (const model of GEMINI_MODELS) {
+    for (let attempt = 0; attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL; attempt++) {
+      if (attempt > 0) {
+        await sleep(backoffMs(attempt - 1));
+      }
 
-  let data: any;
-  try {
-    data = await response.json();
-  } catch (jsonError) {
-    console.error(
-      "Something went wrong parsing Gemini HTTP JSON response:",
-      jsonError,
-    );
-    return null;
-  }
-
-  const candidate = Array.isArray(data?.candidates)
-    ? (data.candidates[0] as Record<string, unknown> | undefined)
-    : undefined;
-  const content = candidate?.content as Record<string, unknown> | undefined;
-  const parts = Array.isArray(content?.parts) ? content.parts : [];
-  const firstPart = parts[0] as Record<string, unknown> | undefined;
-  const text = typeof firstPart?.text === "string" ? firstPart.text.trim() : "";
-
-  if (!text) {
-    console.error("Something went wrong: empty Gemini rewrite payload", {
-      hasCandidates: Array.isArray(data?.candidates),
-      candidateCount: Array.isArray(data?.candidates)
-        ? data.candidates.length
-        : 0,
-      finishReason: candidate?.finishReason,
-      promptFeedback: data?.promptFeedback,
-      rawResponse: data,
-    });
-    return null;
-  }
-  
-
-  try {
-    // Use service role (same as the request handler). Anon key has no user
-    // JWT here, so RLS would block app_resumes / ai_generations.
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (supabaseUrl && serviceRoleKey) {
-      const supabase = createClient(supabaseUrl, serviceRoleKey);
-      const { data: appResume, error: appResumeError } = await supabase
-        .from("app_resumes")
-        .select("application_id, user_id")
-        .eq("id", appResumeId)
-        .single();
-      if (appResumeError) {
+      let response: Response;
+      try {
+        response = await fetch(geminiGenerateUrl(model, apiKey), {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: requestBody,
+        });
+      } catch (fetchError) {
         console.error(
-          "Something went wrong getting app resume:",
-          appResumeError,
+          "Something went wrong fetching Gemini for rewrite-resume-block:",
+          { model, attempt, fetchError },
         );
-      } else {
-        const { error: generationError } = await supabase
-          .from("ai_generations")
-          .insert({
-            user_id: appResume?.user_id,
-            prompt_hash: hash(prompt),
-            tokens_input: data.usageMetadata?.promptTokenCount,
-            tokens_output: data.usageMetadata?.candidatesTokenCount,
-            application_id: appResume?.application_id,
-            block_id: blockId,
-            created_at: new Date().toISOString(),
-          });
-        if (generationError) {
+        if (attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL - 1) continue;
+        break;
+      }
+
+      if (!response.ok) {
+        const details = await response.text();
+        console.error("Something went wrong calling Gemini:", {
+          model,
+          attempt,
+          status: response.status,
+          statusText: response.statusText,
+          details,
+        });
+        if (
+          isRetryableGeminiStatus(response.status) &&
+          attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL - 1
+        ) {
+          continue;
+        }
+        // Fail over to next model on capacity / server errors.
+        if (isRetryableGeminiStatus(response.status)) break;
+        return null;
+      }
+
+      let data: {
+        candidates?: Array<{
+          content?: { parts?: Array<{ text?: string }> };
+          finishReason?: unknown;
+        }>;
+        promptFeedback?: unknown;
+        usageMetadata?: {
+          promptTokenCount?: number;
+          candidatesTokenCount?: number;
+        };
+      };
+      try {
+        data = await response.json();
+      } catch (jsonError) {
+        console.error(
+          "Something went wrong parsing Gemini HTTP JSON response:",
+          { model, attempt, jsonError },
+        );
+        if (attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL - 1) continue;
+        break;
+      }
+
+      const candidate = Array.isArray(data?.candidates)
+        ? data.candidates[0]
+        : undefined;
+      const parts = Array.isArray(candidate?.content?.parts)
+        ? candidate.content.parts
+        : [];
+      const text =
+        typeof parts[0]?.text === "string" ? parts[0].text.trim() : "";
+
+      if (!text) {
+        console.error("Something went wrong: empty Gemini rewrite payload", {
+          model,
+          attempt,
+          hasCandidates: Array.isArray(data?.candidates),
+          candidateCount: Array.isArray(data?.candidates)
+            ? data.candidates.length
+            : 0,
+          finishReason: candidate?.finishReason,
+          promptFeedback: data?.promptFeedback,
+        });
+        if (attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL - 1) continue;
+        break;
+      }
+
+      if (model !== GEMINI_PRIMARY_MODEL) {
+        console.log("rewrite-resume-block using Gemini failover model", {
+          model,
+          attempt,
+        });
+      }
+
+      try {
+        // Use service role (same as the request handler). Anon key has no
+        // user JWT here, so RLS would block app_resumes / ai_generations.
+        const supabaseUrl = Deno.env.get("SUPABASE_URL");
+        const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+        if (supabaseUrl && serviceRoleKey) {
+          const supabase = createClient(supabaseUrl, serviceRoleKey);
+          const { data: appResume, error: appResumeError } = await supabase
+            .from("app_resumes")
+            .select("application_id, user_id")
+            .eq("id", appResumeId)
+            .single();
+          if (appResumeError) {
+            console.error(
+              "Something went wrong getting app resume:",
+              appResumeError,
+            );
+          } else {
+            const { error: generationError } = await supabase
+              .from("ai_generations")
+              .insert({
+                user_id: appResume?.user_id,
+                prompt_hash: hash(prompt),
+                tokens_input: data.usageMetadata?.promptTokenCount,
+                tokens_output: data.usageMetadata?.candidatesTokenCount,
+                application_id: appResume?.application_id,
+                block_id: blockId,
+                created_at: new Date().toISOString(),
+              });
+            if (generationError) {
+              console.error(
+                "Something went wrong inserting ai_generations:",
+                generationError,
+              );
+            }
+          }
+        } else {
           console.error(
-            "Something went wrong inserting ai_generations:",
-            generationError,
+            "Something went wrong: Supabase env missing for ai_generations log",
           );
         }
-      }
-    } else {
-      console.error(
-        "Something went wrong: Supabase env missing for ai_generations log",
-      );
-    }
 
-    let jsonStr = text;
-    const fenced = text.match(/^```(?:json)?\s*([\s\S]*?)```$/m);
-    if (fenced) jsonStr = fenced[1].trim();
-    const parsed = JSON.parse(jsonStr) as Record<string, unknown>;
-    if (!parsed || typeof parsed !== "object") {
-      console.error(
-        "Something went wrong: Gemini rewrite JSON root is not an object",
-        { jsonStr },
-      );
-      return null;
+        let jsonStr = text;
+        const fenced = text.match(/^```(?:json)?\s*([\s\S]*?)```$/m);
+        if (fenced) jsonStr = fenced[1].trim();
+        const parsed = JSON.parse(jsonStr) as Record<string, unknown>;
+        if (!parsed || typeof parsed !== "object") {
+          console.error(
+            "Something went wrong: Gemini rewrite JSON root is not an object",
+            { model, jsonStr },
+          );
+          if (attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL - 1) continue;
+          break;
+        }
+        if (!parsed.content_json || typeof parsed.content_json !== "object") {
+          console.error(
+            "Something went wrong: Gemini rewrite missing content_json object",
+            { model, parsedKeys: Object.keys(parsed), parsed },
+          );
+          if (attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL - 1) continue;
+          break;
+        }
+        return {
+          content_json: parsed.content_json as Record<string, unknown>,
+          changes: (parsed.changes ?? { summary: "" }) as RewriteChanges,
+        };
+      } catch (error) {
+        console.error("Something went wrong parsing rewrite JSON:", {
+          model,
+          attempt,
+          error,
+          message: error instanceof Error ? error.message : String(error),
+          rawText: text,
+        });
+        if (attempt < GEMINI_MAX_ATTEMPTS_PER_MODEL - 1) continue;
+        break;
+      }
     }
-    if (!parsed.content_json || typeof parsed.content_json !== "object") {
-      console.error(
-        "Something went wrong: Gemini rewrite missing content_json object",
-        { parsedKeys: Object.keys(parsed), parsed },
-      );
-      return null;
-    }
-    return {
-      content_json: parsed.content_json as Record<string, unknown>,
-      changes: (parsed.changes ?? { summary: "" }) as RewriteChanges,
-    };
-  } catch (error) {
-    console.error("Something went wrong parsing rewrite JSON:", {
-      error,
-      message: error instanceof Error ? error.message : String(error),
-      rawText: text,
-    });
-    return null;
   }
+
+  return null;
 }
 
 function asString(value: unknown, fallback = ""): string {

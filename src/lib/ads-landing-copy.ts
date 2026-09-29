@@ -42,6 +42,7 @@ export const ADS_LANDING_COPY: LandingCopy = {
 		"Resume help only — not immigration advice",
 	],
 	marketingNav: [
+		{ hash: LANDING_SECTION_ID.jobsPreview, label: "Open jobs" },
 		{ hash: LANDING_SECTION_ID.howItWorks, label: "How it works" },
 		{ hash: LANDING_SECTION_ID.pgwpTracker, label: withPgwpLeaf("PGWP tracker") },
 		{ hash: LANDING_SECTION_ID.whyWording, label: "AI tailoring" },

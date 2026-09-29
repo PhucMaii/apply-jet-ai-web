@@ -20,6 +20,7 @@ export const ROUTES = {
 	applications: "/applications",
 	applicationCreate: "/applications/new",
 	applicationDetail: "/applications/:applicationId",
+	jobs: "/jobs",
 	profile: "/profile",
 	privacy: "/privacy",
 	terms: "/terms",
@@ -56,8 +57,7 @@ export const LINKS = {
 } as const
 
 export const META = {
-	title:
-		"ApplyJet — Free Resume Builder for PGWP Holders in Canada",
+	title: "ApplyJet — Find Jobs, Tailor Your Resume, Apply Faster",
 	description:
-		"Track your PGWP expiry, build your resume free, and tailor it for Canadian employers and ATS. Not immigration advice—job application help only.",
+		"Browse jobs, build an ATS-friendly resume, score it against each posting, and tailor with AI before you apply.",
 } as const
