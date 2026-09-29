@@ -230,7 +230,6 @@ export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 		},
 		pricing: {
 			...copy.pricing,
-			currencyNote: "Prices are charged in USD.",
 		},
 		faq: {
 			...copy.faq,

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from "react"
+import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react"
 import {
 	applyEditableText,
 	buildBlockContentFromForm,
@@ -18,7 +18,6 @@ import {
 } from "@/lib/atsScoring"
 import { buildBlockRewriteDiff, type BlockRewriteDiff } from "@/lib/rewrite-diff"
 import { invokeRewriteResumeBlock } from "@/lib/rewrite-resume-block"
-import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import type {
 	AppResume,
 	AppResumeBlock,
@@ -184,7 +183,7 @@ export function ResumeTab({
 	const resumeText = flattenResumeSectionsText(sections)
 	const jdText = form.jobDescription.trim()
 
-	async function runAtsScore(force = false) {
+	const runAtsScore = useCallback(async (force = false) => {
 		if (!jdText || !resumeText.trim() || !appResume) {
 			setAtsResult(null)
 			return
@@ -211,48 +210,15 @@ export function ResumeTab({
 		} finally {
 			setIsScoringAts(false)
 		}
-	}
 
-	// useEffect(() => {
-	// 	if (showJobForm) return
-	// 	if (!jdText || !resumeText.trim() || !appResume) return
-
-	// 	const scoreKey = `${jdText}::${resumeText}`
-	// 	if (lastScoreKeyRef.current === scoreKey) return
-
-	// 	let cancelled = false
-	// 	lastScoreKeyRef.current = scoreKey
-	// 	setIsScoringAts(true)
-
-	// 	void calculateATSScore(jdText, appResume, {
-	// 		hasTables: false,
-	// 		hasImages: false,
-	// 		fileFormat: "pdf-text",
-	// 	})
-	// 		.then((result) => {
-	// 			if (!cancelled) setAtsResult(result)
-	// 		})
-	// 		.catch((error) => {
-	// 			console.error("Something went wrong calculating ATS score:", error)
-	// 			if (!cancelled) {
-	// 				toast.error("Could not calculate ATS score.")
-	// 			}
-	// 		})
-	// 		.finally(() => {
-	// 			if (!cancelled) setIsScoringAts(false)
-	// 		})
-
-	// 	return () => {
-	// 		cancelled = true
-	// 	}
-	// }, [showJobForm, jdText, resumeText, appResume])
+	}, [jdText, resumeText, appResume])
 
 	useEffect(() => {
 		if (showJobForm) return
 		if (!jdText || !resumeText.trim() || !appResume) return
 
 		runAtsScore(true)
-	}, [showJobForm, jdText, resumeText, appResume])
+	}, [showJobForm, jdText, resumeText, appResume, runAtsScore])
 
 	function handleSaveJobDetails() {
 		onSaveApplication()
@@ -502,9 +468,9 @@ export function ResumeTab({
 				prev.map((section) =>
 					section.id === skillsSection!.id
 						? {
-								...section,
-								blocks: [...section.blocks, createdBlock],
-							}
+							...section,
+							blocks: [...section.blocks, createdBlock],
+						}
 						: section,
 				),
 			)
@@ -636,9 +602,9 @@ export function ResumeTab({
 				prev.map((section) =>
 					section.id === targetSection.id
 						? {
-								...section,
-								blocks: [...section.blocks, createdBlock],
-							}
+							...section,
+							blocks: [...section.blocks, createdBlock],
+						}
 						: section,
 				),
 			)
@@ -753,9 +719,9 @@ export function ResumeTab({
 					prev.map((section) =>
 						section.id === summarySection.id
 							? {
-									...section,
-									blocks: [...section.blocks, targetBlock!],
-								}
+								...section,
+								blocks: [...section.blocks, targetBlock!],
+							}
 							: section,
 					),
 				)
@@ -844,123 +810,120 @@ export function ResumeTab({
 			ref={layoutRef}
 			className="flex h-full min-h-0 flex-1 flex-col overflow-hidden xl:flex-row"
 		>
-				<div
-					className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--left-panel-width)]"
-					style={
-						{
-							"--left-panel-width": `${leftPanelWidth}px`,
-						} as CSSProperties
+			<div
+				className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--left-panel-width)]"
+				style={
+					{
+						"--left-panel-width": `${leftPanelWidth}px`,
+					} as CSSProperties
+				}
+			>
+				<ResumeSectionsAside
+					sections={sections}
+					expandedId={expandedId}
+					activeSectionId={activeSectionId}
+					dragId={dragId}
+					editingBlockId={editingBlockId}
+					editingDraft={editingDraft}
+					editingFormData={editingFormData}
+					isAddingSkillCategory={isAddingSkillCategory}
+					isCreatingCustomSection={isCreatingCustomSection}
+					isAddingCustomBlock={isAddingCustomBlock}
+					rewritingBlockId={rewritingBlockId}
+					isGeneratingSummary={isGeneratingSummary}
+					savingStyleGroupId={savingStyleGroupId}
+					onSectionClick={handleSectionClick}
+					onStyleSectionFocus={handleStyleSectionFocus}
+					onDragStart={handleDragStart}
+					onDrop={(targetId) => {
+						void handleDrop(targetId)
+					}}
+					onStartEditBlock={handleStartEditBlock}
+					onDraftTextChange={setEditingDraft}
+					onFieldChange={(field, value) =>
+						setEditingFormData((prev) => ({
+							...(prev ?? {}),
+							[field]: value,
+						}))
 					}
-					data-tour={TOUR_TARGET.resumeStudioEditor}
-				>
-					<ResumeSectionsAside
-						sections={sections}
-						expandedId={expandedId}
-						activeSectionId={activeSectionId}
-						dragId={dragId}
-						editingBlockId={editingBlockId}
-						editingDraft={editingDraft}
-						editingFormData={editingFormData}
-						isAddingSkillCategory={isAddingSkillCategory}
-						isCreatingCustomSection={isCreatingCustomSection}
-						isAddingCustomBlock={isAddingCustomBlock}
-						rewritingBlockId={rewritingBlockId}
-						isGeneratingSummary={isGeneratingSummary}
-						savingStyleGroupId={savingStyleGroupId}
-						onSectionClick={handleSectionClick}
-						onStyleSectionFocus={handleStyleSectionFocus}
-						onDragStart={handleDragStart}
-						onDrop={(targetId) => {
-							void handleDrop(targetId)
-						}}
-						onStartEditBlock={handleStartEditBlock}
-						onDraftTextChange={setEditingDraft}
-						onFieldChange={(field, value) =>
-							setEditingFormData((prev) => ({
-								...(prev ?? {}),
-								[field]: value,
-							}))
-						}
-						onApplyEditBlock={handleApplyEditBlock}
-						onCancelEditBlock={handleCancelEditBlock}
-						onAddSkillCategory={handleAddSkillCategory}
-						onDeleteBlock={handleDeleteSkillCategory}
-						onRenameSection={handleRenameSection}
-						onDeleteSection={handleDeleteSection}
-						onCreateCustomSection={handleCreateCustomSection}
-						onAddCustomBlock={handleAddCustomBlock}
-						onRewriteBlock={handleRewriteBlock}
-						onGenerateSummary={handleGenerateSummary}
-						onStyleChange={(groupId, blockIds, patch) => {
-							void handleStyleChange(groupId, blockIds, patch)
-						}}
-					/>
-				</div>
-
-				<PanelResizeHandle
-					label="Resize sections panel"
-					onResize={handleResizeLeft}
+					onApplyEditBlock={handleApplyEditBlock}
+					onCancelEditBlock={handleCancelEditBlock}
+					onAddSkillCategory={handleAddSkillCategory}
+					onDeleteBlock={handleDeleteSkillCategory}
+					onRenameSection={handleRenameSection}
+					onDeleteSection={handleDeleteSection}
+					onCreateCustomSection={handleCreateCustomSection}
+					onAddCustomBlock={handleAddCustomBlock}
+					onRewriteBlock={handleRewriteBlock}
+					onGenerateSummary={handleGenerateSummary}
+					onStyleChange={(groupId, blockIds, patch) => {
+						void handleStyleChange(groupId, blockIds, patch)
+					}}
 				/>
+			</div>
 
-				<div
-					className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
-					data-tour={TOUR_TARGET.resumeStudioPreview}
-				>
-					<ResumePreviewPanel
-						sections={sections}
-						activeSectionId={activeSectionId}
-						sectionRefs={previewRefs}
-						pageCount={pageCount}
-						onPageCountChange={setPageCount}
-						rewriteDiff={rewriteDiff}
-						isApplyingRewrite={isApplyingRewrite}
-						onAcceptRewrite={() => {
-							void handleApplyRewriteSuggestion()
-						}}
-						onRejectRewrite={clearRewriteReview}
-					/>
-				</div>
+			<PanelResizeHandle
+				label="Resize sections panel"
+				onResize={handleResizeLeft}
+			/>
 
-				<PanelResizeHandle
-					label="Resize job panel"
-					onResize={handleResizeRight}
+			<div
+				className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+			>
+				<ResumePreviewPanel
+					sections={sections}
+					activeSectionId={activeSectionId}
+					sectionRefs={previewRefs}
+					pageCount={pageCount}
+					onPageCountChange={setPageCount}
+					rewriteDiff={rewriteDiff}
+					isApplyingRewrite={isApplyingRewrite}
+					onAcceptRewrite={() => {
+						void handleApplyRewriteSuggestion()
+					}}
+					onRejectRewrite={clearRewriteReview}
 				/>
+			</div>
 
-				<div
-					className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--right-panel-width)]"
-					style={
-						{
-							"--right-panel-width": `${rightPanelWidth}px`,
-						} as CSSProperties
-					}
-					data-tour={TOUR_TARGET.resumeStudioJobPanel}
-				>
-					<ResumeJobAside
-						form={form}
-						status={status}
-						createdAt={createdAt}
-						savingDetails={savingDetails}
-						updatingStatus={updatingStatus}
-						isDeleting={isDeleting}
-						showJobForm={showJobForm}
-						issueTotal={issueTotal}
-						keywordsOpen={keywordsOpen}
-						contentOpen={contentOpen}
-						atsResult={atsResult}
-						isScoringAts={isScoringAts}
-						onToggleKeywords={() => setKeywordsOpen((prev) => !prev)}
-						onToggleContent={() => setContentOpen((prev) => !prev)}
-						onEditJob={() => setIsEditingJob(true)}
-						onDoneEditingJob={() => {
-							setIsEditingJob(false)
-							void runAtsScore(true)
-						}}
-						onSaveJobDetails={handleSaveJobDetails}
-						onPatchForm={onPatchForm}
-						onStatusChange={onStatusChange}
-						onDelete={onDelete}
-					/>
-				</div>
+			<PanelResizeHandle
+				label="Resize job panel"
+				onResize={handleResizeRight}
+			/>
+
+			<div
+				className="flex max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden xl:max-h-none xl:h-full xl:w-[var(--right-panel-width)]"
+				style={
+					{
+						"--right-panel-width": `${rightPanelWidth}px`,
+					} as CSSProperties
+				}
+			>
+				<ResumeJobAside
+					form={form}
+					status={status}
+					createdAt={createdAt}
+					savingDetails={savingDetails}
+					updatingStatus={updatingStatus}
+					isDeleting={isDeleting}
+					showJobForm={showJobForm}
+					issueTotal={issueTotal}
+					keywordsOpen={keywordsOpen}
+					contentOpen={contentOpen}
+					atsResult={atsResult}
+					isScoringAts={isScoringAts}
+					onToggleKeywords={() => setKeywordsOpen((prev) => !prev)}
+					onToggleContent={() => setContentOpen((prev) => !prev)}
+					onEditJob={() => setIsEditingJob(true)}
+					onDoneEditingJob={() => {
+						setIsEditingJob(false)
+						void runAtsScore(true)
+					}}
+					onSaveJobDetails={handleSaveJobDetails}
+					onPatchForm={onPatchForm}
+					onStatusChange={onStatusChange}
+					onDelete={onDelete}
+				/>
+			</div>
 		</div>
 	)
 }

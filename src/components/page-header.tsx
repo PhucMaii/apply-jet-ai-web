@@ -19,7 +19,6 @@ import { PAGE_HEADER_COPY } from "@/lib/page-header-copy"
 import { PAGE_HEADER_THEME } from "@/lib/page-header-theme"
 import { APP_NAME, ROUTES } from "@/lib/constants"
 import { FEATURES } from "@/lib/features"
-import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { cn } from "@/lib/utils"
 
 export interface PageHeaderProps {
@@ -64,23 +63,16 @@ function NavLink({
 	item,
 	className,
 	onClick,
-	tourTarget,
 }: {
 	item: NavItem
 	className?: string
 	onClick?: () => void
-	tourTarget?: string
 }) {
 	const Icon = item.icon
 	const linkClass = cn(PAGE_HEADER_THEME.navLink, className)
 
 	return (
-		<Link
-			to={item.href}
-			className={linkClass}
-			onClick={onClick}
-			data-tour={tourTarget}
-		>
+		<Link to={item.href} className={linkClass} onClick={onClick}>
 			<Icon className="size-4 shrink-0 opacity-70" aria-hidden />
 			{item.label}
 		</Link>
@@ -90,11 +82,9 @@ function NavLink({
 function MobileNavPill({
 	item,
 	isActive,
-	tourTarget,
 }: {
 	item: NavItem
 	isActive: boolean
-	tourTarget?: string
 }) {
 	const Icon = item.icon
 	const className = cn(
@@ -103,7 +93,7 @@ function MobileNavPill({
 	)
 
 	return (
-		<Link to={item.href} className={className} data-tour={tourTarget}>
+		<Link to={item.href} className={className}>
 			<Icon className="size-3.5 shrink-0" aria-hidden />
 			{item.label}
 		</Link>
@@ -168,11 +158,6 @@ export function PageHeader({
 							<NavLink
 								key={item.href}
 								item={item}
-								tourTarget={
-									item.href === ROUTES.applications
-										? TOUR_TARGET.navApplications
-										: undefined
-								}
 								className={
 									item.isActive(pathname)
 										? PAGE_HEADER_THEME.navLinkActive
@@ -207,7 +192,6 @@ export function PageHeader({
 								>
 									<Link
 										to={ROUTES.applicationCreate}
-										data-tour={TOUR_TARGET.newApplication}
 									>
 										<Plus className="size-4" aria-hidden />
 										<span className="hidden lg:inline">
@@ -244,7 +228,6 @@ export function PageHeader({
 												to={ROUTES.applicationCreate}
 												className={PAGE_HEADER_THEME.menuItem}
 												role="menuitem"
-												data-tour={TOUR_TARGET.newApplication}
 												onClick={closeMenu}
 											>
 												<Plus className="size-4 shrink-0" aria-hidden />
@@ -263,11 +246,6 @@ export function PageHeader({
 																"bg-neutral-50 text-neutral-900",
 														)}
 														role="menuitem"
-														data-tour={
-															item.href === ROUTES.applications
-																? TOUR_TARGET.navApplications
-																: undefined
-														}
 														onClick={closeMenu}
 													>
 														<Icon className="size-4 shrink-0" aria-hidden />
@@ -351,7 +329,6 @@ export function PageHeader({
 							>
 								<Link
 									to={ROUTES.applicationCreate}
-									data-tour={TOUR_TARGET.newApplication}
 								>
 									<Plus className="size-4" aria-hidden />
 									{PAGE_HEADER_COPY.newApplication}
@@ -376,11 +353,6 @@ export function PageHeader({
 									key={item.href}
 									item={item}
 									isActive={item.isActive(pathname)}
-									tourTarget={
-										item.href === ROUTES.applications
-											? TOUR_TARGET.navApplications
-											: undefined
-									}
 								/>
 							))}
 						</nav>

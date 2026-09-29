@@ -403,19 +403,15 @@ export const LANDING_COPY = {
 		title: "Free forever to build. Flexible options when you need more.",
 		description:
 			"The resume builder, PGWP tracker, live job-match scoring, and core suggestions stay free. Try AI at no cost, then pick monthly Pro or one-time credit packs when you need more.",
-		currencyNote:
-			"Prices are charged in USD. CAD is shown for reference for people living in Canada.",
 		monthlyLabel: "Monthly",
 		oneTimeLabel: "One-time packs",
 		plans: {
 			starter: {
 				name: "Starter",
-				price: "US$0",
-				priceCad: "CA$0",
+				price: "$0",
 				period: "/month",
 				desc: "Free forever builder—plus PGWP tracker, free live scoring, match suggestions, and AI tries to start.",
 				features: [
-					withPgwpLeaf("PGWP tracker"),
 					"Resume builder—free forever",
 					"Free live score vs job description",
 					"Free core match suggestions",
@@ -429,8 +425,7 @@ export const LANDING_COPY = {
 			},
 			pro: {
 				name: "Pro",
-				price: "US$19.99",
-				priceCad: "CA$27.99",
+				price: "$19.99",
 				period: "/month",
 				desc: "Unlimited AI, cover letters, and hiring contacts for an active search.",
 				features: [
@@ -446,8 +441,7 @@ export const LANDING_COPY = {
 			},
 			internPack: {
 				name: "Intern Pack",
-				price: "US$5.99",
-				priceCad: "CA$8.49",
+				price: "$5.99",
 				period: "one-time",
 				desc: "A small credit boost—no subscription required.",
 				features: [
@@ -459,8 +453,7 @@ export const LANDING_COPY = {
 			},
 			juniorPack: {
 				name: "Junior Pack",
-				price: "US$9.99",
-				priceCad: "CA$13.99",
+				price: "$9.99",
 				period: "one-time",
 				desc: "More AI generations plus hiring contact searches.",
 				features: [
@@ -475,8 +468,7 @@ export const LANDING_COPY = {
 			},
 			advancedPack: {
 				name: "Advanced Pack",
-				price: "US$14.99",
-				priceCad: "CA$20.99",
+				price: "$14.99",
 				period: "one-time",
 				desc: "The largest one-time pack for a busy application season.",
 				features: [
@@ -497,7 +489,7 @@ export const LANDING_COPY = {
 			{
 				question: "Does this help with visa or PR applications?",
 				answer:
-					"No. ApplyJet is a resume and job-application tool. We do not prepare Express Entry profiles, advise on PGWP eligibility, or file anything with IRCC. If you need immigration help, talk to IRCC or a licensed professional.",
+					"No. ApplyJet is a resume and job-application tool. We do not prepare Express Entry profiles, or file anything with IRCC. If you need immigration help, talk to IRCC or a licensed professional.",
 			},
 			{
 				question: "Is the PGWP tracker legal or immigration advice?",

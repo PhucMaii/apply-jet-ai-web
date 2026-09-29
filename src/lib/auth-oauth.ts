@@ -48,7 +48,7 @@ export function hasOAuthCallbackParams(): boolean {
 }
 
 export function getOAuthSuccessRedirectPath(): string {
-	return consumeOAuthReturnPath() ?? ROUTES.applications
+	return consumeOAuthReturnPath() ?? ROUTES.profile
 }
 
 export type OAuthCallbackResult =

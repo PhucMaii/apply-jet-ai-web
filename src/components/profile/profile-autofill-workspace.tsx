@@ -1,14 +1,12 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Tabs } from "@/components/ui/tabs"
 import { ResumeSection } from "@/components/profile/resume-section"
-import { useOnboarding } from "@/context/onboarding-context"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import {
 	PROFILE_SECTION,
 	PROFILE_SECTION_META,
 	type ProfileSection,
 } from "@/lib/profile-section"
-import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { PgwpTrackerCompact } from "@/components/pgwp/pgwp-tracker-compact"
 import { FEATURES } from "@/lib/features"
@@ -90,13 +88,6 @@ export function ProfileAutofillWorkspace({
 	const [profileSection, setProfileSection] = useState<ProfileSection>(
 		PROFILE_SECTION.contact,
 	)
-	const { activeProfileSection, isTourActive } = useOnboarding()
-
-	useEffect(() => {
-		if (!isTourActive || !activeProfileSection) return
-		// eslint-disable-next-line react-hooks/set-state-in-effect
-		setProfileSection(activeProfileSection as ProfileSection)
-	}, [activeProfileSection, isTourActive])
 
 	return (
 		<Tabs
@@ -112,7 +103,6 @@ export function ProfileAutofillWorkspace({
 						<TabsTrigger
 							key={key}
 							value={key}
-							data-tour={TOUR_TARGET.profileSection(key)}
 							className={DASHBOARD_THEME.sectionTabsTrigger}
 						>
 							<SectionIcon

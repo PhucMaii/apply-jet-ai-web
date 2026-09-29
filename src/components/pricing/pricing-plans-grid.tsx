@@ -137,7 +137,7 @@ export function PricingSectionHeader({
 	variant: PricingPlanCardVariant
 }) {
 	const { pricing } = useLandingCopy()
-	const { eyebrow, title, description, currencyNote } = pricing
+	const { eyebrow, title, description } = pricing
 	const isLanding = variant === "landing"
 
 	return (
@@ -168,9 +168,6 @@ export function PricingSectionHeader({
 			>
 				{description}
 			</p>
-			{isLanding && currencyNote ? (
-				<p className="mt-2 text-sm text-landing-muted">{currencyNote}</p>
-			) : null}
 		</div>
 	)
 }

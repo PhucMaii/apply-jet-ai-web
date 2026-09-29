@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { APPLICATION_CREATE_COPY } from "@/lib/application-create-copy"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
-import { TOUR_TARGET } from "@/lib/onboarding/selectors"
 import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type {
 	CreateApplicationFieldErrors,
@@ -128,7 +127,6 @@ export function ApplicationCreateForm({
 					size="lg"
 					className="gap-2 sm:min-w-[200px]"
 					disabled={submitting}
-					data-tour={TOUR_TARGET.createApplicationSubmit}
 				>
 					{submitting ? (
 						<Loader2 className="size-4 animate-spin" aria-hidden />
