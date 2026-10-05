@@ -1,54 +1,40 @@
-import { motion } from "framer-motion"
 import { Link } from "react-router-dom"
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
 import { useLandingCopy } from "@/context/landing-copy-context"
 import { ROUTES } from "@/lib/constants"
-import { LANDING_PRIMARY_CTA_BUTTON_CLASS } from "@/lib/landing-copy"
 
 export function FinalCta() {
 	const { finalCta } = useLandingCopy()
 
 	return (
-		<section className="pb-24 pt-6">
-			<div className="mx-auto max-w-6xl px-4 sm:px-6">
-				<motion.div
-					className="rounded-3xl border border-border/80 bg-muted/25 px-6 py-10 text-center sm:px-10"
-					initial={{ opacity: 0, y: 12 }}
-					whileInView={{ opacity: 1, y: 0 }}
-					viewport={{ once: true }}
-					transition={{ duration: 0.45 }}
-				>
-					<h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl">
-						{finalCta.title}
-					</h2>
-					<p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
-						{finalCta.description}
-					</p>
-					<div className="mt-8 flex flex-col items-center gap-3">
-						<Button
-							size="lg"
-							surface="light"
-							className={LANDING_PRIMARY_CTA_BUTTON_CLASS}
-							asChild
-						>
-							<LandingSignupLink
-								location="final_cta"
-								label={finalCta.primaryCta}
-							>
-								{finalCta.primaryCta}
-								<ArrowRight className="size-4" aria-hidden />
-							</LandingSignupLink>
-						</Button>
-						<Link
-							to={ROUTES.login}
-							className="text-sm text-landing-muted transition-colors hover:text-landing-primary"
-						>
-							{finalCta.loginLink}
-						</Link>
-					</div>
-				</motion.div>
+		<section className="px-4 pb-20 sm:px-6 sm:pb-28 lg:px-8">
+			<div className="mx-auto max-w-6xl overflow-hidden rounded-2xl bg-brand px-6 py-14 text-center sm:px-12 sm:py-20">
+				<h2 className="mx-auto max-w-2xl font-display text-3xl font-medium tracking-tight text-white text-balance sm:text-4xl">
+					{finalCta.title}
+				</h2>
+				<p className="mx-auto mt-4 max-w-xl leading-relaxed text-white/80 text-pretty">
+					{finalCta.description}
+				</p>
+				<div className="mt-9 flex flex-col items-center gap-4">
+					<Button
+						size="lg"
+						className="bg-white text-brand-ink hover:bg-brand-soft focus-visible:ring-white/60 focus-visible:ring-offset-brand"
+						asChild
+					>
+						<LandingSignupLink location="final_cta" label={finalCta.primaryCta}>
+							{finalCta.primaryCta}
+							<ArrowRight aria-hidden />
+						</LandingSignupLink>
+					</Button>
+					<Link
+						to={ROUTES.login}
+						className="rounded text-sm text-white/80 underline-offset-4 transition-colors hover:text-white hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+					>
+						{finalCta.loginLink}
+					</Link>
+				</div>
 			</div>
 		</section>
 	)

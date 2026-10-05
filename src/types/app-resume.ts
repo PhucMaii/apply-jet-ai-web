@@ -140,6 +140,8 @@ export interface AppResume {
 	application_id: string
 	user_id: string
 	status: AppResumeStatus
+	/** Latest ATS match score from the resume preview (0–100). */
+	score: number | null
 	created_at: string
 	updated_at: string
 	sections: AppResumeSection[]

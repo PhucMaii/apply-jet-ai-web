@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ApplicationsStatusBadge } from "@/components/applications/applications-status-badge"
 import {
 	APPLICATION_STATUSES,
+	APPLICATION_STATUS_META,
 	type ApplicationStatus,
 	isApplicationStatus,
 } from "@/lib/application-status"
@@ -117,7 +118,7 @@ export function ApplicationDetailOverview({
 						>
 							{APPLICATION_STATUSES.map((s) => (
 								<option key={s} value={s}>
-									{s}
+									{APPLICATION_STATUS_META[s].label}
 								</option>
 							))}
 						</select>

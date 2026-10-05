@@ -6,7 +6,10 @@ import {
 	UserSearch,
 } from "lucide-react"
 import { Link } from "react-router-dom"
+import { ApplicationsStatusBadge } from "@/components/applications/applications-status-badge"
+import { Breadcrumb } from "@/components/layout/breadcrumb"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { APPLICATIONS_COPY } from "@/lib/applications-copy"
 import type { ApplicationStatus } from "@/lib/application-status"
 import { ROUTES } from "@/lib/constants"
 import type {
@@ -27,11 +30,11 @@ import type { AppResume, AppResumeBlock, AppResumeSection, CustomSectionBlockTyp
 
 const DOCUMENT_TAB_TRIGGER = cn(
 	"relative h-11 min-w-0 shrink-0 rounded-none border-b-2 border-transparent",
-	"bg-transparent px-3 text-sm font-medium text-neutral-500 shadow-none",
-	"transition-colors hover:text-neutral-800",
-	"focus-visible:ring-0 focus-visible:ring-offset-0",
-	"data-[state=active]:border-primary data-[state=active]:bg-transparent",
-	"data-[state=active]:text-neutral-900 data-[state=active]:shadow-none",
+	"bg-transparent px-3 text-sm font-medium text-ink-subtle shadow-none",
+	"transition-colors hover:text-ink",
+	"focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand/40",
+	"data-[state=active]:border-brand data-[state=active]:bg-transparent",
+	"data-[state=active]:text-ink data-[state=active]:shadow-none",
 	"sm:px-4",
 )
 
@@ -62,6 +65,9 @@ interface ApplicationDetailDocumentsProps {
 	}) => Promise<void>
 	onSaveAppResumeSectionOrder: (
 		orderedSections: Array<{ sectionId: string; sortKey: number }>,
+	) => Promise<void>
+	onSaveAppResumeBlockOrder: (
+		orderedBlocks: Array<{ blockId: string; sortKey: number }>,
 	) => Promise<void>
 	onCreateSkillCategory: (input: {
 		appResumeId: string
@@ -113,6 +119,7 @@ export function ApplicationDetailDocuments({
 	onSaveAppResumeBlock,
 	onSaveAppResumeSectionDisplayName,
 	onSaveAppResumeSectionOrder,
+	onSaveAppResumeBlockOrder,
 	onCreateSkillCategory,
 	onCreateSummaryBlock,
 	onEnsureSkillsSection,
@@ -161,20 +168,28 @@ export function ApplicationDetailDocuments({
 				</div>
 			) : null}
 
-			<header className="shrink-0 border-b border-neutral-200 bg-white">
-				<div className="flex items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3">
+			<header className="shrink-0 border-b border-hairline bg-surface">
+				<div className="flex items-center gap-3 px-3 py-2.5 sm:px-5 sm:py-3">
 					<Link
 						to={ROUTES.applications}
-						className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+						className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 md:hidden"
 						aria-label="Back to applications"
 					>
 						<ArrowLeft className="size-4" aria-hidden />
 					</Link>
 					<div className="min-w-0 flex-1">
-						<p className="truncate font-display text-sm font-semibold text-neutral-900 sm:text-base lg:text-lg">
+						<Breadcrumb
+							className="hidden md:block"
+							items={[
+								{ label: APPLICATIONS_COPY.title, href: ROUTES.applications },
+								{ label: pageTitle },
+							]}
+						/>
+						<p className="truncate font-display text-base font-semibold text-ink md:hidden">
 							{pageTitle}
 						</p>
 					</div>
+					<ApplicationsStatusBadge status={status} className="shrink-0" />
 				</div>
 			</header>
 
@@ -182,7 +197,7 @@ export function ApplicationDetailDocuments({
 				defaultValue="resume"
 				className="flex min-h-0 flex-1 flex-col"
 			>
-				<div className="shrink-0 border-b border-neutral-200 bg-white px-3 sm:px-4">
+				<div className="shrink-0 border-b border-hairline bg-surface px-3 sm:px-5">
 					<TabsList
 						className={cn(
 							"h-auto w-full justify-start gap-0 rounded-none bg-transparent p-0",
@@ -243,6 +258,7 @@ export function ApplicationDetailDocuments({
 								onSaveAppResumeSectionDisplayName
 							}
 							onSaveAppResumeSectionOrder={onSaveAppResumeSectionOrder}
+							onSaveAppResumeBlockOrder={onSaveAppResumeBlockOrder}
 							onCreateSkillCategory={onCreateSkillCategory}
 							onCreateSummaryBlock={onCreateSummaryBlock}
 							onEnsureSkillsSection={onEnsureSkillsSection}

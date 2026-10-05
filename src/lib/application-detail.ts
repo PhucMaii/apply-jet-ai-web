@@ -143,3 +143,23 @@ async function fetchAppResumeTree(
 		sections,
 	}
 }
+
+/** Persist the preview ATS score so the applications list can show it. */
+export async function saveAppResumeScore(
+	appResumeId: string,
+	score: number,
+): Promise<void> {
+	const clamped = Math.round(Math.min(100, Math.max(0, score)))
+	const { error } = await supabase
+		.from("app_resumes")
+		.update({
+			score: clamped,
+			updated_at: new Date().toISOString(),
+		})
+		.eq("id", appResumeId)
+
+	if (error) {
+		console.error("Something went wrong saving app resume score:", error)
+		throw new Error(error.message)
+	}
+}

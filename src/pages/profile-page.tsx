@@ -1,23 +1,67 @@
-import { CreditCard, Gauge, UserRound } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useCallback, useMemo } from "react"
+import { AppPageHeader } from "@/components/layout/app-page-header"
 import { ProfileAutofillWorkspace } from "@/components/profile/profile-autofill-workspace"
 import { ProfileBillingPanel } from "@/components/profile/profile-billing-panel"
-import { ProfileUsagePanel } from "@/components/profile/usage/profile-usage-panel"
-import { ProfileLoadingState } from "@/components/profile/profile-loading-state"
+import { ProfileCompletenessCard } from "@/components/profile/profile-completeness-card"
 import { ProfilePageAlerts } from "@/components/profile/profile-page-alerts"
-import { PageHeader } from "@/components/page-header"
-import { useAuth } from "@/context/auth-context"
+import {
+	ProfileSectionNav,
+	type ProfileNavGroup,
+} from "@/components/profile/profile-section-nav"
+import { ProfileUsagePanel } from "@/components/profile/usage/profile-usage-panel"
+import { Skeleton } from "@/components/ui/skeleton"
 import { useProfilePage } from "@/hooks/use-profile-page"
-import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
-import { PAGE_HEADER_COPY } from "@/lib/page-header-copy"
-import { cn } from "@/lib/utils"
+import { hasUploadedResume, useUserResume } from "@/hooks/use-user-resume"
+import { APP_PAGE_CONTAINER, PROFILE_TAB } from "@/lib/app-nav"
+import {
+	getProfileChecklist,
+	getProfileCompletion,
+} from "@/lib/profile-completeness"
+import {
+	PROFILE_ACCOUNT_META,
+	PROFILE_SECTION,
+	PROFILE_SECTION_META,
+	isProfileSection,
+	type ProfileSection,
+} from "@/lib/profile-section"
+
+const PROFILE_PAGE_COPY = {
+	title: "Profile & resume",
+	description:
+		"Everything here feeds your tailored resumes. Fill it once, reuse it for every application.",
+	profileGroup: "Profile",
+	accountGroup: "Account",
+} as const
+
+const ACCOUNT_NAV_KEY = {
+	usage: `tab:${PROFILE_TAB.usage}`,
+	billing: `tab:${PROFILE_TAB.billing}`,
+} as const
+function ProfilePageSkeleton() {
+	return (
+		<div className="mt-8 grid gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]" aria-busy="true">
+			<div className="hidden space-y-3 lg:block">
+				<Skeleton className="h-28 rounded-xl" />
+				{[0, 1, 2, 3, 4, 5].map((key) => (
+					<Skeleton key={key} className="h-8" />
+				))}
+			</div>
+			<div className="space-y-4">
+				<Skeleton className="h-6 w-48" />
+				<Skeleton className="h-4 w-80 max-w-full" />
+				<Skeleton className="h-64 rounded-xl" />
+			</div>
+		</div>
+	)
+}
 
 export function ProfilePage() {
-	const { signOut } = useAuth()
 	const {
 		user,
 		tab,
 		setTab,
+		section,
+		setSection,
 		loading,
 		billingBusy,
 		notice,
@@ -27,7 +71,6 @@ export function ProfilePage() {
 		subscribeToPro,
 		buyPack,
 		openBillingPortal,
-
 		refetchProfile,
 		saveProfile,
 		saveExperience,
@@ -49,58 +92,131 @@ export function ProfilePage() {
 		onAddLink,
 		onSaveLink,
 	} = useProfilePage()
+	const { resume } = useUserResume(user?.id)
 
-	const accountInitials = (
-		user?.email?.split("@")[0]?.slice(0, 2) || "?"
-	).toUpperCase()
+	const checklist = useMemo(
+		() =>
+			getProfileChecklist({
+				profile: userProfile?.profile ?? null,
+				workExperiences: userProfile?.workExperiences ?? [],
+				educations: userProfile?.educations ?? [],
+				skills: userProfile?.skills ?? [],
+				links: userProfile?.links ?? [],
+				hasResume: hasUploadedResume(resume),
+			}),
+		[userProfile, resume],
+	)
+	const completion = getProfileCompletion(checklist)
+
+	const navGroups = useMemo((): ProfileNavGroup[] => {
+		const isSectionDone = (target: ProfileSection) => {
+			const items = checklist.filter((item) => item.section === target)
+			return items.length > 0 && items.every((item) => item.isDone)
+		}
+		return [
+			{
+				key: "profile",
+				label: PROFILE_PAGE_COPY.profileGroup,
+				items: Object.values(PROFILE_SECTION).map((key) => ({
+					key,
+					label: PROFILE_SECTION_META[key].label,
+					Icon: PROFILE_SECTION_META[key].Icon,
+					isDone: isSectionDone(key),
+				})),
+			},
+			{
+				key: "account",
+				label: PROFILE_PAGE_COPY.accountGroup,
+				items: [
+					{ key: ACCOUNT_NAV_KEY.usage, ...PROFILE_ACCOUNT_META.usage },
+					{ key: ACCOUNT_NAV_KEY.billing, ...PROFILE_ACCOUNT_META.billing },
+				],
+			},
+		]
+	}, [checklist])
+
+	const activeKey =
+		tab === PROFILE_TAB.usage
+			? ACCOUNT_NAV_KEY.usage
+			: tab === PROFILE_TAB.billing
+				? ACCOUNT_NAV_KEY.billing
+				: section
+
+	const activeLabel =
+		tab === PROFILE_TAB.usage
+			? PROFILE_ACCOUNT_META.usage.label
+			: tab === PROFILE_TAB.billing
+				? PROFILE_ACCOUNT_META.billing.label
+				: PROFILE_SECTION_META[section].label
+
+	const handleSelectNav = useCallback(
+		(key: string) => {
+			if (key === ACCOUNT_NAV_KEY.usage) {
+				setTab(PROFILE_TAB.usage)
+			} else if (key === ACCOUNT_NAV_KEY.billing) {
+				setTab(PROFILE_TAB.billing)
+			} else if (isProfileSection(key)) {
+				setSection(key)
+			}
+		},
+		[setTab, setSection],
+	)
+
+	const handleOpenBilling = useCallback(() => {
+		setTab(PROFILE_TAB.billing)
+	}, [setTab])
+
+	const handleSubscribe = useCallback(() => {
+		void subscribeToPro()
+	}, [subscribeToPro])
 
 	return (
-		<div className={DASHBOARD_THEME.page}>
-			<PageHeader
-				title={PAGE_HEADER_COPY.profileTitle}
-				userEmail={user?.email}
-				accountInitials={accountInitials}
-				onSignOut={signOut}
+		<div className={APP_PAGE_CONTAINER}>
+			<AppPageHeader
+				title={PROFILE_PAGE_COPY.title}
+				description={PROFILE_PAGE_COPY.description}
 			/>
 
-			<main className={DASHBOARD_THEME.main}>
+			<div className="mt-6 empty:hidden">
 				<ProfilePageAlerts error={error} notice={notice} />
+			</div>
 
-				{loading || !userProfile ? (
-					<ProfileLoadingState />
-				) : (
-					<Tabs value={tab} onValueChange={setTab} className="w-full">
-						<TabsList
-							className={cn(
-								DASHBOARD_THEME.mainTabsList,
-								DASHBOARD_THEME.mainTabsListThree,
-							)}
-						>
-							<TabsTrigger
-								value="profile"
-								className={DASHBOARD_THEME.mainTabsTrigger}
-							>
-								<UserRound className="size-4 shrink-0 opacity-80" aria-hidden />
-								Resume
-							</TabsTrigger>
-							<TabsTrigger
-								value="usage"
-								className={DASHBOARD_THEME.mainTabsTrigger}
-							>
-								<Gauge className="size-4 shrink-0 opacity-80" aria-hidden />
-								Usage
-							</TabsTrigger>
-							<TabsTrigger
-								value="billing"
-								className={DASHBOARD_THEME.mainTabsTrigger}
-							>
-								<CreditCard className="size-4 shrink-0 opacity-80" aria-hidden />
-								Billing
-							</TabsTrigger>
-						</TabsList>
+			{loading || !userProfile ? (
+				<ProfilePageSkeleton />
+			) : (
+				<div className="mt-6 grid gap-6 lg:mt-8 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-10">
+					<aside className="space-y-4 lg:sticky lg:top-8 lg:space-y-6 lg:self-start">
+						<ProfileCompletenessCard
+							percent={completion}
+							items={checklist}
+							onSelectSection={setSection}
+						/>
+						<ProfileSectionNav
+							groups={navGroups}
+							activeKey={activeKey}
+							onSelect={handleSelectNav}
+						/>
+					</aside>
 
-						<TabsContent value="profile" className="mt-6 outline-none">
+					<section aria-label={activeLabel} className="min-w-0">
+						{tab === PROFILE_TAB.usage ? (
+							<ProfileUsagePanel
+								subscription={subscription ?? null}
+								billingBusy={billingBusy}
+								onSubscribe={handleSubscribe}
+								onOpenBilling={handleOpenBilling}
+							/>
+						) : tab === PROFILE_TAB.billing ? (
+							<ProfileBillingPanel
+								subscription={subscription ?? null}
+								billingBusy={billingBusy}
+								onSubscribePro={handleSubscribe}
+								onBuyPack={(packKey) => void buyPack(packKey)}
+								onOpenPortal={() => void openBillingPortal()}
+							/>
+						) : (
 							<ProfileAutofillWorkspace
+								section={section}
 								userId={user?.id ?? null}
 								userProfile={userProfile}
 								saveProfile={saveProfile}
@@ -124,29 +240,10 @@ export function ProfilePage() {
 								onSaveLink={onSaveLink}
 								refetchProfile={refetchProfile}
 							/>
-						</TabsContent>
-
-						<TabsContent value="usage" className="mt-6 outline-none">
-							<ProfileUsagePanel
-								subscription={subscription}
-								billingBusy={billingBusy}
-								onSubscribe={() => void subscribeToPro()}
-								onOpenBilling={() => setTab("billing")}
-							/>
-						</TabsContent>
-
-						<TabsContent value="billing" className="mt-6 outline-none">
-							<ProfileBillingPanel
-								subscription={subscription}
-								billingBusy={billingBusy}
-								onSubscribePro={() => void subscribeToPro()}
-								onBuyPack={(packKey) => void buyPack(packKey)}
-								onOpenPortal={() => void openBillingPortal()}
-							/>
-						</TabsContent>
-					</Tabs>
-				)}
-			</main>
+						)}
+					</section>
+				</div>
+			)}
 		</div>
 	)
 }

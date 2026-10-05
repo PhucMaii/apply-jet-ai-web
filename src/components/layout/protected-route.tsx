@@ -1,7 +1,6 @@
 import { Navigate, useLocation } from "react-router-dom"
 import type { ReactNode } from "react"
 import { PgwpTrackerProvider } from "@/context/pgwp-tracker-context"
-import { ResumeUploadBanner } from "@/components/layout/resume-upload-banner"
 import { useAuth } from "@/context/auth-context"
 import { ROUTES } from "@/lib/constants"
 import { FEATURES } from "@/lib/features"
@@ -48,16 +47,9 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
 		)
 	}
 
-	const appTree = (
-		<>
-			<ResumeUploadBanner />
-			{children}
-		</>
-	)
-
 	if (!FEATURES.pgwp) {
-		return appTree
+		return <>{children}</>
 	}
 
-	return <PgwpTrackerProvider>{appTree}</PgwpTrackerProvider>
+	return <PgwpTrackerProvider>{children}</PgwpTrackerProvider>
 }

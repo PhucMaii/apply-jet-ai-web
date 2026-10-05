@@ -58,8 +58,8 @@ function PlanGroup({
 		<div className="space-y-4">
 			<h3
 				className={cn(
-					"text-sm font-semibold uppercase tracking-wider",
-					variant === "landing" ? "text-primary" : "text-neutral-500",
+					"text-xs font-semibold uppercase tracking-[0.1em]",
+					variant === "landing" ? "text-ink" : "text-ink-subtle",
 				)}
 			>
 				{title}
@@ -142,30 +142,20 @@ export function PricingSectionHeader({
 
 	return (
 		<div className={isLanding ? "max-w-2xl" : "max-w-3xl"}>
-			<p
-				className={cn(
-					"text-sm font-semibold uppercase tracking-wider",
-					"text-primary",
-				)}
-			>
+			<p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand">
 				{eyebrow}
 			</p>
 			<h2
 				className={cn(
-					"mt-2 font-display font-bold tracking-tight",
+					"mt-3 font-display font-medium tracking-tight text-ink text-balance",
 					isLanding
-						? "text-3xl sm:text-4xl"
-						: "text-2xl text-neutral-900 sm:text-3xl",
+						? "text-3xl leading-[1.15] sm:text-4xl"
+						: "text-2xl sm:text-3xl",
 				)}
 			>
 				{title}
 			</h2>
-			<p
-				className={cn(
-					"mt-3 text-pretty leading-relaxed",
-					isLanding ? "text-muted-foreground" : "text-neutral-600",
-				)}
-			>
+			<p className="mt-4 leading-relaxed text-ink-muted text-pretty">
 				{description}
 			</p>
 		</div>

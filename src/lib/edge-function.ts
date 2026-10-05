@@ -20,12 +20,20 @@ export async function invokeEdgeFunction<T = unknown>(
 	}
 
 	try {
-		const { data } = await supabase.functions.invoke<T>(functionName, {
+		const { data, error } = await supabase.functions.invoke<T>(functionName, {
 			body: body ?? {},
 			headers: {
 				"X-Secret-Key": env.xsecretkey,
-			}
+			},
 		})
+
+		if (error) {
+			console.error("Something went wrong invoking edge function:", error)
+			return {
+				ok: false,
+				message: error.message || "Edge function request failed.",
+			}
+		}
 
 		return { ok: true, data: data as T }
 	} catch (err) {

@@ -1,5 +1,8 @@
 import { LANDING_SECTION_ID } from "@/lib/landing/landing-section"
-import type { ExperienceBulletTierKey } from "@/lib/landing/landing-section"
+import type {
+	ExperienceBulletTierKey,
+	LandingNavItem,
+} from "@/lib/landing/landing-section"
 import { withPgwpLeaf } from "@/lib/pgwp-copy"
 
 export type { ExperienceBulletTierKey } from "@/lib/landing/landing-section"
@@ -102,8 +105,10 @@ export const LANDING_COPY = {
 		{ hash: LANDING_SECTION_ID.jobsPreview, label: "Open jobs" },
 		{ hash: LANDING_SECTION_ID.howItWorks, label: "How it works" },
 		{ hash: LANDING_SECTION_ID.pgwpTracker, label: withPgwpLeaf("PGWP tracker") },
-		{ hash: LANDING_SECTION_ID.whyWording, label: "AI tailoring" },
-	],
+		{ hash: LANDING_SECTION_ID.features, label: "Features" },
+		{ hash: LANDING_SECTION_ID.pricing, label: "Pricing" },
+		{ hash: LANDING_SECTION_ID.faq, label: "FAQ" },
+	] as LandingNavItem[],
 	jobsPreview: {
 		sectionId: LANDING_SECTION_ID.jobsPreview,
 		eyebrow: "Open jobs",
@@ -300,100 +305,37 @@ export const LANDING_COPY = {
 		title: "A free resume builder—plus a PGWP tracker, live scoring, and suggestions.",
 		description:
 			"Build and edit at no cost. Keep your PGWP date in view. Score against Canadian job descriptions, get free suggestions, try AI when you want a rewrite, then generate cover letters and find hiring contacts.",
-		items: [
-			{
-				title: withPgwpLeaf("PGWP tracker in your dashboard"),
-				body: "Save your expiry date once. See days remaining on Applications and a compact reminder in the header while you apply.",
-				className: "md:col-span-2",
-				icon: "calendar" as const,
-			},
-			{
-				title: "Resume builder—free forever",
-				body: "Create, edit, and download without a subscription. Your core builder stays free—no credit card, no trial cliff.",
-				className: "md:col-span-2",
-				icon: "fileText" as const,
-			},
-			{
-				title: "Free live score vs the job",
-				body: "Paste a Canadian job description and see your match score update live—keywords, gaps, and fit—always free in the core app.",
-				className: "md:col-span-2",
-				icon: "gauge" as const,
-			},
-			{
-				title: "AI that fits this posting",
-				body: "Try AI that rewrites your real experience to match the role’s keywords and priorities—without inventing a Canadian work history.",
-				className: "",
-				icon: "sparkles" as const,
-			},
-			{
-				title: "Cover letter generator",
-				body: "Generate a letter grounded in this posting and your matched experience—not a one-size-fits-all opener.",
-				className: "",
-				icon: "list" as const,
-			},
-			{
-				title: "Hiring contact finder",
-				body: "Discover recruiters and hiring contacts at the company so you know who to reach out to after you apply.",
-				className: "md:col-span-2",
-				icon: "users" as const,
-			},
-		],
-	},
-	why: {
-		eyebrow: "Why ApplyJet",
-		title: "The clock is real. So is the bias. Your resume is the part you can change today.",
-		without: {
-			label: "The usual grind",
-			title: "Time pressure, generic docs, “no Canadian experience”",
-			items: [
-				"A PGWP expiry date you only remember when you’re already anxious",
-				"One generic resume sent to every Canadian posting",
-				"International experience buried in vague bullets ATS systems skip",
-				"Paywalls on scoring, downloads, or basic edits",
+		scoring: {
+			eyebrow: "ATS match score",
+			title: "Know where you stand before you hit apply.",
+			body: "Paste any posting and get a live 0–100 score that updates as you edit. It breaks down why—skills, experience, and wording—so you fix the parts that move the number.",
+			points: [
+				"Updates live as you type",
+				"Free on every application",
+				"Explains each point it takes off",
 			],
 		},
-		with: {
-			title: "A window you can see—and applications written for here",
-			items: [
-				"PGWP tracker on the page you use every day",
-				"Free live scoring against each job description",
-				"Bullets rewritten in language Canadian employers and ATS recognize",
-				"Builder free forever—upgrade only if you need more AI, letters, or contacts",
-			],
+		keywords: {
+			eyebrow: "Keyword gaps",
+			title: "See the exact words the posting is scanning for.",
+			body: "ApplyJet pulls the skills and phrases from the job description and checks them against your resume. Add what’s missing in one click—only where it’s true.",
+			matchedLabel: "In your resume",
+			missingLabel: "Missing",
+		},
+		coverLetter: {
+			eyebrow: "Cover letters",
+			title: "A letter that sounds like you, written for this role.",
+			body: "Generated from the posting and your matched experience—not a template opener. Edit inline, then download as PDF.",
+		},
+		tracking: {
+			eyebrow: "Application tracking",
+			title: "Every application in one place, from saved to offer.",
+			body: "Switch between a table and a board. Drag cards as you hear back, and keep the tailored resume, cover letter, and posting attached to each one.",
 		},
 	},
 	testimonials: {
-		eyebrow: "From people in the same boat",
-		title: "Stories from PGWP holders—coming as we collect them",
-		summaryRating: 0,
-		summaryLabel: "We’re collecting real quotes from international grads in Canada.",
-		showSummaryRating: false,
-		items: [
-			{
-				quote:
-					"Placeholder for a real quote from a PGWP holder about using ApplyJet while job hunting in Canada.",
-				name: "Quote 1 — coming soon",
-				role: "International grad · PGWP · Canada",
-				rating: 5,
-				isPlaceholder: true,
-			},
-			{
-				quote:
-					"Placeholder for a real quote about rewriting international experience for Canadian employers.",
-				name: "Quote 2 — coming soon",
-				role: "International grad · PGWP · Canada",
-				rating: 5,
-				isPlaceholder: true,
-			},
-			{
-				quote:
-					"Placeholder for a real quote about keeping the PGWP window visible while applying.",
-				name: "Quote 3 — coming soon",
-				role: "International grad · PGWP · Canada",
-				rating: 5,
-				isPlaceholder: true,
-			},
-		],
+		eyebrow: "From people using ApplyJet",
+		title: "Fewer generic applications. More callbacks.",
 	},
 	privacyTrust: {
 		statement: "Your resume stays private. We never sell your data.",
@@ -512,14 +454,6 @@ export const LANDING_COPY = {
 					"Yes. The builder, PGWP tracker, live scoring, and core match suggestions stay free. You can try AI, then upgrade to Pro or a one-time pack only if you need more.",
 			},
 		],
-	},
-	authCta: {
-		badge: "Free forever · PGWP tracker included",
-		title: "Your window is real. Your resume can start working today.",
-		description:
-			"Build free, keep your PGWP date in view, score against Canadian job descriptions, and rewrite your real experience so employers here can read it. Cover letters and hiring contacts stay in one place.",
-		primaryCta: LANDING_PRIMARY_CTA as string,
-		loginLink: LANDING_LOGIN_LINK as string,
 	},
 	finalCta: {
 		title: "Ready to stop wasting days on a resume that doesn’t travel?",

@@ -1,29 +1,25 @@
 /**
  * Shared light theme for signed-in dashboard pages (applications, profile).
- * White background, dark text, primary accents on actions and links.
+ * Built on the product tokens in `index.css` (ink, hairline, surface, brand).
  */
 export const DASHBOARD_THEME = {
-	modal: "fixed inset-0 size-auto max-h-none max-w-none overflow-y-auto bg-transparent backdrop:bg-transparent z-50",
-	modalBackdrop: "fixed inset-0 bg-gray-900/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in",
-	modalContentWrapper: "flex min-h-full items-end justify-center p-4 text-center focus:outline-none sm:items-center sm:p-0",
-	modalContent: "relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl outline -outline-offset-1 outline-white/10 transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95",
-	page: "min-h-screen bg-white text-neutral-900",
-	header: "border-b border-neutral-200 bg-white",
+	page: "min-h-screen bg-canvas text-ink",
+	header: "border-b border-hairline bg-surface",
 	headerInner:
 		"mx-auto flex max-w-6xl flex-col gap-4 px-4 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-6",
 	headerInnerProfile:
 		"mx-auto max-w-6xl px-4 py-8 sm:px-6",
 	main: "mx-auto max-w-6xl space-y-6 px-4 py-8 sm:px-6",
-	brandLabel: "text-xs font-semibold uppercase tracking-wide text-primary",
-	title: "font-display text-2xl font-bold text-neutral-900",
-	titleLg: "font-display text-3xl font-bold tracking-tight text-neutral-900",
-	subtitle: "text-sm text-neutral-500",
-	body: "text-sm leading-relaxed text-neutral-600",
-	email: "truncate text-sm font-medium text-neutral-800",
-	link: "font-medium text-primary underline-offset-4 hover:underline",
-	muted: "text-neutral-500",
+	brandLabel: "text-xs font-semibold uppercase tracking-[0.14em] text-brand",
+	title: "font-display text-2xl font-semibold text-ink",
+	titleLg: "font-display text-3xl font-semibold tracking-tight text-ink",
+	subtitle: "text-sm text-ink-muted",
+	body: "text-sm leading-relaxed text-ink-muted",
+	email: "truncate text-sm font-medium text-ink",
+	link: "font-medium text-brand underline-offset-4 hover:underline",
+	muted: "text-ink-muted",
 	error:
-		"flex gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700",
+		"flex gap-3 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700",
 	noticeSuccess:
 		"flex gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800",
 	noticeInfo:
@@ -31,32 +27,30 @@ export const DASHBOARD_THEME = {
 	noticeWarning:
 		"flex gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900",
 	loadingPanel:
-		"flex flex-col items-center justify-center gap-4 rounded-2xl border border-neutral-200 bg-white py-24 shadow-sm",
+		"flex flex-col items-center justify-center gap-4 rounded-xl border border-hairline bg-surface py-24",
 	loadingIconWrap:
-		"flex size-14 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20",
+		"flex size-14 items-center justify-center rounded-xl bg-brand-soft text-brand",
 	avatar:
-		"flex size-14 shrink-0 items-center justify-center rounded-2xl bg-primary text-lg font-bold tracking-tight text-primary-foreground shadow-sm",
+		"flex size-14 shrink-0 items-center justify-center rounded-xl bg-brand text-lg font-bold tracking-tight text-white",
 	navButton:
-		"border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50",
+		"border-hairline-strong bg-surface text-ink hover:bg-surface-sunken",
 	navButtonGhost:
-		"text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900",
+		"text-ink-muted hover:bg-surface-sunken hover:text-ink",
 	mainTabsList:
-		"grid h-12 w-full gap-1 rounded-xl border border-neutral-200 bg-neutral-100 p-1",
+		"grid h-11 w-full gap-1 rounded-lg bg-surface-sunken p-1",
 	mainTabsListTwo:
 		"max-w-md grid-cols-2",
-	mainTabsListThree:
-		"max-w-2xl grid-cols-3",
 	mainTabsTrigger:
-		"gap-2 rounded-lg text-sm text-neutral-600 transition-all data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm",
+		"gap-2 rounded-md text-sm text-ink-muted transition-colors data-[state=active]:bg-surface data-[state=active]:text-ink data-[state=active]:shadow-card",
 	sectionTabsList:
-		"mb-6 flex h-auto w-full flex-wrap items-stretch justify-start gap-1.5 rounded-xl border border-neutral-200 bg-neutral-50 p-1.5",
+		"mb-6 flex h-auto w-full flex-wrap items-stretch justify-start gap-1.5 rounded-lg bg-surface-sunken p-1.5",
 	sectionTabsTrigger:
-		"min-w-0 gap-1.5 rounded-lg px-2.5 py-2 text-xs font-medium text-neutral-600 transition-all data-[state=active]:bg-white data-[state=active]:text-neutral-900 data-[state=active]:shadow-sm",
+		"min-w-0 gap-1.5 rounded-md px-2.5 py-2 text-xs font-medium text-ink-muted transition-colors data-[state=active]:bg-surface data-[state=active]:text-ink data-[state=active]:shadow-card",
 	contentPanel:
-		"rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-6",
-	card: "border-neutral-200 bg-white shadow-sm",
-	cardDescription: "text-neutral-600",
-	cardIconWrap: "rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20",
-	billingIconWrap: "rounded-xl bg-primary/10 text-primary ring-1 ring-primary/20",
-	code: "rounded bg-neutral-100 px-1 py-0.5 text-xs text-neutral-800",
+		"rounded-xl border border-hairline bg-surface p-4 shadow-card sm:p-6",
+	card: "border-hairline bg-surface shadow-card",
+	cardDescription: "text-ink-muted",
+	cardIconWrap: "rounded-lg bg-brand-soft text-brand",
+	billingIconWrap: "rounded-lg bg-brand-soft text-brand",
+	code: "rounded bg-surface-sunken px-1 py-0.5 text-xs text-ink",
 } as const

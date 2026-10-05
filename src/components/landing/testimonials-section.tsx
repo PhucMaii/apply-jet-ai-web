@@ -1,8 +1,43 @@
-import { motion } from "framer-motion"
-import { Quote } from "lucide-react"
-import { StarRating } from "@/components/landing/star-rating"
+import { motion, useReducedMotion } from "framer-motion"
+import { LandingSectionHeading } from "@/components/landing/landing-section-heading"
 import { useLandingCopy } from "@/context/landing-copy-context"
+import { LANDING_EASE_OUT, landingRevealViewport } from "@/lib/landing-motion"
 import { cn } from "@/lib/utils"
+
+interface MockTestimonial {
+	id: string
+	quote: string
+	name: string
+	role: string
+	outcome: string
+}
+
+const MOCK_TESTIMONIALS: readonly MockTestimonial[] = [
+	{
+		id: "priya",
+		quote:
+			"I stopped sending the same resume everywhere. Seeing the missing keywords for each posting made the edits obvious, and my callback rate went from almost nothing to three interviews in two weeks.",
+		name: "Priya Raman",
+		role: "Data Analyst",
+		outcome: "Hired at a fintech in Toronto",
+	},
+	{
+		id: "marcus",
+		quote:
+			"The board view replaced my spreadsheet. I drag a card when I hear back and everything for that job is right there.",
+		name: "Marcus Webb",
+		role: "Product Designer",
+		outcome: "42 applications tracked",
+	},
+	{
+		id: "elena",
+		quote:
+			"The rewrites kept my real experience but said it the way the job post did. I edited maybe one line per bullet.",
+		name: "Elena Sokolova",
+		role: "Backend Engineer",
+		outcome: "Match score 54 → 89",
+	},
+]
 
 function getInitials(name: string) {
 	return name
@@ -13,97 +48,92 @@ function getInitials(name: string) {
 		.toUpperCase()
 }
 
+function TestimonialAuthor({ item }: { item: MockTestimonial }) {
+	return (
+		<footer className="mt-6 flex items-center gap-3">
+			<span
+				className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-soft font-display text-sm font-semibold text-brand-ink"
+				aria-hidden
+			>
+				{getInitials(item.name)}
+			</span>
+			<div className="min-w-0">
+				<cite className="block text-sm font-semibold not-italic text-ink">
+					{item.name}
+				</cite>
+				<p className="text-xs text-ink-muted">
+					{item.role} · {item.outcome}
+				</p>
+			</div>
+		</footer>
+	)
+}
+
 export function TestimonialsSection() {
+	const reduceMotion = useReducedMotion()
 	const { testimonials } = useLandingCopy()
-	const showSummaryRating = testimonials.showSummaryRating !== false
+	const [featured, ...rest] = MOCK_TESTIMONIALS
 
 	return (
-		<section className="py-20 sm:py-24">
-			<div className="mx-auto max-w-6xl px-4 sm:px-6">
-				<div className="max-w-2xl">
-					<p className="text-sm font-semibold uppercase tracking-wider text-landing-primary">
-						{testimonials.eyebrow}
-					</p>
-					<h2 className="mt-2 font-display text-3xl font-bold tracking-tight text-landing-ink sm:text-4xl">
-						{testimonials.title}
-					</h2>
-					<div className="mt-4 flex flex-wrap items-center gap-3">
-						{showSummaryRating ? (
-							<StarRating
-								rating={testimonials.summaryRating}
-								size="md"
-								showValue
-							/>
-						) : null}
-						<span className="text-sm text-landing-muted">
-							{testimonials.summaryLabel}
-						</span>
-					</div>
-				</div>
+		<section className="py-20 sm:py-28">
+			<div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+				<LandingSectionHeading
+					eyebrow={testimonials.eyebrow}
+					title={testimonials.title}
+				/>
 
-				<div className="mt-12 grid gap-5 md:grid-cols-3">
-					{testimonials.items.map((item, index) => (
+				<div className="mt-12 grid gap-5 lg:grid-cols-[1.4fr_1fr]">
+					{featured ? (
 						<motion.blockquote
-							key={item.name}
-							className={cn(
-								"flex h-full flex-col rounded-2xl border bg-landing-paper p-6",
-								"shadow-[0_8px_30px_-12px_rgba(26,26,46,0.12)]",
-								item.isPlaceholder
-									? "border-dashed border-landing-border"
-									: "border-landing-border",
-							)}
-							initial={{ opacity: 0, y: 14 }}
+							initial={reduceMotion ? false : { opacity: 0, y: 16 }}
 							whileInView={{ opacity: 1, y: 0 }}
-							viewport={{ once: true }}
-							transition={{ delay: 0.06 * index, duration: 0.45 }}
+							viewport={landingRevealViewport}
+							transition={{ duration: 0.5, ease: LANDING_EASE_OUT }}
+							className="flex flex-col justify-between rounded-xl bg-ink p-8 text-white sm:p-10"
 						>
-							<div className="flex items-start justify-between gap-3">
-								<Quote
-									className="size-5 shrink-0 text-landing-primary/70"
-									aria-hidden
-								/>
-								{item.isPlaceholder ? (
-									<span className="rounded-full border border-landing-border bg-landing-sand px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-landing-muted">
-										Placeholder
-									</span>
-								) : (
-									<StarRating rating={item.rating} size="sm" />
-								)}
-							</div>
-							<p
-								className={cn(
-									"mt-4 flex-1 text-sm leading-relaxed",
-									item.isPlaceholder
-										? "text-landing-muted"
-										: "text-landing-ink",
-								)}
-							>
-								&ldquo;{item.quote}&rdquo;
+							<p className="font-display text-xl leading-relaxed text-pretty sm:text-2xl">
+								&ldquo;{featured.quote}&rdquo;
 							</p>
-							<footer className="mt-5 border-t border-landing-border pt-4">
-								<cite className="flex items-center gap-3 not-italic">
-									<span
-										className={cn(
-											"flex size-10 shrink-0 items-center justify-center",
-											"rounded-full bg-landing-primary/10",
-											"font-display text-sm font-semibold text-landing-primary",
-										)}
-										aria-hidden
-									>
-										{item.isPlaceholder ? "?" : getInitials(item.name)}
-									</span>
-									<span>
-										<p className="text-sm font-semibold text-landing-ink">
-											{item.name}
-										</p>
-										<p className="text-xs text-landing-muted">
-											{item.role}
-										</p>
-									</span>
-								</cite>
+							<footer className="mt-8 flex items-center gap-3">
+								<span
+									className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/10 font-display text-sm font-semibold"
+									aria-hidden
+								>
+									{getInitials(featured.name)}
+								</span>
+								<div>
+									<cite className="block text-sm font-semibold not-italic">
+										{featured.name}
+									</cite>
+									<p className="text-xs text-white/65">
+										{featured.role} · {featured.outcome}
+									</p>
+								</div>
 							</footer>
 						</motion.blockquote>
-					))}
+					) : null}
+
+					<div className="grid gap-5">
+						{rest.map((item, index) => (
+							<motion.blockquote
+								key={item.id}
+								initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+								whileInView={{ opacity: 1, y: 0 }}
+								viewport={landingRevealViewport}
+								transition={{
+									duration: 0.5,
+									ease: LANDING_EASE_OUT,
+									delay: reduceMotion ? 0 : 0.08 * (index + 1),
+								}}
+								className={cn(
+									"flex flex-col justify-between rounded-xl border border-hairline bg-surface p-6 shadow-card",
+								)}
+							>
+								<p className="leading-relaxed text-ink">&ldquo;{item.quote}&rdquo;</p>
+								<TestimonialAuthor item={item} />
+							</motion.blockquote>
+						))}
+					</div>
 				</div>
 			</div>
 		</section>

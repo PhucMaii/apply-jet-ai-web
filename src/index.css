@@ -15,6 +15,32 @@
 	--color-landing-accent: #c9a96e;
 	--color-landing-sand: #f3f0e8;
 
+	/* Shared light product palette (landing + signed-in app) */
+	--color-canvas: #fafaf8;
+	--color-surface: #ffffff;
+	--color-surface-sunken: #f5f4f0;
+	--color-ink: #1a1a2e;
+	--color-ink-muted: #5c5c6b;
+	--color-ink-subtle: #8b8b98;
+	--color-hairline: #e8e6e1;
+	--color-hairline-strong: #d6d3cb;
+	--color-brand: #4f46e5;
+	--color-brand-hover: #4338ca;
+	--color-brand-soft: #eef0fd;
+	--color-brand-ink: #3730a3;
+
+	--color-status-saved: #4f46e5;
+	--color-status-applied: #0284c7;
+	--color-status-interviewing: #d97706;
+	--color-status-offer: #059669;
+	--color-status-rejected: #e11d48;
+
+	--shadow-card: 0 1px 2px rgb(26 26 46 / 0.04);
+	--shadow-pop: 0 16px 40px -16px rgb(26 26 46 / 0.22),
+		0 2px 6px -2px rgb(26 26 46 / 0.06);
+
+	--ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
 	--color-background: #050510;
 	--color-foreground: #f8fafc;
 	--color-muted: #13132a;
@@ -107,6 +133,48 @@
 	--color-ring: color-mix(in oklab, var(--color-landing-primary) 45%, transparent);
 	--shadow-glow: none;
 	--shadow-glow-sm: none;
+}
+
+.app-theme {
+	--color-background: var(--color-canvas);
+	--color-foreground: var(--color-ink);
+	--color-muted: var(--color-surface-sunken);
+	--color-muted-foreground: var(--color-ink-muted);
+	--color-card: var(--color-surface);
+	--color-card-foreground: var(--color-ink);
+	--color-border: var(--color-hairline);
+	--color-input: var(--color-hairline-strong);
+	--color-primary: var(--color-brand);
+	--color-primary-foreground: #ffffff;
+	--color-ring: color-mix(in oklab, var(--color-brand) 45%, transparent);
+	--shadow-glow: none;
+	--shadow-glow-sm: none;
+	background-color: var(--color-canvas);
+	color: var(--color-ink);
+}
+
+@utility skeleton-shimmer {
+	background: linear-gradient(
+		90deg,
+		var(--color-surface-sunken) 0%,
+		color-mix(in oklab, var(--color-surface-sunken) 40%, white) 50%,
+		var(--color-surface-sunken) 100%
+	);
+	background-size: 200% 100%;
+	animation: skeleton-shimmer 1.4s ease-in-out infinite;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+@keyframes skeleton-shimmer {
+	from {
+		background-position: 200% 0;
+	}
+	to {
+		background-position: -200% 0;
+	}
 }
 
 @utility thin-scrollbar {

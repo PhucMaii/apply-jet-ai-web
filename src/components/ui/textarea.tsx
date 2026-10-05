@@ -17,9 +17,10 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
 				<textarea
 					id={id}
 					className={cn(
-						"flex min-h-[120px] w-full rounded-md border px-3 py-2 text-sm text-foreground shadow-inner transition-colors",
-						"border-neutral-300 bg-white text-neutral-900 shadow-sm placeholder:text-neutral-400 focus-visible:ring-primary/40 focus-visible:ring-offset-white",
-						"placeholder:text-neutral-400",
+						"flex min-h-[120px] w-full rounded-md border px-3 py-2 text-sm transition-[border-color,box-shadow]",
+						"border-hairline-strong bg-surface text-ink placeholder:text-ink-subtle",
+						"hover:border-ink-subtle/60",
+						"focus-visible:border-brand focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/12",
 						"disabled:cursor-not-allowed disabled:opacity-50",
 						hasError && INPUT_ERROR.field,
 						className,

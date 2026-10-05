@@ -1,5 +1,8 @@
+import { Loader2 } from "lucide-react"
 import { Navigate, Route, Routes } from "react-router-dom"
+import { AppLayout } from "@/components/layout/app-layout"
 import { ProtectedRoute } from "@/components/layout/protected-route"
+import { useAuth } from "@/context/auth-context"
 import { ROUTES } from "@/lib/constants"
 import { HomePage } from "@/pages/home-page"
 import { AdsLandingPage } from "@/pages/ads-landing-page"
@@ -17,6 +20,33 @@ import { BlogPage } from "@/pages/blog-page"
 import { BlogCategoryPage } from "@/pages/blog-category-page"
 import { BlogPostPage } from "@/pages/blog-post-page"
 import { AuthCallbackPage } from "@/pages/auth-callback-page"
+
+function JobsRoute() {
+	const { user, isLoading } = useAuth()
+
+	if (isLoading) {
+		return (
+			<div
+				className="app-theme flex min-h-dvh flex-col items-center justify-center gap-3 bg-canvas"
+				aria-busy="true"
+				aria-live="polite"
+			>
+				<Loader2 className="size-8 animate-spin text-brand" aria-hidden />
+				<span className="text-sm text-ink-muted">Loading session…</span>
+			</div>
+		)
+	}
+
+	if (!user) {
+		return <JobsPage />
+	}
+
+	return (
+		<AppLayout>
+			<JobsPage />
+		</AppLayout>
+	)
+}
 
 export function AppRoutes() {
 	return (
@@ -36,7 +66,9 @@ export function AppRoutes() {
 				path={ROUTES.applications}
 				element={
 					<ProtectedRoute>
-						<ApplicationsPage />
+						<AppLayout>
+							<ApplicationsPage />
+						</AppLayout>
 					</ProtectedRoute>
 				}
 			/>
@@ -44,7 +76,9 @@ export function AppRoutes() {
 				path={ROUTES.applicationCreate}
 				element={
 					<ProtectedRoute>
-						<ApplicationCreatePage />
+						<AppLayout>
+							<ApplicationCreatePage />
+						</AppLayout>
 					</ProtectedRoute>
 				}
 			/>
@@ -52,16 +86,20 @@ export function AppRoutes() {
 				path={ROUTES.applicationDetail}
 				element={
 					<ProtectedRoute>
-						<ApplicationDetailPage />
+						<AppLayout variant="workspace">
+							<ApplicationDetailPage />
+						</AppLayout>
 					</ProtectedRoute>
 				}
 			/>
-			<Route path={ROUTES.jobs} element={<JobsPage />} />
+			<Route path={ROUTES.jobs} element={<JobsRoute />} />
 			<Route
 				path={ROUTES.profile}
 				element={
 					<ProtectedRoute>
-						<ProfilePage />
+						<AppLayout>
+							<ProfilePage />
+						</AppLayout>
 					</ProtectedRoute>
 				}
 			/>

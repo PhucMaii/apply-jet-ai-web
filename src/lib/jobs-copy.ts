@@ -1,4 +1,6 @@
 export const JOBS_COPY = {
+	pageTitle: "Find jobs",
+	pageDescription: "Search open roles and tailor a resume for the ones you want.",
 	searchLabel: "Title",
 	searchPlaceholder: "Job title",
 	locationLabel: "Location",
@@ -6,7 +8,16 @@ export const JOBS_COPY = {
 	postedLabel: "Posted",
 	sortLabel: "Sort",
 	quickLocationsLabel: "Locations",
-	clearFilters: "Clear",
+	clearFilters: "Clear filters",
+	clearShort: "Clear",
+	clearTitle: "Clear title",
+	clearLocation: "Clear location",
+	updating: "Updating results",
+	emptyDescription: "Try a broader title, another city, or clear the filters.",
+	emptyCatalogDescription: "New roles show up here as they are posted.",
+	newBadge: "New",
+	logIn: "Log in",
+	signUp: "Sign up",
 	resultsOne: "1 job",
 	resultsMany: (count: number) => `${count} jobs`,
 	resultsFiltered: (shown: number) =>
@@ -29,14 +40,20 @@ export const JOBS_COPY = {
 		"Sign up free to generate a resume tailored to this job posting.",
 	signupCta: "Create account",
 	signupLogin: "Log in",
-	viewPosting: "View posting",
 	openExternal: "Opens the employer application page",
 	postedUnknown: "Date unknown",
-	departmentFallback: "General",
 	companyFallback: "Company",
 	descriptionMissing: "Description on company site",
+	descriptionMissingBody:
+		"The full posting lives on the company site. You can still apply from here.",
 	backToResults: "Back",
 	selectJob: "Select a job",
+	clicksFewerThan25: "Fewer than 25 people clicked apply",
+	clicksFewerThan50: "Fewer than 50 people clicked apply",
+	clicksFewerThan100: "Fewer than 100 people clicked apply",
+	clicksOver100: "Over 100 people clicked apply",
+	clicksOver200: "Over 200 people clicked apply",
+	clicksOver500: "Over 500 people clicked apply",
 } as const
 
 export const JOBS_PAGE_SIZE = 24
@@ -52,12 +69,20 @@ export const JOB_POSTED_WITHIN_OPTIONS = [
 export type JobPostedWithin =
 	(typeof JOB_POSTED_WITHIN_OPTIONS)[number]["value"]
 
+export function isJobPostedWithin(value: string): value is JobPostedWithin {
+	return JOB_POSTED_WITHIN_OPTIONS.some((option) => option.value === value)
+}
+
 export const JOB_SORT_OPTIONS = [
 	{ value: "relevant", label: "Most relevant" },
 	{ value: "recent", label: "Most recent" },
 ] as const
 
 export type JobSort = (typeof JOB_SORT_OPTIONS)[number]["value"]
+
+export function isJobSort(value: string): value is JobSort {
+	return JOB_SORT_OPTIONS.some((option) => option.value === value)
+}
 
 export const JOB_LOCATION_SHORTCUTS = [
 	"Remote",

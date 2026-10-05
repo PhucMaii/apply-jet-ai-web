@@ -1,8 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useAuth } from "@/context/auth-context";
+import { PROFILE_TAB, PROFILE_TAB_PARAM } from "@/lib/app-nav";
 import { emptyDisclosure, emptyProfileRow } from "@/lib/profile-defaults";
 import { type ProfileNotice } from "@/lib/profile-notice";
+import {
+  PROFILE_SECTION,
+  PROFILE_SECTION_PARAM,
+  isProfileSection,
+  type ProfileSection,
+} from "@/lib/profile-section";
+import type { ProfilePageData } from "@/types/profile-page";
 import {
   openStripeCustomerPortal,
   startOneTimePackCheckout,
@@ -25,18 +33,53 @@ import type {
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { AsyncResultMsg } from "@/types/types";
 
-function stringToTagList(s: string): string[] {
-  return s
-    .split(",")
-    .map((x) => x.trim())
-    .filter(Boolean);
-}
-
 export function useProfilePage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [tab, setTab] = useState("profile");
+  const tab = searchParams.get(PROFILE_TAB_PARAM) ?? PROFILE_TAB.profile;
+  const sectionParam = searchParams.get(PROFILE_SECTION_PARAM);
+  const section: ProfileSection = isProfileSection(sectionParam)
+    ? sectionParam
+    : PROFILE_SECTION.resume;
+
+  const setTab = useCallback(
+    (next: string) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          params.delete(PROFILE_SECTION_PARAM);
+          if (next === PROFILE_TAB.profile) {
+            params.delete(PROFILE_TAB_PARAM);
+          } else {
+            params.set(PROFILE_TAB_PARAM, next);
+          }
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  const setSection = useCallback(
+    (next: ProfileSection) => {
+      setSearchParams(
+        (prev) => {
+          const params = new URLSearchParams(prev);
+          params.delete(PROFILE_TAB_PARAM);
+          if (next === PROFILE_SECTION.resume) {
+            params.delete(PROFILE_SECTION_PARAM);
+          } else {
+            params.set(PROFILE_SECTION_PARAM, next);
+          }
+          return params;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
   const [billingBusy, setBillingBusy] = useState(false);
   const [notice, setNotice] = useState<ProfileNotice | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -199,7 +242,7 @@ export function useProfilePage() {
     data: userProfile,
     refetch: refetchProfile,
     isLoading: isLoadingProfile,
-  } = useQuery<any>({
+  } = useQuery<ProfilePageData | undefined>({
     queryKey: ["user-profile"],
     queryFn: async () => {
       return await loadData();
@@ -473,10 +516,12 @@ export function useProfilePage() {
       if (!user)
         return { success: false, message: "User is not authenticated" };
 
+      console.log("additionalInfo", additionalInfo);
+
       const payload = {
         user_id: user.id,
-        languages: stringToTagList(additionalInfo?.languages?.join(",") ?? ""),
-        certifications: stringToTagList(additionalInfo?.certifications?.join(",") ?? ""),
+        languages: additionalInfo?.languages ?? [],
+        certifications: additionalInfo?.certifications ?? [],
       };
 
       const { error: upErr } = await supabase
@@ -727,11 +772,13 @@ export function useProfilePage() {
     user,
     tab,
     setTab,
+    section,
+    setSection,
     loading: isLoadingProfile,
     billingBusy,
     notice,
     error,
-    resumeText: userProfile?.resumeText,
+    resumeText: userProfile?.resumeText ?? "",
     subscription: userProfile?.subscription,
     userProfile,
 

@@ -14,14 +14,6 @@ export type LandingSectionId =
 
 export type ExperienceBulletTierKey = "bad" | "good" | "excellent"
 
-export type LandingFeatureIconKey =
-	| "calendar"
-	| "gauge"
-	| "list"
-	| "sparkles"
-	| "fileText"
-	| "users"
-
 export interface LandingNavItem {
 	hash: LandingSectionId
 	label: string
@@ -30,12 +22,4 @@ export interface LandingNavItem {
 export interface LandingFaqItem {
 	question: string
 	answer: string
-}
-
-export interface LandingTestimonialItem {
-	quote: string
-	name: string
-	role: string
-	rating: number
-	isPlaceholder?: boolean
 }

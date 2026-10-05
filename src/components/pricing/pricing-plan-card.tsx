@@ -3,7 +3,6 @@ import { Link } from "react-router-dom"
 import { Check, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { LandingSignupLink } from "@/components/landing/landing-signup-link"
-import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import { ROUTES } from "@/lib/constants"
 import {
 	MONTHLY_MAX_FEATURE_ROWS,
@@ -98,14 +97,12 @@ export function PricingPlanCard({
 
 	const cardClassName = cn(
 		"relative grid h-full grid-rows-[auto_auto_auto_auto_1fr_auto]",
-		"rounded-2xl border p-6 sm:p-7",
-		isLanding
-			? isHighlighted
-				? "border-landing-primary/40 bg-gradient-to-b from-landing-primary/10 via-landing-paper to-landing-bg shadow-[0_12px_40px_-16px_rgba(79,70,229,0.35)]"
-				: "border-landing-border bg-landing-paper/80"
-			: isHighlighted
-				? "border-emerald-300 bg-gradient-to-b from-emerald-50 via-white to-white shadow-md ring-1 ring-emerald-200"
-				: cn(DASHBOARD_THEME.card, "bg-white"),
+		"rounded-xl border bg-surface p-6 sm:p-7",
+		isHighlighted
+			? isLanding
+				? "border-brand ring-1 ring-brand"
+				: "border-emerald-400 ring-1 ring-emerald-400"
+			: "border-hairline shadow-card",
 	)
 
 	const content = (
@@ -122,9 +119,8 @@ export function PricingPlanCard({
 
 			<h3
 				className={cn(
-					"font-display text-xl font-bold leading-tight sm:text-2xl",
+					"font-display text-xl font-semibold leading-tight text-ink sm:text-2xl",
 					CARD_LAYOUT.title,
-					!isLanding && "text-neutral-900",
 				)}
 			>
 				{plan.name}
@@ -149,8 +145,7 @@ export function PricingPlanCard({
 				<div className="flex items-baseline gap-1">
 					<span
 						className={cn(
-							"font-display text-3xl font-extrabold leading-none tracking-tight sm:text-4xl",
-							!isLanding && "text-neutral-900",
+							"font-display text-3xl font-semibold leading-none tracking-tight text-ink sm:text-4xl",
 						)}
 					>
 						{plan.price}

@@ -29,6 +29,7 @@ type SearchJobsRow = {
 	description_html: string | null
 	company_name: string | null
 	company_slug: string | null
+	clicks?: number | null
 }
 
 export type LandingJobsPreviewSource = "geo" | "north-america"
@@ -53,6 +54,9 @@ function mapRow(row: SearchJobsRow): JobFeedItem {
 		is_active: row.is_active,
 		company_id: row.company_id,
 		description_html: row.description_html,
+		clicks: typeof row.clicks === "number" && Number.isFinite(row.clicks)
+			? row.clicks
+			: 0,
 		companies:
 			row.company_id != null
 				? {

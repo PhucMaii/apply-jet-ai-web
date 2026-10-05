@@ -1,18 +1,11 @@
-import { useState } from "react"
-import { Tabs } from "@/components/ui/tabs"
-import { ResumeSection } from "@/components/profile/resume-section"
-import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
-import {
-	PROFILE_SECTION,
-	PROFILE_SECTION_META,
-	type ProfileSection,
-} from "@/lib/profile-section"
-import { TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
-import { PgwpTrackerCompact } from "@/components/pgwp/pgwp-tracker-compact"
-import { FEATURES } from "@/lib/features"
-import { Card, CardHeader, CardTitle, CardContent } from "../ui/card"
-import { cn } from "@/lib/utils"
 import { UserRound } from "lucide-react"
+import { PgwpTrackerCompact } from "@/components/pgwp/pgwp-tracker-compact"
+import { ResumeSection } from "@/components/profile/resume-section"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { FEATURES } from "@/lib/features"
+import { PROFILE_SECTION, type ProfileSection } from "@/lib/profile-section"
+import { PROFILE_SURFACE } from "@/lib/profile-surface"
+import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import { ProfileContactEditor } from "./contact-editor"
 import { WorkExperienceEditor } from "./work-experience-editor"
 import { EducationEditor } from "./education-editor"
@@ -27,11 +20,18 @@ import type {
 	UserProjectRow,
 	UserWorkExperienceRow,
 } from "@/types/database"
+import type { ProfilePageData } from "@/types/profile-page"
 import type { AsyncResultMsg } from "@/types/types"
 
+const CONTACT_CARD_COPY = {
+	title: "Personal info",
+	description: "Name, contact details, target role, and a short summary.",
+} as const
+
 interface ProfileAutofillWorkspaceProps {
+	section: ProfileSection
 	userId: string | null
-	userProfile: any;
+	userProfile: ProfilePageData
 	saveProfile: (profile: UserProfileRow) => Promise<AsyncResultMsg>
 	saveExperience: (experienceId: string, patch: Partial<UserWorkExperienceRow>) => Promise<AsyncResultMsg>
 	addWorkExperience: (experience: UserWorkExperienceRow) => Promise<AsyncResultMsg>
@@ -61,6 +61,7 @@ interface ProfileAutofillWorkspaceProps {
 }
 
 export function ProfileAutofillWorkspace({
+	section,
 	userId,
 	userProfile,
 	saveProfile,
@@ -83,141 +84,83 @@ export function ProfileAutofillWorkspace({
 	onAddLink,
 	onSaveLink,
 	refetchProfile,
-
 }: ProfileAutofillWorkspaceProps) {
-	const [profileSection, setProfileSection] = useState<ProfileSection>(
-		PROFILE_SECTION.contact,
-	)
-
-	return (
-		<Tabs
-			value={profileSection}
-			onValueChange={(value) => setProfileSection(value as ProfileSection)}
-			className="w-full"
-		>
-			<TabsList className={DASHBOARD_THEME.sectionTabsList}>
-				{(Object.keys(PROFILE_SECTION) as ProfileSection[]).map((key) => {
-					const meta = PROFILE_SECTION_META[key]
-					const SectionIcon = meta.Icon
-					return (
-						<TabsTrigger
-							key={key}
-							value={key}
-							className={DASHBOARD_THEME.sectionTabsTrigger}
-						>
-							<SectionIcon
-								className="size-3.5 shrink-0 opacity-80"
-								aria-hidden
-							/>
-							{meta.label}
-						</TabsTrigger>
-					)
-				})}
-			</TabsList>
-
-			<div className={DASHBOARD_THEME.contentPanel}>
-				{FEATURES.pgwp ? <PgwpTrackerCompact /> : null}
-
-				<ResumeSection
-					userId={userId}
-					refetchProfile={refetchProfile}
+	switch (section) {
+		case PROFILE_SECTION.resume:
+			return (
+				<div className="space-y-6">
+					{FEATURES.pgwp ? <PgwpTrackerCompact /> : null}
+					<ResumeSection userId={userId} refetchProfile={refetchProfile} />
+				</div>
+			)
+		case PROFILE_SECTION.contact:
+			return (
+				<Card variant="solid" className={DASHBOARD_THEME.card}>
+					<CardHeader>
+						<CardTitle className="flex items-center gap-2 font-display">
+							<UserRound className={PROFILE_SURFACE.sectionIcon} aria-hidden />
+							{CONTACT_CARD_COPY.title}
+						</CardTitle>
+						<CardDescription>{CONTACT_CARD_COPY.description}</CardDescription>
+					</CardHeader>
+					<CardContent>
+						<ProfileContactEditor
+							userEmail={userProfile.profile.email}
+							profile={userProfile.profile}
+							onSave={saveProfile}
+						/>
+					</CardContent>
+				</Card>
+			)
+		case PROFILE_SECTION.work:
+			return (
+				<WorkExperienceEditor
+					items={userProfile.workExperiences}
+					onAdd={addWorkExperience}
+					onSave={saveExperience}
+					onRemove={removeExperience}
 				/>
-
-				<TabsContent
-					value={PROFILE_SECTION.contact}
-					className="mt-6 space-y-4 focus-visible:outline-none"
-				>
-					<Card variant="solid" className={DASHBOARD_THEME.card}>
-						<CardHeader className="space-y-3 bg-white pb-2">
-							<CardTitle className="flex items-start gap-3 font-display text-xl text-neutral-900">
-								<span
-									className={cn(
-										"flex size-10 shrink-0 items-center justify-center",
-										DASHBOARD_THEME.cardIconWrap,
-									)}
-								>
-									<UserRound className="size-5" aria-hidden />
-								</span>
-								<span className="pt-0.5">
-									Contact &amp; application details
-								</span>
-							</CardTitle>
-						</CardHeader>
-						<CardContent className="bg-white">
-							<ProfileContactEditor
-								userEmail={userProfile.profile.email}
-								profile={userProfile.profile}
-								onSave={saveProfile}
-							/>
-						</CardContent>
-					</Card>
-				</TabsContent>
-
-				<TabsContent
-					value={PROFILE_SECTION.work}
-					className="mt-6 space-y-4 focus-visible:outline-none"
-				>
-					<WorkExperienceEditor
-						items={userProfile.workExperiences}
-						onAdd={addWorkExperience}
-						onSave={saveExperience}
-						onRemove={removeExperience}
-					/>
-				</TabsContent>
-
-				<TabsContent
-					value={PROFILE_SECTION.education}
-					className="mt-6 space-y-4 focus-visible:outline-none"
-				>
-					<EducationEditor
-						items={userProfile.educations}
-						onAdd={addEducation}
-						onSave={saveEducation}
-						onRemove={removeEducation}
-					/>
-				</TabsContent>
-
-				<TabsContent
-					value={PROFILE_SECTION.projects}
-					className="mt-6 space-y-4 focus-visible:outline-none"
-				>
-					<ProjectsEditor
-						items={userProfile.projects}
-						onAdd={addProject}
-						onSave={saveProject}
-						onRemove={removeProject}
-					/>
-				</TabsContent>
-
-				<TabsContent
-					value={PROFILE_SECTION.links}
-					className="mt-6 space-y-4 focus-visible:outline-none"
-				>
-					<LinksAdditionalEditor
-						links={userProfile.links}
-						additionalInfo={userProfile.additionalInfo}
-						onAddLink={onAddLink}
-						onDeleteLink={deleteLink}
-						onSaveLink={onSaveLink}
-						onSaveAdditionalInfo={onSaveAdditionalInfo}
-					/>
-				</TabsContent>
-
-				<TabsContent
-					value={PROFILE_SECTION.skills}
-					className="mt-6 space-y-4 focus-visible:outline-none"
-				>
-					<SkillsEditor
-						categories={userProfile.skillCategories ?? []}
-						skills={userProfile.skills ?? []}
-						onAddCategory={addSkillCategory}
-						onRenameCategory={renameSkillCategory}
-						onDeleteCategory={deleteSkillCategory}
-						onAddSkill={addSkill}
-						onDeleteSkill={deleteSkill}
-					/>
-				</TabsContent>
-			</div>
-		</Tabs>
-	)
+			)
+		case PROFILE_SECTION.education:
+			return (
+				<EducationEditor
+					items={userProfile.educations}
+					onAdd={addEducation}
+					onSave={saveEducation}
+					onRemove={removeEducation}
+				/>
+			)
+		case PROFILE_SECTION.projects:
+			return (
+				<ProjectsEditor
+					items={userProfile.projects}
+					onAdd={addProject}
+					onSave={saveProject}
+					onRemove={removeProject}
+				/>
+			)
+		case PROFILE_SECTION.links:
+			return (
+				<LinksAdditionalEditor
+					links={userProfile.links}
+					additionalInfo={userProfile.additionalInfo}
+					onAddLink={onAddLink}
+					onDeleteLink={deleteLink}
+					onSaveLink={onSaveLink}
+					onSaveAdditionalInfo={onSaveAdditionalInfo}
+				/>
+			)
+		case PROFILE_SECTION.skills:
+			return (
+				<SkillsEditor
+					categories={userProfile.skillCategories ?? []}
+					skills={userProfile.skills ?? []}
+					onAddCategory={addSkillCategory}
+					onRenameCategory={renameSkillCategory}
+					onDeleteCategory={deleteSkillCategory}
+					onAddSkill={addSkill}
+					onDeleteSkill={deleteSkill}
+				/>
+			)
+	}
 }

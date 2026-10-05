@@ -1,27 +1,43 @@
 import { Link } from "react-router-dom"
-import { FileText, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { APPLICATIONS_THEME } from "@/lib/applications-theme"
+import { EmptyState } from "@/components/ui/empty-state"
+import { APPLICATIONS_COPY } from "@/lib/applications-copy"
 import { ROUTES } from "@/lib/constants"
+import { PGWP_MASCOT_SRC } from "@/lib/pgwp-mascot"
 
-export function ApplicationsEmptyState() {
+const EMPTY_MASCOT_ALT = "ApplyJet beaver mascot, ready to help" as const
+
+interface ApplicationsEmptyStateProps {
+	onQuickAdd: () => void
+}
+
+export function ApplicationsEmptyState({ onQuickAdd }: ApplicationsEmptyStateProps) {
 	return (
-		<div className={APPLICATIONS_THEME.empty} role="status">
-			<div className="mx-auto flex size-12 items-center justify-center rounded-xl bg-neutral-100 text-neutral-600 ring-1 ring-neutral-200">
-				<FileText className="size-5" aria-hidden />
-			</div>
-			<h2 className="mt-4 font-display text-lg font-semibold text-neutral-900">
-				No applications yet
-			</h2>
-			<p className={`mx-auto mt-2 max-w-md text-sm ${APPLICATIONS_THEME.muted}`}>
-				Hello! Welcome to your application pipeline. To get started, let's create your first application
-			</p>
-			<Button className="mt-6 gap-2" asChild>
-				<Link to={ROUTES.applicationCreate}>
-					<Plus className="size-4" aria-hidden />
-					New application
-				</Link>
-			</Button>
-		</div>
+		<EmptyState
+			title={APPLICATIONS_COPY.emptyTitle}
+			description={APPLICATIONS_COPY.emptyBody}
+			illustration={
+				<img
+					src={PGWP_MASCOT_SRC.healthy}
+					alt={EMPTY_MASCOT_ALT}
+					width={112}
+					height={112}
+					className="size-28 object-contain"
+					decoding="async"
+				/>
+			}
+			actions={
+				<>
+					<Button onClick={onQuickAdd}>
+						<Plus aria-hidden />
+						{APPLICATIONS_COPY.addApplication}
+					</Button>
+					<Button variant="ghost" asChild>
+						<Link to={ROUTES.jobs}>{APPLICATIONS_COPY.emptyBrowseJobs}</Link>
+					</Button>
+				</>
+			}
+		/>
 	)
 }

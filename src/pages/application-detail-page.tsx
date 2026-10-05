@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom"
-import { ArrowLeft, Loader2 } from "lucide-react"
+import { ArrowLeft } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ApplicationDetailDocuments } from "@/components/applications/application-detail-documents"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import { ROUTES } from "@/lib/constants"
@@ -28,6 +29,7 @@ export function ApplicationDetailPage() {
 		saveAppResumeBlock,
 		saveAppResumeSectionDisplayName,
 		saveAppResumeSectionOrder,
+		saveAppResumeBlockOrder,
 		createAppResumeSkillCategory,
 		createAppResumeSummaryBlock,
 		ensureAppResumeSkillsSection,
@@ -41,18 +43,23 @@ export function ApplicationDetailPage() {
 
 	if (isLoadingApplication) {
 		return (
-			<div className="flex h-dvh flex-col overflow-hidden bg-neutral-50">
+			<div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas">
 				<div
-					className="flex flex-1 flex-col items-center justify-center gap-3"
-					aria-busy="true"
+					className="flex h-14 shrink-0 items-center gap-3 border-b border-hairline bg-surface px-5"
+					aria-hidden
 				>
-					<Loader2
-						className="size-8 animate-spin text-primary"
-						aria-hidden
-					/>
-					<span className={APPLICATIONS_THEME.muted}>
-						Loading application…
-					</span>
+					<Skeleton className="h-4 w-24" />
+					<Skeleton className="h-4 w-56" />
+				</div>
+				<div
+					className="flex flex-1 gap-4 p-4 sm:p-5"
+					role="status"
+					aria-busy="true"
+					aria-label="Loading application"
+				>
+					<Skeleton className="hidden w-72 shrink-0 rounded-xl lg:block" />
+					<Skeleton className="flex-1 rounded-xl" />
+					<Skeleton className="hidden w-80 shrink-0 rounded-xl xl:block" />
 				</div>
 			</div>
 		)
@@ -60,7 +67,7 @@ export function ApplicationDetailPage() {
 
 	if (isNotFound || !record || !form) {
 		return (
-			<div className="flex h-dvh flex-col overflow-hidden bg-neutral-50">
+			<div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas">
 				{error && !isNotFound ? (
 					<div className="shrink-0 border-b border-red-200 bg-red-50 px-4 py-2">
 						<p className="text-sm text-red-700" role="alert">
@@ -90,7 +97,7 @@ export function ApplicationDetailPage() {
 	}
 
 	return (
-		<div className="flex h-dvh flex-col overflow-hidden bg-neutral-50">
+		<div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-canvas">
 			{error ? (
 				<div className="shrink-0 border-b border-red-200 bg-red-50 px-4 py-2">
 					<p className="text-sm text-red-700" role="alert">
@@ -129,6 +136,7 @@ export function ApplicationDetailPage() {
 						saveAppResumeSectionDisplayName
 					}
 					onSaveAppResumeSectionOrder={saveAppResumeSectionOrder}
+					onSaveAppResumeBlockOrder={saveAppResumeBlockOrder}
 					onCreateSkillCategory={createAppResumeSkillCategory}
 					onCreateSummaryBlock={createAppResumeSummaryBlock}
 					onEnsureSkillsSection={ensureAppResumeSkillsSection}

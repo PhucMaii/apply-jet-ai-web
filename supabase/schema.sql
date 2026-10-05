@@ -175,7 +175,7 @@ create table if not exists public.applications (
 	job_url text,
 	job_description text,
 	status text not null default 'Generated'
-		check (status in ('Generated', 'Applied', 'Rejected', 'Accepted')),
+		check (status in ('Generated', 'Applied', 'Interviewing', 'Rejected', 'Accepted')),
 	created_at timestamptz not null default now(),
 	updated_at timestamptz
 );

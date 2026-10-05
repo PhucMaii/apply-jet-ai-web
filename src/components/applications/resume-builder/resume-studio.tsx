@@ -41,6 +41,9 @@ interface ResumeStudioProps {
 	onSaveAppResumeSectionOrder: (
 		orderedSections: Array<{ sectionId: string; sortKey: number }>,
 	) => Promise<void>
+	onSaveAppResumeBlockOrder: (
+		orderedBlocks: Array<{ blockId: string; sortKey: number }>,
+	) => Promise<void>
 	onCreateSkillCategory: (input: {
 		appResumeId: string
 		sectionId: string
@@ -88,6 +91,7 @@ export function ResumeStudio({
 	onSaveAppResumeBlock,
 	onSaveAppResumeSectionDisplayName,
 	onSaveAppResumeSectionOrder,
+	onSaveAppResumeBlockOrder,
 	onCreateSkillCategory,
 	onCreateSummaryBlock,
 	onEnsureSkillsSection,
@@ -244,6 +248,7 @@ export function ResumeStudio({
 						onSaveAppResumeSectionDisplayName
 					}
 					onSaveAppResumeSectionOrder={onSaveAppResumeSectionOrder}
+					onSaveAppResumeBlockOrder={onSaveAppResumeBlockOrder}
 					onCreateSkillCategory={onCreateSkillCategory}
 					onCreateSummaryBlock={onCreateSummaryBlock}
 					onEnsureSkillsSection={onEnsureSkillsSection}

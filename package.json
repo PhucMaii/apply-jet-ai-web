@@ -7,10 +7,12 @@
 		"dev": "vite",
 		"build": "tsc -b && vite build",
 		"lint": "eslint .",
-		"preview": "vite preview"
+		"preview": "vite preview",
+		"generate": "npx supabase gen types typescript --project-id hlptevoushowyonkfrqv --schema public > src/types/database.ts"
 	},
 	"dependencies": {
 		"@fingerprintjs/fingerprintjs": "^5.2.0",
+		"@radix-ui/react-dropdown-menu": "^2.1.24",
 		"@radix-ui/react-label": "^2.1.8",
 		"@radix-ui/react-slot": "^1.2.4",
 		"@radix-ui/react-tabs": "^1.1.13",

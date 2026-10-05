@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import {
 	APPLICATION_STATUSES,
+	APPLICATION_STATUS_META,
 	type ApplicationStatus,
 	isApplicationStatus,
 } from "@/lib/application-status"
@@ -130,7 +131,7 @@ export function ResumeJobAside({
 								>
 									{APPLICATION_STATUSES.map((item) => (
 										<option key={item} value={item}>
-											{item}
+											{APPLICATION_STATUS_META[item].label}
 										</option>
 									))}
 								</select>

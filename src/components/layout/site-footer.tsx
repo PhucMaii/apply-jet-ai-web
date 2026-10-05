@@ -119,13 +119,13 @@ export function SiteFooter() {
 	]
 
 	return (
-		<footer className="border-t border-border/80 bg-muted/20">
-			<div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
+		<footer className="border-t border-hairline bg-surface">
+			<div className="mx-auto max-w-6xl px-4 py-14 sm:px-6 lg:px-8">
 				<div className="grid gap-10 md:grid-cols-[1.2fr_2fr]">
 					<div>
 						<div className="flex items-center gap-3">
-							<BrandLogo size="lg" />
-							<p className="font-display text-xl font-bold tracking-tight">
+							<BrandLogo size="md" />
+							<p className="font-display text-lg font-semibold tracking-tight text-ink">
 								{APP_NAME}
 							</p>
 						</div>

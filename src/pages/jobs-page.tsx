@@ -1,15 +1,28 @@
-import { useDeferredValue, useMemo, useState } from "react"
+import {
+	useCallback,
+	useDeferredValue,
+	useEffect,
+	useMemo,
+	useState,
+} from "react"
+import type { KeyboardEvent } from "react"
 import { Loader2 } from "lucide-react"
 import { JobDetailPanel } from "@/components/jobs/job-detail-panel"
 import { JobFeedCard } from "@/components/jobs/job-feed-card"
 import { JobsEmptyState } from "@/components/jobs/jobs-empty-state"
 import { JobsFilters } from "@/components/jobs/jobs-filters"
-import { PageHeader } from "@/components/page-header"
+import { JobsGuestBar } from "@/components/jobs/jobs-guest-bar"
+import {
+	JobDetailSkeleton,
+	JobsListSkeleton,
+} from "@/components/jobs/jobs-list-skeleton"
+import { AppPageHeader } from "@/components/layout/app-page-header"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
 import { useJobsFeed } from "@/hooks/use-jobs-feed"
 import { useUserGeoLocation } from "@/hooks/use-user-geo-location"
 import { useUserTargetRole } from "@/hooks/use-user-target-role"
+import { APP_PAGE_CONTAINER } from "@/lib/app-nav"
 import {
 	JOBS_COPY,
 	type JobPostedWithin,
@@ -17,27 +30,22 @@ import {
 } from "@/lib/jobs-copy"
 import { geoLocationFilterValue } from "@/lib/jobs-geo"
 import { JOBS_THEME } from "@/lib/jobs-theme"
-import { PAGE_HEADER_COPY } from "@/lib/page-header-copy"
 import { cn } from "@/lib/utils"
 
 export function JobsPage() {
-	const { user, signOut, isLoading: isAuthLoading } = useAuth()
+	const { user, isLoading: isAuthLoading } = useAuth()
 	const {
 		data: targetRole = null,
 		isLoading: isLoadingTargetRole,
 		isFetched: hasFetchedTargetRole,
 	} = useUserTargetRole()
-	const {
-		data: geoLocation = null,
-		isFetched: hasFetchedGeo,
-	} = useUserGeoLocation()
+	const { data: geoLocation = null, isFetched: hasFetchedGeo } =
+		useUserGeoLocation()
 
 	/** `null` means “use profile target role once it loads.” */
 	const [titleOverride, setTitleOverride] = useState<string | null>(null)
 	/** `null` means “use detected geo city once it loads.” */
-	const [locationOverride, setLocationOverride] = useState<string | null>(
-		null,
-	)
+	const [locationOverride, setLocationOverride] = useState<string | null>(null)
 	const [postedWithin, setPostedWithin] = useState<JobPostedWithin>("any")
 	const [sort, setSort] = useState<JobSort>("relevant")
 	const [selectedIdOverride, setSelectedIdOverride] = useState<number | null>(
@@ -66,6 +74,7 @@ export function JobsPage() {
 		loadError,
 		hasMore,
 		loadMore,
+		setJobClicks,
 	} = useJobsFeed({
 		titleQuery: deferredTitle,
 		locationQuery: deferredLocation,
@@ -95,37 +104,109 @@ export function JobsPage() {
 		[locationQuery, postedWithin, sort, titleQuery],
 	)
 
-	const handleClearFilters = () => {
+	const resetSelection = useCallback(() => {
+		setSelectedIdOverride(null)
+		setMobileShowDetail(false)
+	}, [])
+
+	const handleTitleChange = useCallback(
+		(value: string) => {
+			setTitleOverride(value)
+			resetSelection()
+		},
+		[resetSelection],
+	)
+
+	const handleLocationChange = useCallback(
+		(value: string) => {
+			setLocationOverride(value)
+			resetSelection()
+		},
+		[resetSelection],
+	)
+
+	const handlePostedWithinChange = useCallback(
+		(value: JobPostedWithin) => {
+			setPostedWithin(value)
+			resetSelection()
+		},
+		[resetSelection],
+	)
+
+	const handleSortChange = useCallback(
+		(value: JobSort) => {
+			setSort(value)
+			resetSelection()
+		},
+		[resetSelection],
+	)
+
+	const handleClearFilters = useCallback(() => {
 		setTitleOverride("")
 		setLocationOverride("")
 		setPostedWithin("any")
 		setSort("relevant")
-		setSelectedIdOverride(null)
-		setMobileShowDetail(false)
-	}
+		resetSelection()
+	}, [resetSelection])
 
-	const handleSelectJob = (jobId: number) => {
+	const handleSelectJob = useCallback((jobId: number) => {
 		setSelectedIdOverride(jobId)
 		setMobileShowDetail(true)
-	}
+	}, [])
 
-	const accountInitials = (
-		user?.email?.split("@")[0]?.slice(0, 2) || "?"
-	).toUpperCase()
+	const handleBack = useCallback(() => {
+		setMobileShowDetail(false)
+		const jobId = selectedJob?.id
+		if (jobId == null) return
+		requestAnimationFrame(() => {
+			document.getElementById(`job-option-${jobId}`)?.focus()
+		})
+	}, [selectedJob?.id])
 
-	const showFeedLoading = !filtersReady || loading
+	const handleListKeyDown = useCallback(
+		(event: KeyboardEvent<HTMLDivElement>) => {
+			if (!jobs.length) return
+			const isNext = event.key === "ArrowDown" || event.key === "End"
+			const isPrev = event.key === "ArrowUp" || event.key === "Home"
+			if (!isNext && !isPrev) return
+			event.preventDefault()
 
-	return (
-		<div className={JOBS_THEME.page}>
-			<PageHeader
-				title={PAGE_HEADER_COPY.jobsTitle}
-				isAuthenticated={Boolean(user)}
-				userEmail={user?.email}
-				accountInitials={accountInitials}
-				onSignOut={user ? signOut : undefined}
-			/>
+			const currentIndex = jobs.findIndex((job) => job.id === selectedJob?.id)
+			let nextIndex = currentIndex < 0 ? 0 : currentIndex
+			if (event.key === "ArrowDown") {
+				nextIndex = Math.min(jobs.length - 1, currentIndex + 1)
+			} else if (event.key === "ArrowUp") {
+				nextIndex = Math.max(0, currentIndex - 1)
+			} else if (event.key === "Home") {
+				nextIndex = 0
+			} else {
+				nextIndex = jobs.length - 1
+			}
 
-			<main className={JOBS_THEME.main}>
+			const next = jobs[nextIndex]
+			if (!next) return
+			setSelectedIdOverride(next.id)
+			const option = document.getElementById(`job-option-${next.id}`)
+			option?.scrollIntoView({ block: "nearest" })
+			if (option instanceof HTMLElement) option.focus()
+		},
+		[jobs, selectedJob?.id],
+	)
+
+	useEffect(() => {
+		if (!mobileShowDetail) return
+		if (window.matchMedia("(min-width: 1024px)").matches) return
+		document.getElementById("job-detail-back")?.focus()
+	}, [mobileShowDetail, selectedJob?.id])
+
+	const isSignedIn = Boolean(user)
+	const isInitialLoading = jobs.length === 0 && (!filtersReady || loading)
+	const isUpdating = loading && jobs.length > 0
+	const showEmpty = !isInitialLoading && jobs.length === 0
+
+	const feed = (
+		<div className="mt-5 flex flex-col gap-4">
+			<div className={cn(mobileShowDetail && "max-lg:hidden")}>
 				<JobsFilters
 					titleQuery={titleQuery}
 					locationQuery={locationQuery}
@@ -133,112 +214,134 @@ export function JobsPage() {
 					sort={sort}
 					resultCount={jobs.length}
 					hasActiveFilters={hasActiveFilters}
-					onTitleChange={(value) => {
-						setTitleOverride(value)
-						setSelectedIdOverride(null)
-						setMobileShowDetail(false)
-					}}
-					onLocationChange={(value) => {
-						setLocationOverride(value)
-						setSelectedIdOverride(null)
-						setMobileShowDetail(false)
-					}}
-					onPostedWithinChange={(value) => {
-						setPostedWithin(value)
-						setSelectedIdOverride(null)
-						setMobileShowDetail(false)
-					}}
-					onSortChange={(value) => {
-						setSort(value)
-						setSelectedIdOverride(null)
-						setMobileShowDetail(false)
-					}}
+					isSearching={isInitialLoading}
+					isUpdating={isUpdating}
+					onTitleChange={handleTitleChange}
+					onLocationChange={handleLocationChange}
+					onPostedWithinChange={handlePostedWithinChange}
+					onSortChange={handleSortChange}
 					onClearFilters={handleClearFilters}
 				/>
+			</div>
 
-				{loadError ? (
-					<p className={JOBS_THEME.error} role="alert">
-						{loadError}
-					</p>
-				) : null}
-
-				{showFeedLoading ? (
+			{showEmpty ? (
+				<JobsEmptyState
+					hasActiveFilters={hasActiveFilters}
+					onClearFilters={handleClearFilters}
+					message={loadError}
+				/>
+			) : (
+				<section
+					aria-label="Job results"
+					aria-busy={loading || undefined}
+					className={cn(
+						JOBS_THEME.board,
+						!isSignedIn && "lg:h-[calc(100dvh-22rem)]",
+					)}
+				>
 					<div
-						className="flex flex-col items-center justify-center gap-3 py-20"
-						aria-busy="true"
+						className={cn(
+							JOBS_THEME.listPane,
+							mobileShowDetail && "max-lg:hidden",
+						)}
 					>
-						<Loader2
-							className="size-8 animate-spin text-primary"
-							aria-hidden
-						/>
-						<span className={JOBS_THEME.muted}>{JOBS_COPY.loading}</span>
-					</div>
-				) : jobs.length === 0 ? (
-					<JobsEmptyState
-						hasActiveFilters={hasActiveFilters}
-						onClearFilters={handleClearFilters}
-					/>
-				) : (
-					<section aria-label="Job results" className="space-y-4">
-						<div className={JOBS_THEME.board}>
+						{isUpdating ? (
 							<div
-								className={cn(
-									JOBS_THEME.listPane,
-									mobileShowDetail && "hidden lg:flex",
-									!mobileShowDetail && "flex",
-								)}
+								className="h-0.5 shrink-0 overflow-hidden bg-brand-soft"
+								aria-hidden
 							>
-								<div className={JOBS_THEME.listScroll} role="listbox">
-									{jobs.map((job) => (
-										<JobFeedCard
-											key={job.id}
-											job={job}
-											isSelected={selectedJob?.id === job.id}
-											onSelect={handleSelectJob}
-										/>
-									))}
-								</div>
-								{hasMore ? (
-									<div className="shrink-0 border-t border-neutral-100 p-3">
-										<Button
-											type="button"
-											variant="outline"
-											className="w-full"
-											onClick={loadMore}
-											disabled={loadingMore}
-										>
-											{loadingMore ? (
-												<>
-													<Loader2
-														className="size-4 animate-spin"
-														aria-hidden
-													/>
-													{JOBS_COPY.loadingMore}
-												</>
-											) : (
-												JOBS_COPY.loadMore
-											)}
-										</Button>
-									</div>
-								) : null}
+								<div className="skeleton-shimmer h-full w-full" />
 							</div>
-
-							<div
-								className={cn(
-									!mobileShowDetail && "hidden lg:flex",
-									mobileShowDetail && "flex",
-								)}
-							>
-								<JobDetailPanel
-									job={selectedJob}
-									showBack={mobileShowDetail}
-									onBack={() => setMobileShowDetail(false)}
-								/>
-							</div>
+						) : null}
+						<div
+							className={cn(
+								JOBS_THEME.listScroll,
+								"outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand/40",
+							)}
+							aria-label="Job list"
+							tabIndex={0}
+							onKeyDown={handleListKeyDown}
+						>
+							{isInitialLoading ? (
+								<JobsListSkeleton />
+							) : (
+								jobs.map((job) => (
+									<JobFeedCard
+										key={job.id}
+										job={job}
+										isSelected={selectedJob?.id === job.id}
+										onSelect={handleSelectJob}
+									/>
+								))
+							)}
 						</div>
-					</section>
-				)}
-			</main>
+						{hasMore && !isInitialLoading ? (
+							<div className="shrink-0 border-t border-hairline p-3">
+								<Button
+									type="button"
+									variant="outline"
+									className="w-full"
+									onClick={loadMore}
+									disabled={loadingMore || loading}
+								>
+									{loadingMore ? (
+										<>
+											<Loader2 className="animate-spin" aria-hidden />
+											{JOBS_COPY.loadingMore}
+										</>
+									) : (
+										JOBS_COPY.loadMore
+									)}
+								</Button>
+							</div>
+						) : null}
+					</div>
+
+					<div
+						className={cn(
+							JOBS_THEME.detailPane,
+							!mobileShowDetail && "max-lg:hidden",
+						)}
+					>
+						{isInitialLoading ? (
+							<JobDetailSkeleton />
+						) : (
+							<JobDetailPanel
+								job={selectedJob}
+								showBack={mobileShowDetail}
+								onBack={handleBack}
+								reserveBottomNav={isSignedIn}
+								onClicksChange={setJobClicks}
+							/>
+						)}
+					</div>
+				</section>
+			)}
+		</div>
+	)
+
+	if (!isSignedIn) {
+		return (
+			<div className="app-theme min-h-dvh bg-canvas text-ink">
+				<JobsGuestBar />
+				<div className={APP_PAGE_CONTAINER}>
+					<AppPageHeader
+						title={JOBS_COPY.pageTitle}
+						description={JOBS_COPY.pageDescription}
+					/>
+					{feed}
+				</div>
+			</div>
+		)
+	}
+
+	return (
+		<div className={APP_PAGE_CONTAINER}>
+			<AppPageHeader
+				title={JOBS_COPY.pageTitle}
+				description={JOBS_COPY.pageDescription}
+			/>
+			{feed}
 		</div>
 	)
 }

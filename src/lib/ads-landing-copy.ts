@@ -85,19 +85,6 @@ export const ADS_LANDING_COPY: LandingCopy = {
 		description:
 			"We built ApplyJet so people on a PGWP can apply stronger without paying. Tracker, live scoring, match suggestions, AI tailoring, cover letters, and hiring contacts—yours to use.",
 	},
-	why: {
-		...LANDING_COPY.why,
-		title: "You get the tools. We take the cost.",
-		with: {
-			title: "Free for you—built for this search in Canada",
-			items: [
-				withPgwpLeaf("PGWP tracker free on your dashboard"),
-				"Free live scoring against each job description",
-				"Free suggestions and free AI to match Canadian postings",
-				"Cover letters and hiring contacts included so you can apply smarter",
-			],
-		},
-	},
 	faq: {
 		...LANDING_COPY.faq,
 		items: [
@@ -108,14 +95,6 @@ export const ADS_LANDING_COPY: LandingCopy = {
 					"Yes. On this path the builder, PGWP tracker, live scoring, match suggestions, AI, cover letters, and hiring contacts are free for you. No credit card.",
 			},
 		],
-	},
-	authCta: {
-		badge: "Free forever · PGWP tracker included",
-		title: "Your free resume workspace is waiting.",
-		description:
-			"Build free, track your PGWP, score free, and use free AI for Canadian job postings. Cover letters and hiring contacts in one place. The upside is yours.",
-		primaryCta: LANDING_PRIMARY_CTA,
-		loginLink: LANDING_LOGIN_LINK,
 	},
 	finalCta: {
 		title: "Ready for a free edge before the clock runs down?",

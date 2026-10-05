@@ -6,12 +6,14 @@ import {
 	getEditableText,
 	hasCompleteJobDetails,
 	sortSections,
+	sortBlocks,
 } from "@/components/applications/resume-builder/app-resume-utils"
 import { PanelResizeHandle } from "@/components/applications/resume-builder/panel-resize-handle"
 import { ResumeJobAside } from "@/components/applications/resume-builder/resume-job-aside"
 import { ResumePreviewPanel } from "@/components/applications/resume-builder/resume-preview-panel"
 import { ResumeSectionsAside } from "@/components/applications/resume-builder/resume-sections-aside"
 import type { ApplicationStatus } from "@/lib/application-status"
+import { saveAppResumeScore } from "@/lib/application-detail"
 import {
 	calculateATSScore,
 	type ATSScoreResult,
@@ -67,6 +69,9 @@ interface ResumeTabProps {
 	onSaveAppResumeSectionOrder: (
 		orderedSections: Array<{ sectionId: string; sortKey: number }>,
 	) => Promise<void>
+	onSaveAppResumeBlockOrder: (
+		orderedBlocks: Array<{ blockId: string; sortKey: number }>,
+	) => Promise<void>
 	onCreateSkillCategory: (input: {
 		appResumeId: string
 		sectionId: string
@@ -119,6 +124,7 @@ export function ResumeTab({
 	onSaveAppResumeBlock,
 	onSaveAppResumeSectionDisplayName,
 	onSaveAppResumeSectionOrder,
+	onSaveAppResumeBlockOrder,
 	onCreateSkillCategory,
 	onCreateSummaryBlock,
 	onEnsureSkillsSection,
@@ -148,6 +154,7 @@ export function ResumeTab({
 		() => !hasCompleteJobDetails(form),
 	)
 	const [dragId, setDragId] = useState<string | null>(null)
+	const [blockDragId, setBlockDragId] = useState<string | null>(null)
 	const [pageCount, setPageCount] = useState(1)
 	const [leftPanelWidth, setLeftPanelWidth] = useState(LEFT_PANEL_DEFAULT)
 	const [rightPanelWidth, setRightPanelWidth] = useState(RIGHT_PANEL_DEFAULT)
@@ -173,6 +180,13 @@ export function ResumeTab({
 		useState<AppResumeBlockContent | null>(null)
 	const previewRefs = useRef<Record<string, HTMLElement | null>>({})
 	const lastScoreKeyRef = useRef<string | null>(null)
+	const lastSavedScoreRef = useRef<number | null>(appResume?.score ?? null)
+
+	useEffect(() => {
+		if (typeof appResume?.score === "number") {
+			lastSavedScoreRef.current = appResume.score
+		}
+	}, [appResume?.id, appResume?.score])
 
 	const issueTotal = sections.reduce(
 		(sum, section) => sum + (section.issueCount ?? 0),
@@ -190,7 +204,7 @@ export function ResumeTab({
 		}
 
 		const scoreKey = `${jdText}::${resumeText}`
-		if (!force && lastScoreKeyRef.current === scoreKey && atsResult) {
+		if (!force && lastScoreKeyRef.current === scoreKey) {
 			return
 		}
 
@@ -202,15 +216,24 @@ export function ResumeTab({
 				hasImages: false,
 				fileFormat: "pdf-text",
 			})
-			console.log("result", result)
 			setAtsResult(result)
+
+			const nextScore = Math.round(result.overallScore)
+			if (lastSavedScoreRef.current !== nextScore) {
+				lastSavedScoreRef.current = nextScore
+				try {
+					await saveAppResumeScore(appResume.id, nextScore)
+				} catch (error) {
+					lastSavedScoreRef.current = null
+					console.error("Something went wrong saving ATS score:", error)
+				}
+			}
 		} catch (error) {
 			console.error("Something went wrong calculating ATS score:", error)
 			toast.error("Could not calculate ATS score.")
 		} finally {
 			setIsScoringAts(false)
 		}
-
 	}, [jdText, resumeText, appResume])
 
 	useEffect(() => {
@@ -347,7 +370,13 @@ export function ResumeTab({
 	}
 
 	function handleDragStart(sectionId: string) {
+		setBlockDragId(null)
 		setDragId(sectionId)
+	}
+
+	function handleBlockDragStart(blockId: string) {
+		setDragId(null)
+		setBlockDragId(blockId)
 	}
 
 	async function handleDrop(targetId: string) {
@@ -388,6 +417,62 @@ export function ResumeTab({
 				error instanceof Error
 					? error.message
 					: "Failed to save section order.",
+			)
+		}
+	}
+
+	async function handleBlockDrop(sectionId: string, targetBlockId: string) {
+		if (!blockDragId || blockDragId === targetBlockId) {
+			setBlockDragId(null)
+			return
+		}
+
+		const previousSections = sections
+		const section = sections.find((item) => item.id === sectionId)
+		if (!section) {
+			setBlockDragId(null)
+			return
+		}
+
+		const ordered = sortBlocks(section.blocks)
+		const from = ordered.findIndex((block) => block.id === blockDragId)
+		const to = ordered.findIndex((block) => block.id === targetBlockId)
+		setBlockDragId(null)
+		if (from < 0 || to < 0) return
+
+		const next = [...ordered]
+		const [moved] = next.splice(from, 1)
+		if (!moved) return
+		next.splice(to, 0, moved)
+
+		const reorderedBlocks = next.map((block, index) => ({
+			...block,
+			sort_key: index,
+		}))
+
+		setSections((prev) =>
+			prev.map((item) =>
+				item.id === sectionId
+					? { ...item, blocks: reorderedBlocks }
+					: item,
+			),
+		)
+
+		try {
+			await onSaveAppResumeBlockOrder(
+				reorderedBlocks.map((block) => ({
+					blockId: block.id,
+					sortKey: block.sort_key,
+				})),
+			)
+			void refetchApplication()
+		} catch (error) {
+			console.error("Something went wrong saving block order:", error)
+			setSections(previousSections)
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to save entry order.",
 			)
 		}
 	}
@@ -823,6 +908,7 @@ export function ResumeTab({
 					expandedId={expandedId}
 					activeSectionId={activeSectionId}
 					dragId={dragId}
+					blockDragId={blockDragId}
 					editingBlockId={editingBlockId}
 					editingDraft={editingDraft}
 					editingFormData={editingFormData}
@@ -838,6 +924,11 @@ export function ResumeTab({
 					onDrop={(targetId) => {
 						void handleDrop(targetId)
 					}}
+					onBlockDragStart={handleBlockDragStart}
+					onBlockDrop={(sectionId, targetBlockId) => {
+						void handleBlockDrop(sectionId, targetBlockId)
+					}}
+					onBlockDragEnd={() => setBlockDragId(null)}
 					onStartEditBlock={handleStartEditBlock}
 					onDraftTextChange={setEditingDraft}
 					onFieldChange={(field, value) =>

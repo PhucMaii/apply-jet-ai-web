@@ -233,6 +233,44 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		[user, applicationId],
 	)
 
+	const saveAppResumeBlockOrder = useCallback(
+		async (
+			orderedBlocks: Array<{ blockId: string; sortKey: number }>,
+		) => {
+			if (!user || !applicationId) {
+				throw new Error("Missing application or user.")
+			}
+
+			const now = new Date().toISOString()
+			const results = await Promise.all(
+				orderedBlocks.map(async ({ blockId, sortKey }) => {
+					const { error: upErr } = await supabase
+						.from("app_resume_blocks")
+						.update({
+							sort_key: sortKey,
+							updated_at: now,
+						})
+						.eq("id", blockId)
+
+					if (upErr) {
+						console.error(
+							"Something went wrong saving block order:",
+							upErr,
+						)
+						return upErr
+					}
+					return null
+				}),
+			)
+
+			const firstError = results.find((error) => error !== null)
+			if (firstError) {
+				throw new Error(firstError.message)
+			}
+		},
+		[user, applicationId],
+	)
+
 	const createAppResumeSkillCategory = useCallback(
 		async (input: {
 			appResumeId: string
@@ -563,6 +601,7 @@ export function useApplicationDetail(applicationId: string | undefined) {
 		saveAppResumeBlock,
 		saveAppResumeSectionDisplayName,
 		saveAppResumeSectionOrder,
+		saveAppResumeBlockOrder,
 		createAppResumeSkillCategory,
 		createAppResumeSummaryBlock,
 		ensureAppResumeSkillsSection,

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils"
 // eslint-disable-next-line react-refresh/only-export-components
 export const INPUT_ERROR = {
 	field:
-		"border-red-500 focus-visible:ring-red-500/40 focus-visible:ring-offset-white",
+		"border-rose-500 hover:border-rose-500 focus-visible:border-rose-500 focus-visible:ring-rose-500/15",
 	message: "mt-1.5 text-sm text-red-600",
 } as const
 
@@ -24,9 +24,10 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 					id={id}
 					type={type}
 					className={cn(
-						"flex h-11 w-full rounded-md border px-3 py-2 text-sm text-foreground shadow-inner transition-colors",
-						"placeholder:text-muted-foreground",
-						"border-neutral-300 bg-white text-neutral-900 shadow-sm placeholder:text-neutral-400 focus-visible:ring-primary/40 focus-visible:ring-offset-white",
+						"flex h-11 w-full rounded-md border px-3 py-2 text-sm transition-[border-color,box-shadow]",
+						"border-hairline-strong bg-surface text-ink placeholder:text-ink-subtle",
+						"hover:border-ink-subtle/60",
+						"focus-visible:border-brand focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand/12",
 						"disabled:cursor-not-allowed disabled:opacity-50",
 						hasError && INPUT_ERROR.field,
 						className,

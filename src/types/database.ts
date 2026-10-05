@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       ai_generations: {
@@ -204,6 +179,7 @@ export type Database = {
           application_id: string | null
           created_at: string
           id: string
+          score: number | null
           status: Database["public"]["Enums"]["app_resume_status"]
           updated_at: string
           user_id: string
@@ -212,6 +188,7 @@ export type Database = {
           application_id?: string | null
           created_at?: string
           id?: string
+          score?: number | null
           status?: Database["public"]["Enums"]["app_resume_status"]
           updated_at?: string
           user_id: string
@@ -220,6 +197,7 @@ export type Database = {
           application_id?: string | null
           created_at?: string
           id?: string
+          score?: number | null
           status?: Database["public"]["Enums"]["app_resume_status"]
           updated_at?: string
           user_id?: string
@@ -535,6 +513,7 @@ export type Database = {
         Row: {
           apply_url: string
           ats: string
+          clicks: number | null
           closed_at: string | null
           company_id: number
           department: string | null
@@ -552,6 +531,7 @@ export type Database = {
         Insert: {
           apply_url: string
           ats: string
+          clicks?: number | null
           closed_at?: string | null
           company_id: number
           department?: string | null
@@ -569,6 +549,7 @@ export type Database = {
         Update: {
           apply_url?: string
           ats?: string
+          clicks?: number | null
           closed_at?: string | null
           company_id?: number
           department?: string | null
@@ -1259,40 +1240,45 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      search_jobs: {
+        Args: {
+          p_city?: string
+          p_continent_terms?: string[]
+          p_country?: string
+          p_limit?: number
+          p_location?: string
+          p_offset?: number
+          p_posted_since?: string
+          p_region?: string
+          p_sort?: string
+          p_title?: string
+          p_title_tokens?: string[]
+        }
+        Returns: {
+          apply_url: string
+          ats: string
+          clicks: number
+          company_id: number
+          company_name: string
+          company_slug: string
+          department: string
+          description_html: string
+          first_seen_at: string
+          id: number
+          is_active: boolean
+          is_seed: boolean
+          location: string
+          posted_at: string
+          title: string
+        }[]
+      }
+      increment_job_clicks: {
+        Args: { p_job_id: number }
+        Returns: number
+      }
       sync_company_jobs: {
         Args: { p_company_id: number; p_seen_ids: string[] }
         Returns: string[]
-      }
-      search_jobs: {
-        Args: {
-          p_title?: string | null
-          p_title_tokens?: string[]
-          p_location?: string | null
-          p_city?: string | null
-          p_region?: string | null
-          p_country?: string | null
-          p_continent_terms?: string[]
-          p_posted_since?: string | null
-          p_sort?: string
-          p_limit?: number
-          p_offset?: number
-        }
-        Returns: {
-          id: number
-          title: string
-          location: string | null
-          department: string | null
-          apply_url: string
-          ats: string
-          posted_at: string | null
-          first_seen_at: string
-          is_seed: boolean
-          is_active: boolean
-          company_id: number
-          description_html: string | null
-          company_name: string | null
-          company_slug: string | null
-        }[]
       }
     }
     Enums: {
@@ -1447,9 +1433,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {
       app_resume_block_type: [
@@ -1493,12 +1476,15 @@ export type GeneratedCoverLetterRow =
 	Database["public"]["Tables"]["generated_cover_letters"]["Row"]
 export type JobRow = Database["public"]["Tables"]["jobs"]["Row"]
 export type CompanyRow = Database["public"]["Tables"]["companies"]["Row"]
+export type AppResumeRow = Database["public"]["Tables"]["app_resumes"]["Row"]
 
 export type ApplicationWithDocuments = ApplicationRow & {
 	generated_resume_id: string | null
 	generated_cover_letter_id: string | null
 	generated_resume: GeneratedResumeRow | null
 	generated_cover_letter: GeneratedCoverLetterRow | null
+	/** Linked builder resume — used for the applications list score. */
+	app_resume: Pick<AppResumeRow, "id" | "score"> | null
 }
 
 export type JobFeedItem = {
@@ -1514,6 +1500,7 @@ export type JobFeedItem = {
 	is_active: boolean
 	company_id: number
 	description_html: string | null
+	clicks: number
 	companies: Pick<CompanyRow, "id" | "name" | "slug"> | null
 }
 

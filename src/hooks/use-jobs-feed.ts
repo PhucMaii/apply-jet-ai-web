@@ -40,6 +40,7 @@ type SearchJobsRow = {
 	description_html: string | null
 	company_name: string | null
 	company_slug: string | null
+	clicks?: number | null
 }
 
 function mapSearchRow(row: SearchJobsRow): JobFeedItem {
@@ -56,6 +57,9 @@ function mapSearchRow(row: SearchJobsRow): JobFeedItem {
 		is_active: row.is_active,
 		company_id: row.company_id,
 		description_html: row.description_html,
+		clicks: typeof row.clicks === "number" && Number.isFinite(row.clicks)
+			? row.clicks
+			: 0,
 		companies:
 			row.company_id != null
 				? {
@@ -210,6 +214,16 @@ export function useJobsFeed({
 		void fetchPage(0, true)
 	}, [fetchPage])
 
+	const setJobClicks = useCallback((jobId: number, clicks: number) => {
+		setJobs((prev) =>
+			prev.map((job) =>
+				job.id === jobId
+					? { ...job, clicks: Math.max(job.clicks, clicks) }
+					: job,
+			),
+		)
+	}, [])
+
 	return {
 		jobs,
 		loading,
@@ -218,5 +232,6 @@ export function useJobsFeed({
 		hasMore,
 		loadMore,
 		refresh,
+		setJobClicks,
 	}
 }

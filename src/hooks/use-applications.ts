@@ -3,7 +3,7 @@ import { useAuth } from "@/context/auth-context";
 import { supabase } from "@/lib/supabase";
 import {
   type ApplicationStatus,
-  isApplicationStatus,
+  resolveApplicationStatus,
 } from "@/lib/application-status";
 import type { ApplicationWithDocuments } from "@/types/database";
 import { useGeneratedResume } from "../../hooks/useGeneratedResume";
@@ -44,34 +44,68 @@ export function useApplications() {
         return;
       }
 
-      const generatedResumes = await supabase
-        .from("generated_resumes")
-        .select("*")
-        .in(
-          "application_id",
-          data.map((d) => d.id),
-        )
-        .then((res) => res.data);
+      const applicationIds = data.map((d) => d.id);
 
-      const generatedCoverLetters = await supabase
-        .from("generated_cover_letters")
-        .select("*")
-        .in(
-          "application_id",
-          data.map((d) => d.id),
-        )
-        .then((res) => res.data);
+      const [generatedResumesResult, generatedCoverLettersResult, appResumesResult] =
+        await Promise.all([
+          applicationIds.length
+            ? supabase
+                .from("generated_resumes")
+                .select("*")
+                .in("application_id", applicationIds)
+            : Promise.resolve({ data: [], error: null }),
+          applicationIds.length
+            ? supabase
+                .from("generated_cover_letters")
+                .select("*")
+                .in("application_id", applicationIds)
+            : Promise.resolve({ data: [], error: null }),
+          applicationIds.length
+            ? supabase
+                .from("app_resumes")
+                .select("id, application_id, score")
+                .in("application_id", applicationIds)
+            : Promise.resolve({ data: [], error: null }),
+        ]);
+
+      if (generatedResumesResult.error) {
+        console.error(
+          "Something went wrong loading generated resumes:",
+          generatedResumesResult.error,
+        );
+      }
+      if (generatedCoverLettersResult.error) {
+        console.error(
+          "Something went wrong loading cover letters:",
+          generatedCoverLettersResult.error,
+        );
+      }
+      if (appResumesResult.error) {
+        console.error(
+          "Something went wrong loading app resume scores:",
+          appResumesResult.error,
+        );
+      }
+
+      const generatedResumes = generatedResumesResult.data ?? [];
+      const generatedCoverLetters = generatedCoverLettersResult.data ?? [];
+      const appResumes = appResumesResult.data ?? [];
 
       setRows(
-        data.map((d) => ({
-          ...d,
-          generated_resume: generatedResumes?.find(
-            (r) => r.application_id === d.id,
-          ),
-          generated_cover_letter: generatedCoverLetters?.find(
-            (c) => c.application_id === d.id,
-          ),
-        })) as unknown as ApplicationWithDocuments[],
+        data.map((d) => {
+          const appResume = appResumes.find((r) => r.application_id === d.id);
+          return {
+            ...d,
+            generated_resume:
+              generatedResumes.find((r) => r.application_id === d.id) ?? null,
+            generated_cover_letter:
+              generatedCoverLetters.find((c) => c.application_id === d.id) ??
+              null,
+            app_resume: appResume
+              ? { id: appResume.id, score: appResume.score }
+              : null,
+          };
+        }) as ApplicationWithDocuments[],
       );
     } catch (err) {
       console.error("Something went wrong loading applications:", err);
@@ -86,32 +120,49 @@ export function useApplications() {
     void loadApplications();
   }, [loadApplications]);
 
-  async function updateStatus(applicationId: string, next: ApplicationStatus) {
-    if (!user) return;
+  /** Optimistic: the row moves immediately and rolls back if the save fails. */
+  async function updateStatus(
+    applicationId: string,
+    next: ApplicationStatus,
+  ): Promise<boolean> {
+    if (!user) return false;
+    const previous = rows.find((r) => r.id === applicationId);
+    if (!previous) return false;
+
+    const updatedAt = new Date().toISOString();
     setUpdatingId(applicationId);
-    setLoadError(null);
+    setRows((prev) =>
+      prev.map((r) =>
+        r.id === applicationId ? { ...r, status: next, updated_at: updatedAt } : r,
+      ),
+    );
+
+    const rollback = () =>
+      setRows((prev) =>
+        prev.map((r) =>
+          r.id === applicationId
+            ? { ...r, status: previous.status, updated_at: previous.updated_at }
+            : r,
+        ),
+      );
+
     try {
       const { error } = await supabase
         .from("applications")
-        .update({
-          status: next,
-          updated_at: new Date().toISOString(),
-        })
+        .update({ status: next, updated_at: updatedAt })
         .eq("id", applicationId)
         .eq("user_id", user.id);
 
       if (error) {
         console.error("Something went wrong updating status:", error);
-        setLoadError(error.message);
-        return;
+        rollback();
+        return false;
       }
-
-      setRows((prev) =>
-        prev.map((r) => (r.id === applicationId ? { ...r, status: next } : r)),
-      );
+      return true;
     } catch (err) {
       console.error("Something went wrong updating status:", err);
-      setLoadError(err instanceof Error ? err.message : "Update failed.");
+      rollback();
+      return false;
     } finally {
       setUpdatingId(null);
     }
@@ -166,10 +217,6 @@ export function useApplications() {
     }
   }
 
-  function resolveStatus(raw: string): ApplicationStatus {
-    return isApplicationStatus(raw) ? raw : "Generated";
-  }
-
   const deleteApplication = useCallback(
     async (applicationId: string) => {
       if (!user)
@@ -216,7 +263,7 @@ export function useApplications() {
     updateStatus,
     downloadResume,
     downloadCoverLetter,
-    resolveStatus,  
+    resolveStatus: resolveApplicationStatus,
     deleteApplication,
   };
 }

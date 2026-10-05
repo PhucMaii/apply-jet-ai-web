@@ -46,6 +46,7 @@ interface ResumeSectionsAsideProps {
 	expandedId: string | null
 	activeSectionId: string
 	dragId: string | null
+	blockDragId: string | null
 	editingBlockId: string | null
 	editingDraft: string
 	editingFormData: Record<string, unknown> | null
@@ -59,6 +60,9 @@ interface ResumeSectionsAsideProps {
 	onStyleSectionFocus?: (sectionId: string) => void
 	onDragStart: (sectionId: string) => void
 	onDrop: (targetId: string) => void
+	onBlockDragStart: (blockId: string) => void
+	onBlockDrop: (sectionId: string, targetBlockId: string) => void
+	onBlockDragEnd: () => void
 	onStartEditBlock: (block: AppResumeBlock) => void
 	onDraftTextChange: (value: string) => void
 	onFieldChange: (field: string, value: unknown) => void
@@ -88,6 +92,29 @@ interface ResumeSectionsAsideProps {
 	) => void
 }
 
+const REORDERABLE_BLOCK_TYPES = new Set([
+	"job_entry",
+	"education_entry",
+	"project_entry",
+	"skill_category_entry",
+])
+
+function canReorderBlock(
+	block: AppResumeBlock,
+	section: AppResumeSection,
+): boolean {
+	if (section.section_type === "custom") return true
+	return REORDERABLE_BLOCK_TYPES.has(block.block_type)
+}
+
+function sectionHasReorderableBlocks(section: AppResumeSection): boolean {
+	return (
+		sortBlocks(section.blocks).filter((block) =>
+			canReorderBlock(block, section),
+		).length > 1
+	)
+}
+
 function isEmptySummaryBlock(block: AppResumeBlock) {
 	if (block.block_type !== "rich_text") return false
 	const content = block.content_json
@@ -111,6 +138,7 @@ export function ResumeSectionsAside({
 	expandedId,
 	activeSectionId,
 	dragId,
+	blockDragId,
 	editingBlockId,
 	editingDraft,
 	editingFormData,
@@ -124,6 +152,9 @@ export function ResumeSectionsAside({
 	onStyleSectionFocus,
 	onDragStart,
 	onDrop,
+	onBlockDragStart,
+	onBlockDrop,
+	onBlockDragEnd,
 	onStartEditBlock,
 	onDraftTextChange,
 	onFieldChange,
@@ -476,20 +507,73 @@ export function ResumeSectionsAside({
 														section.section_type !== "summary"
 													)
 												const isRewriting = rewritingBlockId === block.id
+												const canReorder =
+													sectionHasReorderableBlocks(section) &&
+													canReorderBlock(block, section)
+												const isBlockDragging = blockDragId === block.id
 												return (
 													<div
 														key={block.id}
+														onDragOver={
+															canReorder
+																? (event: DragEvent) => {
+																		event.preventDefault()
+																		event.dataTransfer.dropEffect = "move"
+																	}
+																: undefined
+														}
+														onDrop={
+															canReorder
+																? (event: DragEvent) => {
+																		event.preventDefault()
+																		event.stopPropagation()
+																		onBlockDrop(section.id, block.id)
+																	}
+																: undefined
+														}
 														className={cn(
 															"rounded-lg border p-2 transition-colors",
 															isEditing
 																? "border-primary/40 bg-primary/5"
 																: "border-neutral-200 bg-white",
+															isBlockDragging &&
+																"border-primary/40 bg-primary/5 opacity-70",
+															blockDragId &&
+																canReorder &&
+																!isBlockDragging &&
+																"border-dashed border-neutral-300",
 														)}
 													>
 														<div className="mb-1 flex items-center justify-between gap-2">
-															<p className="truncate text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
-																{customBlockTypeLabel(block.block_type)}
-															</p>
+															<div className="flex min-w-0 items-center gap-1">
+																{canReorder ? (
+																	<span
+																		draggable
+																		onDragStart={(event) => {
+																			event.stopPropagation()
+																			event.dataTransfer.effectAllowed = "move"
+																			event.dataTransfer.setData(
+																				"text/plain",
+																				block.id,
+																			)
+																			onBlockDragStart(block.id)
+																		}}
+																		onDragEnd={onBlockDragEnd}
+																		className="cursor-grab touch-none rounded p-0.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 active:cursor-grabbing"
+																		aria-label={`Reorder ${customBlockTypeLabel(block.block_type)}`}
+																		role="button"
+																		tabIndex={0}
+																	>
+																		<GripVertical
+																			className="size-3.5"
+																			aria-hidden
+																		/>
+																	</span>
+																) : null}
+																<p className="truncate text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+																	{customBlockTypeLabel(block.block_type)}
+																</p>
+															</div>
 															<div className="flex items-center gap-1">
 																{canDelete ? (
 																	<Button

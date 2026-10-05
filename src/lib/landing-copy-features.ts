@@ -27,11 +27,6 @@ function isRegionalMarketing(text: string): boolean {
 export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 	if (FEATURES.pgwp) return copy
 
-	const howItWorksSteps = copy.howItWorks.steps.filter(
-		(step) =>
-			!isRegionalMarketing(step.title) && !isRegionalMarketing(step.body),
-	)
-
 	const faqItems = copy.faq.items.filter(
 		(item) =>
 			!isRegionalMarketing(item.question) &&
@@ -77,30 +72,23 @@ export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 		},
 		howItWorks: {
 			...copy.howItWorks,
-			title: "From job search to a tailored application—in four steps.",
+			title: "From posting to tailored application in three steps.",
 			description:
-				"Start free. Find roles that fit, build a resume employers can scan, then tailor it to each posting before you apply.",
-			steps:
-				howItWorksSteps.length >= 3
-					? howItWorksSteps
-					: [
-							{
-								title: "Create your free account",
-								body: "Sign up with email or Google. Your resume workspace is ready right away—nothing to install.",
-							},
-							{
-								title: "Browse jobs that match you",
-								body: "Search roles by title and location, then open postings that fit what you’re looking for.",
-							},
-							{
-								title: "Build and score against the posting",
-								body: "Upload a PDF or start from scratch. Paste a job description, see your match score live, and get suggestions on what to strengthen.",
-							},
-							{
-								title: "Rewrite, then apply",
-								body: "Use AI that reframes your real experience in the posting’s language, generate a cover letter, and apply with a stronger packet.",
-							},
-						],
+				"Start free. Bring your resume once, then tailor it to every role you care about.",
+			steps: [
+				{
+					title: "Add your resume",
+					body: "Upload a PDF or DOCX. ApplyJet parses it into editable sections—work, education, skills—so you never retype it.",
+				},
+				{
+					title: "Paste the job",
+					body: "Drop in a job link or description. You get a live match score and the exact keywords the posting expects.",
+				},
+				{
+					title: "Get a tailored resume",
+					body: "AI rewrites your real experience in the posting’s language. Review every change, download the PDF, and apply.",
+				},
+			],
 		},
 		experienceBullets: {
 			...copy.experienceBullets,
@@ -182,51 +170,9 @@ export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 		},
 		features: {
 			...copy.features,
-			title: "A free resume builder—plus live scoring and job-ready tools.",
+			title: "Everything between “found a job” and “hit submit.”",
 			description:
-				"Build and edit at no cost. Score against job descriptions, get suggestions, try AI when you want a rewrite, then generate cover letters and apply.",
-			items: copy.features.items.filter(
-				(item) =>
-					!isRegionalMarketing(item.title) &&
-					!isRegionalMarketing(item.body),
-			),
-		},
-		why: {
-			...copy.why,
-			title: "Job hunting is hard. Your resume is the part you can change today.",
-			without: {
-				...copy.why.without,
-				title: "Generic docs, wasted applications, slow feedback",
-				items: [
-					"One generic resume sent to every posting",
-					"Experience buried in vague bullets ATS systems skip",
-					"No clear sense of whether you match the role",
-					"Paywalls on scoring, downloads, or basic edits",
-				],
-			},
-			with: {
-				...copy.why.with,
-				title: "Jobs, scoring, and applications written for the role",
-				items: [
-					"Browse and filter jobs that fit your search",
-					"Free live scoring against each job description",
-					"Bullets rewritten in language employers and ATS recognize",
-					"Builder free forever—upgrade only if you need more AI, letters, or contacts",
-				],
-			},
-		},
-		testimonials: {
-			...copy.testimonials,
-			title: "Stories from job seekers—coming as we collect them",
-			summaryLabel:
-				"We’re collecting real quotes from people using ApplyJet to apply.",
-			items: copy.testimonials.items.map((item, index) => ({
-				...item,
-				quote:
-					"Placeholder for a real quote about using ApplyJet while job hunting.",
-				name: `Quote ${index + 1} — coming soon`,
-				role: "Job seeker",
-			})),
+				"Score, fix, write, and track—each tool built for the one job in front of you.",
 		},
 		pricing: {
 			...copy.pricing,
@@ -248,13 +194,6 @@ export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 									"No. We rewrite and reframe the work you’ve already done so it matches the posting’s language—without inventing jobs you didn’t have.",
 							},
 						],
-		},
-		authCta: {
-			...copy.authCta,
-			badge: "Free forever · Jobs & resume tools",
-			title: "Your free resume workspace is waiting.",
-			description:
-				"Build free, score against job postings, and use AI to tailor before you apply. Cover letters and hiring contacts in one place.",
 		},
 		finalCta: {
 			...copy.finalCta,
