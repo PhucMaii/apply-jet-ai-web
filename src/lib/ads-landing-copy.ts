@@ -28,12 +28,6 @@ export const ADS_LANDING_COPY: LandingCopy = {
 			tagline:
 				"Free PGWP tracker, live scoring, and match suggestions—no paywall waiting after signup",
 		},
-		video: {
-			...LANDING_COPY.hero.video,
-			eyebrow: "Free product walkthrough",
-			title: "See how ApplyJet works—free",
-			caption: "Watch free — then build your resume free",
-		},
 	},
 	trustStrip: [
 		withPgwpLeaf("PGWP countdown—free on your dashboard"),

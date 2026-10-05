@@ -39,15 +39,6 @@ export const LANDING_COPY = {
 			tagline:
 				"Track your PGWP window. Score your resume against Canadian job postings. Improve before you apply.",
 		},
-		video: {
-			youtubeId: "7QBcWjdO8iA",
-			eyebrow: "Product walkthrough",
-			title: "See how ApplyJet works",
-			description:
-				"A short tour of the PGWP tracker, free resume builder, live job-match scoring, and AI tailoring.",
-			playLabel: "Play product walkthrough video",
-			caption: "Watch the walkthrough — then build your resume free",
-		},
 	},
 	tryItNow: {
 		sectionId: "try-it-now",

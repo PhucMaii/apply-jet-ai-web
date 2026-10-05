@@ -9,8 +9,6 @@ const JOBS_HERO = {
 		"ApplyJet helps you discover roles, score your resume against the posting, and rewrite your real experience so employers and ATS systems can see the fit—then apply.",
 	socialProofTagline:
 		"Browse jobs, score your resume live, and tailor before you apply.",
-	videoDescription:
-		"A short tour of job search, free resume building, live job-match scoring, and AI tailoring.",
 	noCreditCardNote: "Free builder · Job matching · No credit card",
 } as const
 
@@ -44,10 +42,6 @@ export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 			socialProof: {
 				...copy.hero.socialProof,
 				tagline: JOBS_HERO.socialProofTagline,
-			},
-			video: {
-				...copy.hero.video,
-				description: JOBS_HERO.videoDescription,
 			},
 		},
 		trustStrip: [

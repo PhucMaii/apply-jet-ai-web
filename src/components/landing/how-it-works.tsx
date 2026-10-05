@@ -1,7 +1,6 @@
 import type { ReactNode } from "react"
 import { motion, useReducedMotion } from "framer-motion"
 import { ArrowRight, Check, FileText, Link2, Sparkles } from "lucide-react"
-import { HeroDemoVideo } from "@/components/landing/hero-demo-video"
 import { LandingSectionHeading } from "@/components/landing/landing-section-heading"
 import { ScoreRing } from "@/components/ui/score-ring"
 import { useLandingCopy } from "@/context/landing-copy-context"
@@ -164,10 +163,6 @@ export function HowItWorks() {
 						)
 					})}
 				</ol>
-
-				<div className="mx-auto mt-20 max-w-4xl sm:mt-28">
-					<HeroDemoVideo />
-				</div>
 			</div>
 		</section>
 	)
