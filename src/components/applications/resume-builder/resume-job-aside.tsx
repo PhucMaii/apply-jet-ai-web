@@ -8,6 +8,7 @@ import {
 import { ApplicationsStatusBadge } from "@/components/applications/applications-status-badge"
 import { DeleteApplicationControl } from "@/components/applications/delete-application-control"
 import { AccordionPanel } from "@/components/applications/resume-builder/accordion-panel"
+import { KeywordsMatchPanel } from "@/components/applications/resume-builder/keywords-match-panel"
 import { ScoreGauge } from "@/components/applications/resume-builder/score-gauge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,7 +21,11 @@ import {
 	isApplicationStatus,
 } from "@/lib/application-status"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
-import type { ATSScoreResult } from "@/lib/atsScoring"
+import type { ATSScoreResult, ExtractedKeyword } from "@/lib/atsScoring"
+import {
+	ADDABLE_KEYWORD_CATEGORIES,
+	normalizeSkillName,
+} from "@/lib/keyword-skills"
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type { ApplicationDetailForm } from "@/types/application-detail"
@@ -40,8 +45,11 @@ interface ResumeJobAsideProps {
 	contentOpen: boolean
 	atsResult: ATSScoreResult | null
 	isScoringAts: boolean
+	addedKeywordTerms: Set<string>
+	pendingKeywordTerm: string | null
 	onToggleKeywords: () => void
 	onToggleContent: () => void
+	onAddKeyword: (keyword: ExtractedKeyword) => void
 	onEditJob: () => void
 	onDoneEditingJob: () => void
 	onSaveJobDetails: () => void
@@ -66,8 +74,11 @@ export function ResumeJobAside({
 	contentOpen,
 	atsResult,
 	isScoringAts,
+	addedKeywordTerms,
+	pendingKeywordTerm,
 	onToggleKeywords,
 	onToggleContent,
+	onAddKeyword,
 	onEditJob,
 	onDoneEditingJob,
 	onSaveJobDetails,
@@ -81,7 +92,12 @@ export function ResumeJobAside({
 		timeStyle: "short",
 	})
 	const displayScore = atsResult?.overallScore ?? 0
-	const missingKeywordCount = atsResult?.missingKeywords.length ?? 0
+	const missingKeywordCount =
+		atsResult?.missingKeywords.filter(
+			(keyword) =>
+				ADDABLE_KEYWORD_CATEGORIES.has(keyword.category) &&
+				!addedKeywordTerms.has(normalizeSkillName(keyword.term)),
+		).length ?? 0
 
 	return (
 		<aside className="flex h-full max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden border-t border-neutral-200 bg-white xl:max-h-none xl:border-t-0">
@@ -377,29 +393,13 @@ export function ResumeJobAside({
 							open={keywordsOpen}
 							onToggle={onToggleKeywords}
 						>
-							{atsResult && atsResult.missingKeywords.length > 0 ? (
-								<div className="space-y-2">
-									<p className="text-[11px] font-semibold uppercase tracking-wide text-amber-700">
-										Missing ({atsResult.missingKeywords.length})
-									</p>
-									<div className="flex flex-wrap gap-1.5">
-										{atsResult.missingKeywords.slice(0, 12).map((keyword) => (
-											<span
-												key={`${keyword.term}-${keyword.category}`}
-												className="rounded-md bg-amber-50 px-2 py-0.5 text-xs text-amber-900"
-											>
-												{keyword.term}
-											</span>
-										))}
-									</div>
-								</div>
-							) : (
-								<p className="text-sm text-neutral-500">
-									{atsResult
-										? "Strong keyword coverage for this job description."
-										: "Keyword insights appear once scoring finishes."}
-								</p>
-							)}
+							<KeywordsMatchPanel
+								missingKeywords={atsResult?.missingKeywords ?? []}
+								addedTerms={addedKeywordTerms}
+								pendingTerm={pendingKeywordTerm}
+								isReady={Boolean(atsResult)}
+								onAddKeyword={onAddKeyword}
+							/>
 						</AccordionPanel>
 						<AccordionPanel
 							title="Suggestions"

@@ -12,12 +12,22 @@ import { PanelResizeHandle } from "@/components/applications/resume-builder/pane
 import { ResumeJobAside } from "@/components/applications/resume-builder/resume-job-aside"
 import { ResumePreviewPanel } from "@/components/applications/resume-builder/resume-preview-panel"
 import { ResumeSectionsAside } from "@/components/applications/resume-builder/resume-sections-aside"
+import { useAuth } from "@/context/auth-context"
 import type { ApplicationStatus } from "@/lib/application-status"
 import { saveAppResumeScore } from "@/lib/application-detail"
 import {
 	calculateATSScore,
 	type ATSScoreResult,
+	type ExtractedKeyword,
 } from "@/lib/atsScoring"
+import {
+	collectResumeSkillNames,
+	ensureUserSkillSaved,
+	findSkillCategoryBlock,
+	normalizeSkillName,
+	preferredCategoryNameForKeyword,
+	withSkillAddedToCategoryBlock,
+} from "@/lib/keyword-skills"
 import { buildBlockRewriteDiff, type BlockRewriteDiff } from "@/lib/rewrite-diff"
 import { invokeRewriteResumeBlock } from "@/lib/rewrite-resume-block"
 import type {
@@ -134,6 +144,7 @@ export function ResumeTab({
 	onDeleteAppResumeSection,
 	refetchApplication,
 }: ResumeTabProps) {
+	const { user } = useAuth()
 	const seedSections = appResume?.sections ?? []
 	const [sections, setSections] = useState(() => cloneSections(seedSections))
 	const [expandedId, setExpandedId] = useState<string | null>(
@@ -150,6 +161,16 @@ export function ResumeTab({
 	> | null>(null)
 	const [keywordsOpen, setKeywordsOpen] = useState(true)
 	const [contentOpen, setContentOpen] = useState(true)
+	const [addedKeywordTerms, setAddedKeywordTerms] = useState(
+		() => collectResumeSkillNames(seedSections),
+	)
+	const [pendingKeywordTerm, setPendingKeywordTerm] = useState<string | null>(
+		null,
+	)
+
+	useEffect(() => {
+		setAddedKeywordTerms(collectResumeSkillNames(sections))
+	}, [sections])
 	const [isEditingJob, setIsEditingJob] = useState(
 		() => !hasCompleteJobDetails(form),
 	)
@@ -565,6 +586,118 @@ export function ResumeTab({
 			toast.success("Skill category added")
 		} finally {
 			setIsAddingSkillCategory(false)
+		}
+	}
+
+	async function handleAddMissingKeyword(keyword: ExtractedKeyword) {
+		if (!user) {
+			toast.error("Sign in to add keywords to your resume.")
+			return
+		}
+		if (!appResume) {
+			toast.error("No resume found for this application.")
+			return
+		}
+
+		const termKey = normalizeSkillName(keyword.term)
+		if (!termKey || pendingKeywordTerm) return
+		if (addedKeywordTerms.has(termKey)) return
+
+		const categoryName = preferredCategoryNameForKeyword(keyword)
+		const previousSections = sections
+		setPendingKeywordTerm(termKey)
+
+		try {
+			let workingSections = sections
+			let skillsSection = workingSections.find(
+				(section) => section.section_type === "skills",
+			)
+
+			if (!skillsSection) {
+				const nextSortKey =
+					workingSections.length === 0
+						? 0
+						: Math.max(
+								...workingSections.map((section) => section.sort_key),
+							) + 1
+				skillsSection = await onEnsureSkillsSection({
+					appResumeId: appResume.id,
+					sortKey: nextSortKey,
+				})
+				workingSections = sortSections([
+					...workingSections,
+					skillsSection,
+				])
+			}
+
+			let targetBlock = findSkillCategoryBlock(
+				workingSections,
+				categoryName,
+			)
+
+			if (!targetBlock) {
+				const createdBlock = await onCreateSkillCategory({
+					appResumeId: appResume.id,
+					sectionId: skillsSection.id,
+					sortKey: skillsSection.blocks.length,
+					name: categoryName,
+				})
+				targetBlock = createdBlock
+				workingSections = workingSections.map((section) =>
+					section.id === skillsSection!.id
+						? {
+								...section,
+								blocks: [...section.blocks, createdBlock],
+							}
+						: section,
+				)
+				skillsSection =
+					workingSections.find(
+						(section) => section.id === skillsSection!.id,
+					) ?? skillsSection
+			}
+
+			const updatedBlock = withSkillAddedToCategoryBlock(
+				targetBlock,
+				keyword.term,
+				categoryName,
+			)
+
+			workingSections = workingSections.map((section) => ({
+				...section,
+				blocks: section.blocks.map((block) =>
+					block.id === updatedBlock.id ? updatedBlock : block,
+				),
+			}))
+
+			setSections(workingSections)
+			setExpandedId(skillsSection.id)
+			setActiveSectionId(skillsSection.id)
+
+			const [, profileResult] = await Promise.all([
+				onSaveAppResumeBlock(updatedBlock),
+				ensureUserSkillSaved({
+					userId: user.id,
+					skillName: keyword.term,
+					categoryName,
+				}),
+			])
+
+			toast.success(
+				profileResult.alreadyOwned
+					? `Added ${keyword.term} to your resume`
+					: `Added ${keyword.term} · saved for future resumes`,
+			)
+		} catch (error) {
+			console.error("Something went wrong adding keyword skill:", error)
+			setSections(previousSections)
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Could not add keyword to resume.",
+			)
+		} finally {
+			setPendingKeywordTerm(null)
 		}
 	}
 
@@ -1002,8 +1135,13 @@ export function ResumeTab({
 					contentOpen={contentOpen}
 					atsResult={atsResult}
 					isScoringAts={isScoringAts}
+					addedKeywordTerms={addedKeywordTerms}
+					pendingKeywordTerm={pendingKeywordTerm}
 					onToggleKeywords={() => setKeywordsOpen((prev) => !prev)}
 					onToggleContent={() => setContentOpen((prev) => !prev)}
+					onAddKeyword={(keyword) => {
+						void handleAddMissingKeyword(keyword)
+					}}
 					onEditJob={() => setIsEditingJob(true)}
 					onDoneEditingJob={() => {
 						setIsEditingJob(false)
