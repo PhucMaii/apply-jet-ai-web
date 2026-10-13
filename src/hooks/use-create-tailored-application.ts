@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/context/auth-context"
 import { useCreateApplication } from "@/hooks/use-create-application"
 import { applicationDetailPath } from "@/lib/constants"
@@ -114,7 +113,6 @@ async function loadResumeBlocksForRewrite(applicationId: string) {
 
 export function useCreateTailoredApplication(job: JobFeedItem | null) {
 	const { user } = useAuth()
-	const navigate = useNavigate()
 	const { submit, submitting } = useCreateApplication()
 	const [isTailoring, setIsTailoring] = useState(false)
 	const [error, setError] = useState<string | null>(null)
@@ -200,7 +198,11 @@ export function useCreateTailoredApplication(job: JobFeedItem | null) {
 					)
 				}
 
-				navigate(applicationDetailPath(applicationId))
+				window.open(
+					applicationDetailPath(applicationId),
+					"_blank",
+					"noopener,noreferrer",
+				)
 				return {
 					success: true,
 					msg: JOBS_COPY.tailorSuccess,
