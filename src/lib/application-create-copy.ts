@@ -1,7 +1,7 @@
 export const APPLICATION_CREATE_COPY = {
 	pageTitle: "New application",
 	pageSubtitle:
-		"Add the role details once—use them to generate resumes, cover letters, and find HR contacts.",
+		"Paste the role details and we’ll create your application with an AI-tailored resume, same as Tailor with AI on the job board.",
 	backLabel: "Back to applications",
 	companyNameLabel: "Company name",
 	companyNamePlaceholder: "e.g. Acme Corp",
@@ -12,11 +12,11 @@ export const APPLICATION_CREATE_COPY = {
 	jobUrlHint: "Optional. Link to the listing for quick reference.",
 	jobDescriptionLabel: "Job description",
 	jobDescriptionPlaceholder:
-		"Paste the full job description here. The more detail you add, the better your tailored documents will be.",
+		"Paste the full job description here. The more detail you add, the better your tailored resume will be.",
 	jobDescriptionHint:
-		"Used to tailor resumes, cover letters, and HR outreach for this role.",
-	submitLabel: "Create application",
-	submittingLabel: "Creating…",
+		"Used to tailor your resume for this role, then cover letters and HR outreach.",
+	submitLabel: "Create & tailor with AI",
+	submittingLabel: "Tailoring…",
 	requiredHint: "Required fields",
 } as const
 

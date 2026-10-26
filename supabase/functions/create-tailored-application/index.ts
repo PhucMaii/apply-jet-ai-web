@@ -1,8 +1,12 @@
 /**
- * Create an application from a jobs row, clone the user's profile resume,
- * then run a bounded AI tailor (summary + top experiences + skills) with apply.
+ * Create an application, clone the user's profile resume, then run a bounded
+ * AI tailor (summary + top experiences + skills) with apply.
  *
- * Body: { userId, jobId }
+ * Body (jobs board):
+ *   { userId, jobId }
+ * Body (manual paste):
+ *   { userId, companyName, jobTitle, jobDescription, jobUrl? }
+ *
  * Returns: { applicationId, appResumeId, tailorStatus, tailoredCount, failedCount }
  */
 
@@ -31,7 +35,19 @@ type TailorStatus = "pending" | "tailoring" | "ready" | "partial" | "failed"
 
 interface CreateTailoredApplicationBody {
 	userId: string
-	jobId: number | string
+	jobId?: number | string
+	companyName?: string
+	jobTitle?: string
+	jobDescription?: string
+	jobUrl?: string
+}
+
+interface ResolvedJobInput {
+	jobId: number | null
+	companyName: string
+	jobTitle: string
+	jobUrl: string | null
+	jdText: string
 }
 
 interface TailorTargets {
@@ -313,6 +329,86 @@ async function runBoundedTailor(input: {
 	return { tailoredCount, failedCount, status }
 }
 
+async function resolveJobInput(
+	// deno-lint-ignore no-explicit-any
+	supabase: any,
+	body: CreateTailoredApplicationBody,
+): Promise<ResolvedJobInput> {
+	const jobIdRaw = body.jobId
+	const jobId =
+		typeof jobIdRaw === "number"
+			? jobIdRaw
+			: typeof jobIdRaw === "string" && jobIdRaw.trim()
+				? Number(jobIdRaw)
+				: NaN
+
+	if (Number.isFinite(jobId)) {
+		const { data: job, error: jobError } = await supabase
+			.from("jobs")
+			.select("id, title, apply_url, description_html, companies(name)")
+			.eq("id", jobId)
+			.maybeSingle()
+
+		if (jobError || !job) {
+			console.error("Something went wrong loading job:", jobError)
+			throw new Error("Job not found")
+		}
+
+		const jdText = jobDescriptionPlainText(job.description_html)
+		if (!jdText) {
+			throw new Error("This job needs a description to tailor")
+		}
+
+		const companyRelation = job.companies as
+			| { name?: string | null }
+			| { name?: string | null }[]
+			| null
+		const companyName = Array.isArray(companyRelation)
+			? companyRelation[0]?.name?.trim()
+			: companyRelation?.name?.trim()
+
+		return {
+			jobId: job.id as number,
+			companyName: companyName || "Company",
+			jobTitle: (job.title ?? "").trim() || "Role",
+			jobUrl: job.apply_url?.trim() || null,
+			jdText,
+		}
+	}
+
+	const companyName =
+		typeof body.companyName === "string" ? body.companyName.trim() : ""
+	const jobTitle =
+		typeof body.jobTitle === "string" ? body.jobTitle.trim() : ""
+	const jobDescription =
+		typeof body.jobDescription === "string"
+			? body.jobDescription.trim()
+			: ""
+	const jobUrl =
+		typeof body.jobUrl === "string" && body.jobUrl.trim()
+			? body.jobUrl.trim()
+			: null
+
+	if (!companyName || !jobTitle || !jobDescription) {
+		throw new Error(
+			"Missing required fields: companyName, jobTitle, and jobDescription (or pass jobId)",
+		)
+	}
+
+	const jdText = jobDescriptionPlainText(jobDescription) || jobDescription
+	if (!jdText) {
+		throw new Error("This job needs a description to tailor")
+	}
+
+	return {
+		jobId: null,
+		companyName,
+		jobTitle,
+		jobUrl,
+		jdText,
+	}
+}
+
 Deno.serve(async (req) => {
 	if (req.method === "OPTIONS") {
 		return jsonResponse({ message: "OK" }, 200)
@@ -337,19 +433,8 @@ Deno.serve(async (req) => {
 		}
 
 		const userId = typeof body?.userId === "string" ? body.userId.trim() : ""
-		const jobIdRaw = body?.jobId
-		const jobId =
-			typeof jobIdRaw === "number"
-				? jobIdRaw
-				: typeof jobIdRaw === "string"
-					? Number(jobIdRaw)
-					: NaN
-
-		if (!userId || !Number.isFinite(jobId)) {
-			return jsonResponse(
-				{ error: "Missing required fields: userId, jobId" },
-				400,
-			)
+		if (!userId) {
+			return jsonResponse({ error: "Missing required field: userId" }, 400)
 		}
 
 		const supabaseUrl = Deno.env.get("SUPABASE_URL")
@@ -363,42 +448,32 @@ Deno.serve(async (req) => {
 
 		const supabase = createClient(supabaseUrl, serviceRoleKey)
 
-		const { data: job, error: jobError } = await supabase
-			.from("jobs")
-			.select("id, title, apply_url, description_html, companies(name)")
-			.eq("id", jobId)
-			.maybeSingle()
-
-		if (jobError || !job) {
-			console.error("Something went wrong loading job:", jobError)
-			return jsonResponse({ error: "Job not found" }, 404)
+		let resolved: ResolvedJobInput
+		try {
+			resolved = await resolveJobInput(supabase, body)
+		} catch (resolveError) {
+			const message =
+				resolveError instanceof Error
+					? resolveError.message
+					: "Invalid job input"
+			const status =
+				message === "Job not found"
+					? 404
+					: message.includes("description")
+						? 400
+						: 400
+			return jsonResponse({ error: message }, status)
 		}
-
-		const jdText = jobDescriptionPlainText(job.description_html)
-		if (!jdText) {
-			return jsonResponse(
-				{ error: "This job needs a description to tailor" },
-				400,
-			)
-		}
-
-		const companyRelation = job.companies as
-			| { name?: string | null }
-			| { name?: string | null }[]
-			| null
-		const companyName = Array.isArray(companyRelation)
-			? companyRelation[0]?.name?.trim()
-			: companyRelation?.name?.trim()
 
 		const { data: application, error: insertError } = await supabase
 			.from("applications")
 			.insert({
 				user_id: userId,
-				company_name: companyName || "Company",
-				job_title: (job.title ?? "").trim() || "Role",
-				job_url: job.apply_url?.trim() || null,
-				job_description: jdText,
-				job_id: job.id,
+				company_name: resolved.companyName,
+				job_title: resolved.jobTitle,
+				job_url: resolved.jobUrl,
+				job_description: resolved.jdText,
+				job_id: resolved.jobId,
 				status: "Generated",
 				tailor_status: "tailoring" satisfies TailorStatus,
 			})
@@ -424,7 +499,7 @@ Deno.serve(async (req) => {
 				supabase,
 				userId,
 				applicationId,
-				(job.title ?? "").trim() || "Role",
+				resolved.jobTitle,
 			)
 			appResumeId = initialized.appResumeId
 		} catch (initError) {
@@ -460,7 +535,7 @@ Deno.serve(async (req) => {
 			userId,
 			applicationId,
 			appResumeId,
-			jdText,
+			jdText: resolved.jdText,
 		})
 
 		const scheduled = scheduleBackground(

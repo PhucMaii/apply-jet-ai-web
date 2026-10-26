@@ -18,17 +18,40 @@ export interface CreateTailoredApplicationResponse {
 	error?: string
 }
 
-export async function invokeCreateTailoredApplication(input: {
-	userId: string
-	jobId: number
-}): Promise<CreateTailoredApplicationResponse> {
+export type CreateTailoredApplicationInput =
+	| {
+			userId: string
+			jobId: number
+	  }
+	| {
+			userId: string
+			companyName: string
+			jobTitle: string
+			jobDescription: string
+			jobUrl?: string
+	  }
+
+export async function invokeCreateTailoredApplication(
+	input: CreateTailoredApplicationInput,
+): Promise<CreateTailoredApplicationResponse> {
+	const body =
+		"jobId" in input
+			? {
+					userId: input.userId,
+					jobId: input.jobId,
+				}
+			: {
+					userId: input.userId,
+					companyName: input.companyName,
+					jobTitle: input.jobTitle,
+					jobDescription: input.jobDescription,
+					jobUrl: input.jobUrl,
+				}
+
 	const { data, error } = await supabase.functions.invoke(
 		"create-tailored-application",
 		{
-			body: {
-				userId: input.userId,
-				jobId: input.jobId,
-			},
+			body,
 			headers: {
 				"X-Secret-Key": env.xsecretkey,
 			},

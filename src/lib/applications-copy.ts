@@ -42,9 +42,9 @@ export const APPLICATIONS_COPY = {
 	loading: "Loading applications",
 	quickAddTitle: "Quick add application",
 	quickAddDescription:
-		"Just the essentials. We’ll set up a tailored resume and take you to it.",
-	quickAddSubmit: "Add and open",
-	quickAddSubmitting: "Adding…",
+		"Paste the essentials. We’ll create the application and AI-tailor your resume, same as Tailor with AI on the job board.",
+	quickAddSubmit: "Add & tailor with AI",
+	quickAddSubmitting: "Tailoring…",
 } as const
 
 export const APPLICATIONS_VIEW_STORAGE_KEY = "applyjet:applications-view" as const
