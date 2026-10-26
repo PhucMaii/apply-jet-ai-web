@@ -1,4 +1,5 @@
 import {
+	Award,
 	FolderKanban,
 	Briefcase,
 	FileText,
@@ -23,6 +24,8 @@ export function getSectionIcon(type: AppResumeSectionType) {
 			return Wrench
 		case "projects":
 			return FolderKanban
+		case "certifications":
+			return Award
 		case "custom":
 			return Layers
 		default:

@@ -220,9 +220,12 @@ export type Database = {
           generated_resume_id: string | null
           id: string
           job_description: string | null
+          job_id: number | null
           job_title: string | null
           job_url: string | null
           status: string | null
+          tailor_feedback: Json | null
+          tailor_status: string | null
           updated_at: string | null
           user_id: string | null
           visitor_id: number | null
@@ -234,9 +237,12 @@ export type Database = {
           generated_resume_id?: string | null
           id?: string
           job_description?: string | null
+          job_id?: number | null
           job_title?: string | null
           job_url?: string | null
           status?: string | null
+          tailor_feedback?: Json | null
+          tailor_status?: string | null
           updated_at?: string | null
           user_id?: string | null
           visitor_id?: number | null
@@ -248,9 +254,12 @@ export type Database = {
           generated_resume_id?: string | null
           id?: string
           job_description?: string | null
+          job_id?: number | null
           job_title?: string | null
           job_url?: string | null
           status?: string | null
+          tailor_feedback?: Json | null
+          tailor_status?: string | null
           updated_at?: string | null
           user_id?: string | null
           visitor_id?: number | null
@@ -268,6 +277,13 @@ export type Database = {
             columns: ["generated_resume_id"]
             isOneToOne: false
             referencedRelation: "generated_resumes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
             referencedColumns: ["id"]
           },
           {

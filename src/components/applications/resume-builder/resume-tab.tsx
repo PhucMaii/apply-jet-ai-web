@@ -40,6 +40,10 @@ import type {
 } from "@/types/app-resume"
 import type { ApplicationDetailForm } from "@/types/application-detail"
 import { isRewriteSupportedBlockType } from "@/types/rewrite-resume-block"
+import {
+	isTailorFeedbackPayload,
+	type TailorFeedbackPayload,
+} from "@/types/tailor-feedback"
 import { applyStylePatchToBlocks } from "@/lib/resume-block-style"
 import toast from "react-hot-toast"
 
@@ -112,6 +116,8 @@ interface ResumeTabProps {
 	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
 	onDeleteAppResumeSection: (sectionId: string) => Promise<void>
 	refetchApplication: () => void
+	tailorFeedback?: unknown
+	onTailorFeedbackChange?: (feedback: TailorFeedbackPayload) => void
 }
 
 function cloneSections(sections: AppResumeSection[]): AppResumeSection[] {
@@ -143,6 +149,8 @@ export function ResumeTab({
 	onDeleteAppResumeBlock,
 	onDeleteAppResumeSection,
 	refetchApplication,
+	tailorFeedback: tailorFeedbackProp,
+	onTailorFeedbackChange,
 }: ResumeTabProps) {
 	const { user } = useAuth()
 	const seedSections = appResume?.sections ?? []
@@ -161,6 +169,21 @@ export function ResumeTab({
 	> | null>(null)
 	const [keywordsOpen, setKeywordsOpen] = useState(true)
 	const [contentOpen, setContentOpen] = useState(true)
+	const [feedbackOpen, setFeedbackOpen] = useState(true)
+	const [tailorFeedback, setTailorFeedback] =
+		useState<TailorFeedbackPayload | null>(() =>
+			isTailorFeedbackPayload(tailorFeedbackProp)
+				? tailorFeedbackProp
+				: null,
+		)
+
+	useEffect(() => {
+		setTailorFeedback(
+			isTailorFeedbackPayload(tailorFeedbackProp)
+				? tailorFeedbackProp
+				: null,
+		)
+	}, [tailorFeedbackProp])
 	const [addedKeywordTerms, setAddedKeywordTerms] = useState(
 		() => collectResumeSkillNames(seedSections),
 	)
@@ -1137,6 +1160,38 @@ export function ResumeTab({
 					isScoringAts={isScoringAts}
 					addedKeywordTerms={addedKeywordTerms}
 					pendingKeywordTerm={pendingKeywordTerm}
+					applicationId={form.id}
+					userId={user?.id ?? null}
+					tailorFeedback={tailorFeedback}
+					feedbackOpen={feedbackOpen}
+					onToggleFeedback={() => setFeedbackOpen((prev) => !prev)}
+					onTailorFeedbackChange={(next) => {
+						setTailorFeedback(next)
+						onTailorFeedbackChange?.(next)
+					}}
+					onFocusFeedbackBlock={(blockId) => {
+						const target = sections
+							.flatMap((section) => section.blocks)
+							.find((block) => block.id === blockId)
+						if (!target) {
+							toast.error("That section is no longer on this resume.")
+							return
+						}
+						setExpandedId(target.section_id)
+						setActiveSectionId(target.section_id)
+						handleStartEditBlock(target)
+					}}
+					onFeedbackBlockUpdated={(nextBlock) => {
+						setSections((prev) =>
+							prev.map((section) => ({
+								...section,
+								blocks: section.blocks.map((block) =>
+									block.id === nextBlock.id ? nextBlock : block,
+								),
+							})),
+						)
+						void runAtsScore(true)
+					}}
 					onToggleKeywords={() => setKeywordsOpen((prev) => !prev)}
 					onToggleContent={() => setContentOpen((prev) => !prev)}
 					onAddKeyword={(keyword) => {

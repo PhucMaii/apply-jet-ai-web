@@ -31,8 +31,8 @@ export const ADS_LANDING_COPY: LandingCopy = {
 	},
 	trustStrip: [
 		withPgwpLeaf("PGWP countdown—free on your dashboard"),
-		"Written for Canadian employers and ATS",
-		"Free live score vs any job posting",
+		"Tailor from the job board — one button",
+		"Kanban board — drag to track applications",
 		"Resume help only — not immigration advice",
 	],
 	marketingNav: [
@@ -47,7 +47,7 @@ export const ADS_LANDING_COPY: LandingCopy = {
 		...LANDING_COPY.howItWorks,
 		title: "From PGWP pressure to a job-ready resume—free in four steps.",
 		description:
-			"Everything you need to apply stronger is free. Track your window, build, score, and tailor—no credit card on this path.",
+			"Everything you need to apply stronger is free. Track your window, tailor from the job board, and manage applications on a Kanban—no credit card on this path.",
 		steps: [
 			{
 				title: "Create your free account",
@@ -58,12 +58,12 @@ export const ADS_LANDING_COPY: LandingCopy = {
 				body: "Enter it once, free. You’ll see days remaining while you apply—so the window stays visible.",
 			},
 			{
-				title: "Build and score against the posting—free",
-				body: "Upload a PDF or start from scratch. Paste a Canadian job description and see your match score update live.",
+				title: "Tailor from the job board—free",
+				body: "Browse openings and press Tailor with AI. One button opens an application with your resume rewritten for that posting.",
 			},
 			{
-				title: "Free AI, cover letter, and reach out",
-				body: "Use free AI that reframes your experience for the posting, generate a cover letter, and find hiring contacts.",
+				title: "Track on a Kanban board",
+				body: "Drag cards as you hear back. Keep tailored resumes, cover letters, and hiring contacts on every application.",
 			},
 		],
 	},
@@ -75,9 +75,9 @@ export const ADS_LANDING_COPY: LandingCopy = {
 	features: {
 		...LANDING_COPY.features,
 		eyebrow: "What you get—free",
-		title: "Every core tool is free. Including the PGWP tracker.",
+		title: "Tailor from the job board. Track on a Kanban. Free.",
 		description:
-			"We built ApplyJet so people on a PGWP can apply stronger without paying. Tracker, live scoring, match suggestions, AI tailoring, cover letters, and hiring contacts—yours to use.",
+			"One-click tailor from open jobs, drag-and-drop application tracking, PGWP countdown, live scoring, and cover letters—yours to use without paying.",
 	},
 	faq: {
 		...LANDING_COPY.faq,
@@ -93,20 +93,20 @@ export const ADS_LANDING_COPY: LandingCopy = {
 	finalCta: {
 		title: "Ready for a free edge before the clock runs down?",
 		description:
-			"Join ApplyJet free. Track your PGWP, build your resume, score it live, and tailor with free AI—no credit card, no paid pitch. Job applications only—not immigration advice.",
+			"Join ApplyJet free. Track your PGWP, tailor from the job board in one click, and drag applications across a Kanban board—no credit card, no paid pitch. Job applications only—not immigration advice.",
 		primaryCta: LANDING_PRIMARY_CTA,
 		loginLink: LANDING_LOGIN_LINK,
 	},
 	footer: {
 		...LANDING_COPY.footer,
 		tagline:
-			"Free resume builder for PGWP holders in Canada—tracker, live scoring, AI tailoring, cover letters, and hiring contacts. Not immigration advice.",
+			"Free resume builder for PGWP holders in Canada—one-click job-board tailor, Kanban tracking, and a PGWP countdown. Not immigration advice.",
 		copyrightNote:
 			"Built by Canadians, for Canadians. Resume help only. We cover the cost on this path.",
 	},
 	meta: {
 		title: "ApplyJet — Free Resume Builder for PGWP Holders in Canada",
 		description:
-			"Free PGWP tracker, resume builder, live scoring, and AI tailoring for international grads job hunting in Canada. Not immigration advice.",
+			"Free PGWP tracker, one-click tailor from the job board, and Kanban application tracking for international grads in Canada. Not immigration advice.",
 	},
 }

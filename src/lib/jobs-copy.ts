@@ -32,9 +32,35 @@ export const JOBS_COPY = {
 	loadingMore: "Loading…",
 	apply: "Apply",
 	tailorWithAi: "Tailor with AI",
+	openApplication: "Open your application",
+	checkingApplication: "Checking…",
 	tailoring: "Tailoring…",
-	tailorSuccess: "Tailored application ready",
+	tailorInProgress:
+		"Application opened — AI is finishing your resume tailor",
+	tailorSuccess: "Resume tailored for this job",
+	tailorPartial:
+		"Application created — some AI edits didn’t finish. Check your resume.",
+	tailorCreatedOnly:
+		"Application created — open it to finish editing your resume",
 	tailorNeedsDescription: "This job needs a description to tailor",
+	tailorBannerRunning:
+		"AI is rewriting your summary, experience, and skills for this job…",
+	tailorBannerReady: "Resume tailored for this job. Review the notes below.",
+	tailorBannerPartial:
+		"Tailor finished with some gaps. Review your resume and the notes below.",
+	tailorBannerFailed:
+		"AI tailor didn’t finish. Your profile copy is ready — edit it in the studio.",
+	tailorModalTitle: "Tailoring your resume",
+	tailorModalBody:
+		"We’re rewriting your summary, experience, and skills to match this job — without inventing facts. This usually takes under a minute. Please keep this tab open.",
+	tailorModalHint: "You can browse the draft behind this dialog while we finish.",
+	tailorModalDone: "Continue to your resume",
+	tailorFeedbackTitle: "Review notes",
+	tailorFeedbackEmpty: "No extra notes for this resume.",
+	tailorFeedbackOpenSection: "Open section",
+	tailorFeedbackDismiss: "Dismiss",
+	tailorFeedbackInsertSuggestion: "Insert suggestion",
+	tailorFeedbackApplied: "Updated on your resume",
 	signupTitle: "Create an account to tailor",
 	signupMessage:
 		"Sign up free to generate a resume tailored to this job posting.",

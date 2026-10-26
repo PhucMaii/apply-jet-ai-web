@@ -7,6 +7,7 @@ export type AppResumeSectionType =
 	| "education"
 	| "skills"
 	| "projects"
+	| "certifications"
 	| "custom"
 
 export type AppResumeBlockType =

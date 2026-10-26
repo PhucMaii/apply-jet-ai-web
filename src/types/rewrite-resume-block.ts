@@ -16,6 +16,8 @@ export interface RewriteResumeBlockResult {
 	sectionType: string
 	content_json: Record<string, unknown>
 	changes: RewriteChanges
+	/** True when the edge function wrote content_json back to the block. */
+	applied?: boolean
 }
 
 export const REWRITE_SUPPORTED_BLOCK_TYPES = [

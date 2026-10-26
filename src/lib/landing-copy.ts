@@ -88,8 +88,8 @@ export const LANDING_COPY = {
 	},
 	trustStrip: [
 		withPgwpLeaf("PGWP countdown on your dashboard"),
-		"Written for Canadian employers and ATS",
-		"Free live score vs any job posting",
+		"Tailor from the job board — one button",
+		"Kanban board — drag to track applications",
 		"Resume help only — not immigration advice",
 	],
 	marketingNav: [
@@ -103,12 +103,13 @@ export const LANDING_COPY = {
 	jobsPreview: {
 		sectionId: LANDING_SECTION_ID.jobsPreview,
 		eyebrow: "Open jobs",
-		title: "Browse real openings—free, no account required.",
+		title: "Browse real openings—tailor in one click.",
 		description:
-			"Search live roles by title and location. When one fits, tailor your resume to the posting and apply with a stronger packet.",
+			"Search live roles by title and location. When one fits, hit Tailor with AI right on the job board—your application opens with a resume already rewritten for that posting.",
 		browseCta: "Browse all jobs",
 		browseGhostCta: "Explore openings",
-		browseHint: "Free to explore. Sign up only when you’re ready to tailor.",
+		browseHint: "Free to explore. Tailor when you’re ready—one button away.",
+		cardCta: "Tailor with AI",
 		nearYouLabel: (place: string) => `Near ${place}`,
 		fallbackLabel: "Openings in the US & Canada",
 		loadingLabel: "Loading openings…",
@@ -154,7 +155,7 @@ export const LANDING_COPY = {
 		eyebrow: "How it works",
 		title: "From PGWP pressure to a job-ready resume—in four steps.",
 		description:
-			"Start free. Add your expiry date, build a resume Canadian employers can scan, then tailor it to each posting before you apply.",
+			"Start free. Add your expiry date, tailor from the job board in one click, then track every application on a Kanban board.",
 		steps: [
 			{
 				title: "Create your free account",
@@ -165,12 +166,12 @@ export const LANDING_COPY = {
 				body: "Enter it once. You’ll see days remaining while you apply—so the window stays visible, not something you check in a panic.",
 			},
 			{
-				title: "Build and score against the posting",
-				body: "Upload a PDF or start from scratch. Paste a Canadian job description, see your match score live, and get free suggestions on what to strengthen.",
+				title: "Tailor from the job board",
+				body: "Browse openings and press Tailor with AI. One button opens an application with your resume rewritten for that Canadian posting.",
 			},
 			{
-				title: "Rewrite for this employer, then reach out",
-				body: "Try AI that reframes your real experience in the posting’s language, generate a cover letter, and find hiring contacts when you’re ready to apply.",
+				title: "Track on a Kanban board",
+				body: "Drag cards from Saved to Applied, Interviewing, and Offer. Keep the tailored resume, cover letter, and hiring contacts on each card.",
 			},
 		],
 	},
@@ -293,9 +294,9 @@ export const LANDING_COPY = {
 	},
 	features: {
 		eyebrow: "What you get",
-		title: "A free resume builder—plus a PGWP tracker, live scoring, and suggestions.",
+		title: "Tailor from the job board. Track everything on a Kanban.",
 		description:
-			"Build and edit at no cost. Keep your PGWP date in view. Score against Canadian job descriptions, get free suggestions, try AI when you want a rewrite, then generate cover letters and find hiring contacts.",
+			"Find a role, hit one button to tailor your application, then drag it across a board as you hear back—score, keywords, and cover letters included.",
 		scoring: {
 			eyebrow: "ATS match score",
 			title: "Know where you stand before you hit apply.",
@@ -313,15 +314,22 @@ export const LANDING_COPY = {
 			matchedLabel: "In your resume",
 			missingLabel: "Missing",
 		},
-		coverLetter: {
-			eyebrow: "Cover letters",
-			title: "A letter that sounds like you, written for this role.",
-			body: "Generated from the posting and your matched experience—not a template opener. Edit inline, then download as PDF.",
+		jobBoardTailor: {
+			eyebrow: "One-click tailor",
+			title: "Tailor your application right from the job board.",
+			body: "No copy-paste detour. Spot a role, press Tailor with AI, and ApplyJet opens an application with your resume already rewritten for that posting—one button away.",
+			buttonLabel: "Tailor with AI",
+			jobTitle: "Machine Learning Engineer",
+			company: "Cobalt · Vancouver",
 		},
 		tracking: {
-			eyebrow: "Application tracking",
-			title: "Every application in one place, from saved to offer.",
-			body: "Switch between a table and a board. Drag cards as you hear back, and keep the tailored resume, cover letter, and posting attached to each one.",
+			eyebrow: "Kanban board",
+			title: "Track applications with drag-and-drop.",
+			body: "Move cards from Saved to Applied, Interviewing, Offer, and Rejected as you hear back. Every card keeps the tailored resume, cover letter, and posting attached.",
+			dragHint: "Drag cards between columns, or use the status menu on each card.",
+			imageAlt:
+				"ApplyJet applications Kanban board with Saved, Applied, Interviewing, Offer, and Rejected columns",
+			imageSrc: "/landing/applications-kanban.png",
 		},
 	},
 	testimonials: {
@@ -449,13 +457,13 @@ export const LANDING_COPY = {
 	finalCta: {
 		title: "Ready to stop wasting days on a resume that doesn’t travel?",
 		description:
-			"Join ApplyJet free. Track your PGWP, build forever at no cost, score live against the posting, and upgrade only when you need more. Job applications only—not immigration advice.",
+			"Join ApplyJet free. Track your PGWP, tailor from the job board in one click, and drag applications across a Kanban board. Job applications only—not immigration advice.",
 		primaryCta: LANDING_PRIMARY_CTA as string,
 		loginLink: LANDING_LOGIN_LINK as string,
 	},
 	footer: {
 		tagline:
-			"Free resume builder for international grads and PGWP holders in Canada—live scoring, AI tailoring, and a PGWP tracker. Not immigration advice.",
+			"Free resume builder for international grads and PGWP holders in Canada—one-click job-board tailor, Kanban tracking, and a PGWP countdown. Not immigration advice.",
 		copyrightNote:
 			"Built by Canadians, for Canadians. Resume help only.",
 		productLinks: {
@@ -481,7 +489,7 @@ export const LANDING_COPY = {
 		title:
 			"ApplyJet — Free Resume Builder for PGWP Holders in Canada",
 		description:
-			"Track your PGWP expiry, build your resume free, and tailor it for Canadian employers and ATS. Not immigration advice—job application help only.",
+			"Track your PGWP expiry, tailor applications from the job board in one click, and manage them on a Kanban board. Not immigration advice—job application help only.",
 	},
 }
 

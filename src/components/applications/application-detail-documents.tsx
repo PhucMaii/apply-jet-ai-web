@@ -1,5 +1,6 @@
 import {
 	ArrowLeft,
+	ExternalLink,
 	FileText,
 	Loader2,
 	Mail,
@@ -8,6 +9,7 @@ import {
 import { Link } from "react-router-dom"
 import { ApplicationsStatusBadge } from "@/components/applications/applications-status-badge"
 import { Breadcrumb } from "@/components/layout/breadcrumb"
+import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { APPLICATIONS_COPY } from "@/lib/applications-copy"
 import type { ApplicationStatus } from "@/lib/application-status"
@@ -27,6 +29,7 @@ import ProFeatureGuard, { ProFeatureBadge } from "../pro-feature-guard"
 import useUserUsage from "@/hooks/use-user-usage"
 import { useMemo } from "react"
 import type { AppResume, AppResumeBlock, AppResumeSection, CustomSectionBlockType } from "@/types/app-resume"
+import type { TailorFeedbackPayload } from "@/types/tailor-feedback"
 
 const DOCUMENT_TAB_TRIGGER = cn(
 	"relative h-11 min-w-0 shrink-0 rounded-none border-b-2 border-transparent",
@@ -50,6 +53,8 @@ interface ApplicationDetailDocumentsProps {
 	updatingStatus?: boolean
 	isDeleting?: boolean
 	appResume: AppResume | null
+	/** Remount studio after AI tailor refetch so preview shows new content. */
+	resumeSyncKey?: number
 	onPatchForm: (patch: Partial<ApplicationDetailForm>) => void
 	onSaveApplication: () => void
 	onStatusChange: (status: ApplicationStatus) => void
@@ -98,6 +103,8 @@ interface ApplicationDetailDocumentsProps {
 	}) => Promise<AppResumeBlock>
 	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
 	onDeleteAppResumeSection: (sectionId: string) => Promise<void>
+	tailorFeedback?: unknown
+	onTailorFeedbackChange?: (feedback: TailorFeedbackPayload) => void
 }
 
 export function ApplicationDetailDocuments({
@@ -111,6 +118,7 @@ export function ApplicationDetailDocuments({
 	updatingStatus = false,
 	isDeleting = false,
 	appResume,
+	resumeSyncKey = 0,
 	onPatchForm,
 	onSaveApplication,
 	onStatusChange,
@@ -127,6 +135,8 @@ export function ApplicationDetailDocuments({
 	onCreateCustomBlock,
 	onDeleteAppResumeBlock,
 	onDeleteAppResumeSection,
+	tailorFeedback,
+	onTailorFeedbackChange,
 }: ApplicationDetailDocumentsProps) {
 	const { resumeText } = useProfilePage()
 	const { plan } = useUserSubscription()
@@ -147,6 +157,8 @@ export function ApplicationDetailDocuments({
 		const company = form.companyName.trim() || "Company"
 		return `${role} at ${company}`
 	}, [form.companyName, form.jobTitle])
+
+	const jobPostingUrl = form.jobUrl.trim()
 
 	return (
 		<section
@@ -169,7 +181,7 @@ export function ApplicationDetailDocuments({
 			) : null}
 
 			<header className="shrink-0 border-b border-hairline bg-surface">
-				<div className="flex items-center gap-3 px-3 py-2.5 sm:px-5 sm:py-3">
+				<div className="flex items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3">
 					<Link
 						to={ROUTES.applications}
 						className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-ink-muted transition-colors hover:bg-surface-sunken hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 md:hidden"
@@ -189,6 +201,21 @@ export function ApplicationDetailDocuments({
 							{pageTitle}
 						</p>
 					</div>
+					{jobPostingUrl ? (
+						<Button variant="outline" size="sm" className="shrink-0" asChild>
+							<a
+								href={jobPostingUrl}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								<span className="hidden sm:inline">
+									{APPLICATIONS_COPY.viewPosting}
+								</span>
+								<span className="sm:hidden">Posting</span>
+								<ExternalLink className="size-3.5" aria-hidden />
+							</a>
+						</Button>
+					) : null}
 					<ApplicationsStatusBadge status={status} className="shrink-0" />
 				</div>
 			</header>
@@ -253,6 +280,7 @@ export function ApplicationDetailDocuments({
 							onStatusChange={onStatusChange}
 							onDelete={onDelete}
 							appResume={appResume}
+							resumeSyncKey={resumeSyncKey}
 							onSaveAppResumeBlock={onSaveAppResumeBlock}
 							onSaveAppResumeSectionDisplayName={
 								onSaveAppResumeSectionDisplayName
@@ -267,6 +295,8 @@ export function ApplicationDetailDocuments({
 							onDeleteAppResumeBlock={onDeleteAppResumeBlock}
 							onDeleteAppResumeSection={onDeleteAppResumeSection}
 							refetchApplication={refetchApplication}
+							tailorFeedback={tailorFeedback}
+							onTailorFeedbackChange={onTailorFeedbackChange}
 						/>
 					</ProFeatureGuard>
 				</TabsContent>

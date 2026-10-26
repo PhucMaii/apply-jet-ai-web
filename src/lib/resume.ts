@@ -304,6 +304,19 @@ export const getUserProfile = async (userId: string) => {
     throw new Error("User education not found");
   }
 
+  // Get certifications (and languages) from additional info
+  const { data: additionalInfo, error: additionalInfoError } = await supabase
+    .from("user_additional_info")
+    .select("certifications")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (additionalInfoError) {
+    throw new Error("Failed to get user certifications");
+  }
+  const userCertificationsArray = (additionalInfo?.certifications ?? [])
+    .map((item: string) => item.trim())
+    .filter(Boolean);
+
   return {
     userData,
     userLinksArray,
@@ -312,10 +325,18 @@ export const getUserProfile = async (userId: string) => {
     userSkillsArray,
     userSkillCategoriesArray: formattedUserSkillCategoriesArray,
     userEducationArray,
+    userCertificationsArray,
   };
 }
 
-export const buildAppResumeSections = (appResumeId: string, hasUserExperiences: boolean, hasUserProjects: boolean, hasUserEducation: boolean, hasUserSkills: boolean) => {
+export const buildAppResumeSections = (
+  appResumeId: string,
+  hasUserExperiences: boolean,
+  hasUserProjects: boolean,
+  hasUserEducation: boolean,
+  hasUserSkills: boolean,
+  hasUserCertifications = false,
+) => {
   const sections = [
     {
       app_resume_id: appResumeId,
@@ -352,6 +373,12 @@ export const buildAppResumeSections = (appResumeId: string, hasUserExperiences: 
       section_type: APP_RESUME_SECTION_TYPE.SKILLS,
       display_name: 'Skills',
       sort_key: 5,
+    },
+    hasUserCertifications && {
+      app_resume_id: appResumeId,
+      section_type: APP_RESUME_SECTION_TYPE.CERTIFICATIONS,
+      display_name: 'Certifications',
+      sort_key: 6,
     },
   ].filter(Boolean) as AppResumeSection[];
 

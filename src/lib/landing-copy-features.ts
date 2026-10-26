@@ -45,10 +45,10 @@ export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 			},
 		},
 		trustStrip: [
-			"Free job board — browse without signing up",
+			"Tailor from the job board — one button",
+			"Kanban board — drag to track applications",
 			"Free live score vs any job posting",
 			"ATS-friendly resume tools",
-			"Apply with a stronger packet",
 		],
 		marketingNav: [
 			{ hash: LANDING_SECTION_ID.jobsPreview, label: "Open jobs" },
@@ -60,27 +60,28 @@ export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 		],
 		jobsPreview: {
 			...copy.jobsPreview,
-			title: "Browse real openings—free, no account required.",
+			title: "Browse real openings—tailor in one click.",
 			description:
-				"Search live roles by title and location. When one fits, tailor your resume to the posting and apply with a stronger packet.",
+				"Search live roles by title and location. When one fits, hit Tailor with AI right on the job board—your application opens ready for that posting.",
+			browseHint: "Free to explore. Tailor when you’re ready—one button away.",
 		},
 		howItWorks: {
 			...copy.howItWorks,
-			title: "From posting to tailored application in three steps.",
+			title: "From job board to tailored application in three steps.",
 			description:
-				"Start free. Bring your resume once, then tailor it to every role you care about.",
+				"Start free. Bring your resume once, tailor from any posting, then track progress on a Kanban board.",
 			steps: [
 				{
 					title: "Add your resume",
 					body: "Upload a PDF or DOCX. ApplyJet parses it into editable sections—work, education, skills—so you never retype it.",
 				},
 				{
-					title: "Paste the job",
-					body: "Drop in a job link or description. You get a live match score and the exact keywords the posting expects.",
+					title: "Tailor from the job board",
+					body: "Find a role and press Tailor with AI. One button opens an application with your resume rewritten for that posting.",
 				},
 				{
-					title: "Get a tailored resume",
-					body: "AI rewrites your real experience in the posting’s language. Review every change, download the PDF, and apply.",
+					title: "Track on a Kanban board",
+					body: "Drag applications from Saved to Applied, Interviewing, and Offer. Every card keeps your tailored resume attached.",
 				},
 			],
 		},
@@ -164,9 +165,9 @@ export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 		},
 		features: {
 			...copy.features,
-			title: "Everything between “found a job” and “hit submit.”",
+			title: "Tailor from the job board. Track everything on a Kanban.",
 			description:
-				"Score, fix, write, and track—each tool built for the one job in front of you.",
+				"One button to tailor an application to any posting—then drag cards across a board as you hear back.",
 		},
 		pricing: {
 			...copy.pricing,
@@ -191,20 +192,20 @@ export function applyLandingFeatureFlags(copy: LandingCopy): LandingCopy {
 		},
 		finalCta: {
 			...copy.finalCta,
-			title: "Ready to find roles and apply with a stronger resume?",
+			title: "Ready to tailor from the board and track every apply?",
 			description:
-				"Join ApplyJet free. Browse jobs, build your resume, score it live, and tailor with AI—no credit card required.",
+				"Join ApplyJet free. Browse jobs, tailor in one click, and drag applications across a Kanban board—no credit card required.",
 		},
 		footer: {
 			...copy.footer,
 			tagline:
-				"Free resume builder and job tools—live scoring, AI tailoring, cover letters, and hiring contacts.",
+				"Free resume builder and job tools—one-click tailor from the job board, Kanban tracking, live scoring, and cover letters.",
 			copyrightNote: "Resume and job-application help only.",
 		},
 		meta: {
-			title: "ApplyJet — Find Jobs, Tailor Your Resume, Apply Faster",
+			title: "ApplyJet — Tailor From the Job Board, Track on Kanban",
 			description:
-				"Browse jobs, build an ATS-friendly resume, score it against each posting, and tailor with AI before you apply.",
+				"Browse jobs, tailor your resume in one click, and track applications on a drag-and-drop Kanban board.",
 		},
 	}
 }

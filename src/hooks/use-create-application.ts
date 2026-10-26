@@ -149,11 +149,13 @@ export function useCreateApplication() {
       userSkillsArray,
       userSkillCategoriesArray,
       userEducationArray,
+      userCertificationsArray,
     } = await getUserProfile(userId);
     const hasUserExperiences = userExperiencesArray.length > 0;
     const hasUserProjects = userProjectsArray.length > 0;
     const hasUserEducation = userEducationArray.length > 0;
     const hasUserSkills = userSkillsArray.length > 0;
+    const hasUserCertifications = userCertificationsArray.length > 0;
 
     // Create app resume based on user info
     const { data: appResumeData, error: appResumeError } = await supabase
@@ -176,6 +178,7 @@ export function useCreateApplication() {
       hasUserProjects,
       hasUserEducation,
       hasUserSkills,
+      hasUserCertifications,
     );
     const idsMap = new Map<string, string>();
     await Promise.all(
@@ -374,6 +377,32 @@ export function useCreateApplication() {
         return appResumeBlockData.id;
       }),
     );
+
+    // Certifications Block
+    if (idsMap.has(APP_RESUME_SECTION_TYPE.CERTIFICATIONS)) {
+      const certificationsBlock = {
+        app_resume_id: appResumeData.id,
+        section_id: idsMap.get(APP_RESUME_SECTION_TYPE.CERTIFICATIONS)!,
+        block_type: "bullet_list",
+        sort_key: 0,
+        content_json: {
+          items: userCertificationsArray,
+        },
+        style_json: {
+          color: "black",
+          fontSize: 12,
+        },
+      };
+      const { error: certificationsError } = await supabase
+        .from("app_resume_blocks")
+        .insert(certificationsBlock)
+        .select("id")
+        .single();
+      if (certificationsError) {
+        console.error(certificationsError);
+        throw new Error(certificationsError.message);
+      }
+    }
   };
 
   return {

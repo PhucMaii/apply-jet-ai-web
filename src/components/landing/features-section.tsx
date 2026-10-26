@@ -1,5 +1,5 @@
 import { motion, useReducedMotion } from "framer-motion"
-import { Check, Plus } from "lucide-react"
+import { Check, Plus, Sparkles } from "lucide-react"
 import { LandingSectionHeading } from "@/components/landing/landing-section-heading"
 import { ScoreRing } from "@/components/ui/score-ring"
 import { useLandingCopy } from "@/context/landing-copy-context"
@@ -22,17 +22,6 @@ const MOCK_MATCHED_KEYWORDS = [
 ] as const
 
 const MOCK_MISSING_KEYWORDS = ["Airflow", "dbt", "Experiment design"] as const
-
-const MOCK_LETTER = {
-	greeting: "Dear Hiring Team at Fieldstone,",
-	body: "When I read that your analytics team is rebuilding its forecasting stack, I recognized the work I led at Harbor Freight Labs—moving 40 dashboards onto a single dbt model and cutting report prep from two days to two hours.",
-} as const
-
-const MOCK_BOARD = [
-	{ status: "Applied", dot: "bg-status-applied", cards: ["Data Analyst · Lumen", "BI Developer · Arcadia"] },
-	{ status: "Interviewing", dot: "bg-status-interviewing", cards: ["Analytics Lead · Fieldstone"] },
-	{ status: "Offer", dot: "bg-status-offer", cards: ["Data Scientist · Northwind"] },
-] as const
 
 const BLOCK_FRAME = "rounded-xl border border-hairline bg-surface shadow-card"
 const EYEBROW_CLASS =
@@ -125,50 +114,77 @@ function KeywordGapVisual({
 	)
 }
 
-function CoverLetterVisual() {
+function JobBoardTailorVisual({
+	buttonLabel,
+	jobTitle,
+	company,
+}: {
+	buttonLabel: string
+	jobTitle: string
+	company: string
+}) {
 	return (
-		<div className="rounded-lg border border-hairline bg-canvas p-5 font-serif">
-			<p className="text-sm text-ink">{MOCK_LETTER.greeting}</p>
-			<p className="mt-3 text-sm leading-relaxed text-ink-muted">
-				{MOCK_LETTER.body}
-			</p>
-			<div className="mt-4 space-y-2" aria-hidden>
-				<div className="h-1.5 w-full rounded-full bg-hairline" />
-				<div className="h-1.5 w-5/6 rounded-full bg-hairline" />
+		<div className="rounded-lg border border-hairline bg-canvas p-4 sm:p-5">
+			<div className="flex items-start gap-3">
+				<span
+					className="flex size-10 shrink-0 items-center justify-center rounded-md border border-hairline bg-surface text-xs font-semibold tracking-[0.04em] text-ink"
+					aria-hidden
+				>
+					CB
+				</span>
+				<div className="min-w-0 flex-1">
+					<p className="text-sm font-semibold text-ink">{jobTitle}</p>
+					<p className="mt-0.5 text-sm text-ink-muted">{company}</p>
+					<p className="mt-3 line-clamp-2 text-xs leading-relaxed text-ink-subtle">
+						Ship forecasting models with product and design. Python, SQL, and
+						production ML experience preferred.
+					</p>
+				</div>
+			</div>
+			<div className="mt-4 flex items-center justify-between gap-3 border-t border-hairline pt-4">
+				<span className="text-xs text-ink-subtle">On the job board</span>
+				<span className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-2 text-xs font-semibold text-white shadow-sm">
+					<Sparkles className="size-3.5" aria-hidden />
+					{buttonLabel}
+				</span>
 			</div>
 		</div>
 	)
 }
 
-function TrackingBoardVisual() {
+function KanbanBoardScreenshot({
+	src,
+	alt,
+	caption,
+}: {
+	src: string
+	alt: string
+	caption: string
+}) {
 	return (
-		<div className="grid grid-cols-3 gap-2.5">
-			{MOCK_BOARD.map((column) => (
-				<div key={column.status} className="min-w-0 rounded-lg bg-surface-sunken p-2">
-					<p className="flex items-center gap-1.5 px-1 pb-2 text-[11px] font-semibold text-ink-muted">
-						<span className={cn("size-1.5 rounded-full", column.dot)} aria-hidden />
-						<span className="truncate">{column.status}</span>
-					</p>
-					<ul className="space-y-1.5">
-						{column.cards.map((card) => (
-							<li
-								key={card}
-								className="rounded-md border border-hairline bg-surface px-2 py-2 text-[11px] leading-snug font-medium text-ink"
-							>
-								{card}
-							</li>
-						))}
-					</ul>
-				</div>
-			))}
-		</div>
+		<figure className="overflow-hidden rounded-xl border border-hairline bg-surface-sunken shadow-card">
+			<div className="overflow-hidden bg-[#f4f5f7]">
+				<img
+					src={src}
+					alt={alt}
+					width={1600}
+					height={900}
+					loading="lazy"
+					decoding="async"
+					className="block h-auto w-full object-cover object-top"
+				/>
+			</div>
+			<figcaption className="border-t border-hairline bg-surface px-4 py-3 text-sm text-ink-muted sm:px-5">
+				{caption}
+			</figcaption>
+		</figure>
 	)
 }
 
 export function FeaturesSection() {
 	const { features } = useLandingCopy()
 	const reveal = useReveal()
-	const { scoring, keywords, coverLetter, tracking } = features
+	const { scoring, keywords, jobBoardTailor, tracking } = features
 
 	return (
 		<section
@@ -182,9 +198,51 @@ export function FeaturesSection() {
 					description={features.description}
 				/>
 
+				<motion.article
+					{...reveal}
+					className={cn(
+						BLOCK_FRAME,
+						"mt-16 grid items-center gap-8 p-6 sm:p-8 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] md:gap-10",
+					)}
+				>
+					<div>
+						<p className={EYEBROW_CLASS}>{jobBoardTailor.eyebrow}</p>
+						<h3 className="mt-3 font-display text-xl font-medium tracking-tight text-ink sm:text-2xl">
+							{jobBoardTailor.title}
+						</h3>
+						<p className="mt-2 max-w-md leading-relaxed text-ink-muted">
+							{jobBoardTailor.body}
+						</p>
+					</div>
+					<JobBoardTailorVisual
+						buttonLabel={jobBoardTailor.buttonLabel}
+						jobTitle={jobBoardTailor.jobTitle}
+						company={jobBoardTailor.company}
+					/>
+				</motion.article>
+
+				<motion.div {...reveal} className="mt-16 sm:mt-20">
+					<div className="mx-auto max-w-2xl text-center">
+						<p className={EYEBROW_CLASS}>{tracking.eyebrow}</p>
+						<h3 className="mt-3 font-display text-2xl font-medium tracking-tight text-ink sm:text-[1.75rem]">
+							{tracking.title}
+						</h3>
+						<p className="mt-3 leading-relaxed text-ink-muted">
+							{tracking.body}
+						</p>
+					</div>
+					<div className="mt-8 sm:mt-10">
+						<KanbanBoardScreenshot
+							src={tracking.imageSrc}
+							alt={tracking.imageAlt}
+							caption={tracking.dragHint}
+						/>
+					</div>
+				</motion.div>
+
 				<motion.div
 					{...reveal}
-					className="mt-16 grid items-center gap-10 md:grid-cols-[1fr_1.05fr] md:gap-16"
+					className="mt-20 grid items-center gap-10 md:grid-cols-[1fr_1.05fr] md:gap-16"
 				>
 					<div>
 						<p className={EYEBROW_CLASS}>{scoring.eyebrow}</p>
@@ -196,7 +254,10 @@ export function FeaturesSection() {
 						</p>
 						<ul className="mt-6 space-y-2.5">
 							{scoring.points.map((point) => (
-								<li key={point} className="flex items-center gap-2.5 text-sm text-ink">
+								<li
+									key={point}
+									className="flex items-center gap-2.5 text-sm text-ink"
+								>
 									<Check className="size-4 text-emerald-600" aria-hidden />
 									{point}
 								</li>
@@ -226,29 +287,6 @@ export function FeaturesSection() {
 						/>
 					</div>
 				</motion.div>
-
-				<div className="mt-20 grid gap-5 sm:mt-28 md:grid-cols-2">
-					<motion.article {...reveal} className={cn(BLOCK_FRAME, "flex flex-col p-6 sm:p-8")}>
-						<p className={EYEBROW_CLASS}>{coverLetter.eyebrow}</p>
-						<h3 className="mt-3 font-display text-xl font-medium tracking-tight text-ink sm:text-2xl">
-							{coverLetter.title}
-						</h3>
-						<p className="mt-2 leading-relaxed text-ink-muted">{coverLetter.body}</p>
-						<div className="mt-6 flex-1">
-							<CoverLetterVisual />
-						</div>
-					</motion.article>
-					<motion.article {...reveal} className={cn(BLOCK_FRAME, "flex flex-col p-6 sm:p-8")}>
-						<p className={EYEBROW_CLASS}>{tracking.eyebrow}</p>
-						<h3 className="mt-3 font-display text-xl font-medium tracking-tight text-ink sm:text-2xl">
-							{tracking.title}
-						</h3>
-						<p className="mt-2 leading-relaxed text-ink-muted">{tracking.body}</p>
-						<div className="mt-6 flex-1">
-							<TrackingBoardVisual />
-						</div>
-					</motion.article>
-				</div>
 			</div>
 		</section>
 	)

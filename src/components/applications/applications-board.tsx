@@ -57,11 +57,18 @@ export function ApplicationsBoard({
 	}
 
 	return (
-		<div>
-			<p className="mb-3 hidden text-xs text-ink-subtle md:block">
+		<div className="flex h-full min-h-0 flex-1 flex-col">
+			<p className="mb-3 hidden shrink-0 text-xs text-ink-subtle lg:block">
 				{APPLICATIONS_COPY.boardDragHint}
 			</p>
-			<div className="-mx-4 grid snap-x snap-mandatory auto-cols-[minmax(15.5rem,1fr)] grid-flow-col gap-3 overflow-x-auto px-4 pb-3 thin-scrollbar sm:mx-0 sm:px-0">
+			<div
+				className={cn(
+					"-mx-4 flex min-h-[22rem] gap-3 overflow-x-auto px-4 pb-3 thin-scrollbar",
+					"snap-x snap-mandatory",
+					"lg:mx-0 lg:h-full lg:min-h-0 lg:flex-1 lg:snap-none",
+					"lg:grid lg:grid-cols-5 lg:overflow-x-visible lg:overflow-hidden lg:px-0 lg:pb-0",
+				)}
+			>
 				{columns.map((column) => {
 					const meta = APPLICATION_STATUS_META[column.status]
 					const isOver = overStatus === column.status && draggingId !== null
@@ -82,11 +89,13 @@ export function ApplicationsBoard({
 							}}
 							onDrop={(event) => handleDrop(event, column.status)}
 							className={cn(
-								"flex min-h-[18rem] snap-start flex-col rounded-xl bg-surface-sunken/70 p-2 transition-colors",
+								"flex w-[min(18rem,78vw)] shrink-0 snap-start flex-col",
+								"min-h-[22rem] rounded-xl bg-surface-sunken/70 p-2 transition-colors",
+								"lg:h-full lg:min-h-0 lg:w-auto lg:shrink",
 								isOver && "bg-brand-soft ring-2 ring-brand/30",
 							)}
 						>
-							<header className="flex items-center justify-between px-2 pt-1 pb-2.5">
+							<header className="flex shrink-0 items-center justify-between px-2 pt-1 pb-2.5">
 								<h3 className="flex items-center gap-2 text-sm font-semibold text-ink">
 									<span className={cn("size-2 rounded-full", meta.dotClass)} aria-hidden />
 									{meta.label}
@@ -96,7 +105,7 @@ export function ApplicationsBoard({
 								</span>
 							</header>
 
-							<ul className="flex flex-1 flex-col gap-2">
+							<ul className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain thin-scrollbar">
 								{column.items.map((app) => {
 									const jobTitle = app.job_title?.trim() || APPLICATIONS_COPY.untitledRole
 									const companyName = app.company_name?.trim() || APPLICATIONS_COPY.unknownCompany
@@ -108,7 +117,7 @@ export function ApplicationsBoard({
 											onDragStart={(event) => handleDragStart(event, app.id)}
 											onDragEnd={handleDragEnd}
 											className={cn(
-												"group relative cursor-grab rounded-lg border border-hairline bg-surface p-3 shadow-card transition-[border-color,opacity,box-shadow]",
+												"group relative shrink-0 cursor-grab rounded-lg border border-hairline bg-surface p-3 shadow-card transition-[border-color,opacity,box-shadow]",
 												"hover:border-hairline-strong active:cursor-grabbing",
 												draggingId === app.id && "opacity-50",
 											)}
@@ -143,7 +152,7 @@ export function ApplicationsBoard({
 								})}
 								{column.items.length === 0 ? (
 									<li
-										className="flex flex-1 items-center justify-center rounded-lg border border-dashed border-hairline-strong p-4 text-xs text-ink-subtle"
+										className="flex min-h-[8rem] flex-1 items-center justify-center rounded-lg border border-dashed border-hairline-strong p-4 text-xs text-ink-subtle lg:min-h-0"
 										aria-hidden
 									>
 										{APPLICATIONS_COPY.boardEmptyColumn}

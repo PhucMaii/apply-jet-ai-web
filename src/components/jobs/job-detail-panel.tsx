@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react"
+import { Link } from "react-router-dom"
 import {
 	ArrowLeft,
+	ArrowRight,
 	ArrowUpRight,
 	Clock3,
 	Loader2,
@@ -13,8 +15,9 @@ import { JobsSignupModal } from "@/components/jobs/jobs-signup-modal"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/context/auth-context"
+import { useApplicationForJob } from "@/hooks/use-application-for-job"
 import { useCreateTailoredApplication } from "@/hooks/use-create-tailored-application"
-import { ROUTES } from "@/lib/constants"
+import { applicationDetailPath, ROUTES } from "@/lib/constants"
 import {
 	formatJobClicksLabel,
 	hasTrackedJobApplyClick,
@@ -57,6 +60,10 @@ export function JobDetailPanel({
 
 	const { createTailoredApplication, isCreating } =
 		useCreateTailoredApplication(job)
+	const {
+		data: linkedApplicationId = null,
+		isLoading: isLoadingLinkedApplication,
+	} = useApplicationForJob(user ? job?.id : null)
 	const [isSubmitting, setIsSubmitting] = useState(false)
 	const [isSignupOpen, setIsSignupOpen] = useState(false)
 	const [clicks, setClicks] = useState(job?.clicks ?? 0)
@@ -94,18 +101,34 @@ export function JobDetailPanel({
 		setIsSubmitting(true)
 		try {
 			const result = await createTailoredApplication()
-			if (result.success) {
-				toast.success(result.msg)
-			} else {
+			if (!result.success) {
 				toast.error(result.msg)
+				return
 			}
+			if (
+				result.msg === JOBS_COPY.tailorPartial ||
+				result.msg === JOBS_COPY.tailorCreatedOnly ||
+				result.msg === JOBS_COPY.tailorInProgress
+			) {
+				toast(result.msg)
+				return
+			}
+			toast.success(result.msg)
 		} finally {
 			setIsSubmitting(false)
 		}
 	}
 
 	const isBusy = isCreating || isSubmitting
-	const canTailor = Boolean(job) && hasDescription && !isBusy
+	const isCheckingLinked =
+		Boolean(user) && Boolean(job) && isLoadingLinkedApplication
+	const hasLinkedApplication = Boolean(linkedApplicationId)
+	const canTailor =
+		Boolean(job) &&
+		hasDescription &&
+		!isBusy &&
+		!isCheckingLinked &&
+		!hasLinkedApplication
 
 	if (!job) {
 		return (
@@ -118,23 +141,46 @@ export function JobDetailPanel({
 	const applyLabel = `${JOBS_COPY.apply}: ${job.title} at ${companyName}`
 	const clicksLabel = formatJobClicksLabel(clicks)
 
+	const renderPrimaryAction = () => {
+		if (linkedApplicationId) {
+			return (
+				<Button asChild>
+					<Link to={applicationDetailPath(linkedApplicationId)}>
+						{JOBS_COPY.openApplication}
+						<ArrowRight aria-hidden />
+					</Link>
+				</Button>
+			)
+		}
+
+		return (
+			<Button
+				type="button"
+				onClick={handleTailorWithAi}
+				disabled={!canTailor}
+				aria-busy={isBusy || isCheckingLinked}
+				title={
+					!hasDescription ? JOBS_COPY.tailorNeedsDescription : undefined
+				}
+			>
+				{isBusy || isCheckingLinked ? (
+					<Loader2 className="animate-spin" aria-hidden />
+				) : (
+					<Sparkles aria-hidden />
+				)}
+				{isBusy
+					? JOBS_COPY.tailoring
+					: isCheckingLinked
+						? JOBS_COPY.checkingApplication
+						: JOBS_COPY.tailorWithAi}
+			</Button>
+		)
+	}
+
 	const renderActions = () => (
 		<div className="space-y-2">
 			<div className="flex flex-wrap gap-2">
-				<Button
-					type="button"
-					onClick={handleTailorWithAi}
-					disabled={!canTailor}
-					aria-busy={isBusy}
-					title={!hasDescription ? JOBS_COPY.tailorNeedsDescription : undefined}
-				>
-					{isBusy ? (
-						<Loader2 className="animate-spin" aria-hidden />
-					) : (
-						<Sparkles aria-hidden />
-					)}
-					{isBusy ? JOBS_COPY.tailoring : JOBS_COPY.tailorWithAi}
-				</Button>
+				{renderPrimaryAction()}
 				<Button variant="outline" asChild>
 					<a
 						href={job.apply_url}

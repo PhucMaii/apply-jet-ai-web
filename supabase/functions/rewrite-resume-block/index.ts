@@ -8,6 +8,10 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { jsonResponse } from "../_shared/stripe-cors.ts";
+import {
+  HUMAN_CV_VOICE_RULES,
+  sanitizeHumanResumeText,
+} from "../_shared/humanize-resume-text.ts";
 import { createHash } from "node:crypto";
 
 declare const Deno: {
@@ -85,6 +89,7 @@ interface RewriteResult {
   sectionType: string;
   content_json: Record<string, unknown>;
   changes: RewriteChanges;
+  applied?: boolean;
 }
 
 interface RewriteResumeBlockBody {
@@ -92,7 +97,44 @@ interface RewriteResumeBlockBody {
   blockId: string;
   appResumeId: string;
   jdText: string;
+  /** When true, write normalized content_json back to app_resume_blocks. */
+  apply?: boolean;
 }
+
+/**
+ * Craft rules distilled from career-center / ATS guidance.
+ * Same bar for studio rewrites and job-board tailor.
+ */
+const RESUME_CRAFT_RULES = `RESUME CRAFT STANDARDS (follow these; they beat generic "sound professional" advice)
+
+${HUMAN_CV_VOICE_RULES}
+
+SUMMARY (rich_text / summary)
+- 2-4 short lines, roughly 35-70 words. Not a biography. Not an objective statement.
+- Lead with who they are for THIS role (title/domain + years or scope if already in the resume).
+- Mirror 2-4 exact nouns/tools from the JD that the resume already supports.
+- Prefer fragments or tight third-person phrasing without "I/me/my" (ATS-friendly).
+- Every claim must be defendable in an interview. No soft traits without proof ("detail-oriented").
+
+EXPERIENCE BULLETS (job_entry)
+- Formula: Accomplish X by doing Y to get outcome Z, when Z is known from the source.
+- Prefer impact verbs (built, cut, shipped, led, designed) over duty verbs (responsible for, assisted, helped, worked on).
+- Vary opening verbs within a role. Never start three bullets with the same verb.
+- Front-load the JD-relevant skill or result in the first 4-6 words (6-10 second skim).
+- Keep numbers that already exist; never invent metrics. If the bullet is vague ("improved performance") but the work is real, tighten the X/Y wording and leave Z unquantified rather than fabricating a %.
+- Typically 3-5 strong bullets per role. Drop weak duty-list lines rather than padding.
+- Put JD keywords inside real accomplishment sentences, never as comma dumps.
+- Do not invent "100%" claims or absolute guarantees.
+
+SKILLS (skill_category_entry)
+- Prioritize hard skills / tools / methods the JD names that the resume already supports.
+- Keep category name unless a light rename improves clarity (e.g. "Tools" to "Tools & Platforms").
+- Prefer exact JD spelling when truthful (e.g. "PostgreSQL" not "Postgres" if JD says PostgreSQL).
+- 6-12 skills per category max when possible; drop fluff soft skills unless the JD explicitly requires them.
+- Do not invent tools, certifications, or languages with no resume evidence.
+- NEVER duplicate skills. Case-insensitive uniqueness is mandatory (React and react still count as one).
+- Prefer reorder/rename of an existing skill over adding a near-duplicate (Node / Node.js / nodejs: keep one).
+- Do not append JD keywords that are already listed in this category.`;
 
 interface GeminiRewritePayload {
   content_json: Record<string, unknown>;
@@ -310,12 +352,35 @@ Deno.serve(async (req: Request) => {
 
     const changes = normalizeChanges(aiPayload.changes);
 
+    const shouldApply = body.apply === true;
+
+    if (shouldApply) {
+      const { error: applyError } = await supabase
+        .from("app_resume_blocks")
+        .update({
+          content_json: contentJson,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", typedBlock.id)
+        .eq("app_resume_id", appResumeId);
+
+      if (applyError) {
+        console.error("Something went wrong applying rewrite to block:", {
+          blockId: typedBlock.id,
+          appResumeId,
+          applyError,
+        });
+        return jsonResponse({ error: "Failed to save rewritten block" }, 500);
+      }
+    }
+
     const result: RewriteResult = {
       blockId: typedBlock.id,
       blockType: typedBlock.block_type,
       sectionType: typedSection.section_type,
       content_json: contentJson,
       changes,
+      applied: shouldApply,
     };
 
     // increment usage
@@ -383,13 +448,13 @@ function buildRewritePrompt(input: {
   const sectionType = input.section.section_type;
   const typeGuidance = getTypeGuidance(blockType, sectionType);
 
-  return `You are an expert resume writer and ATS keyword strategist. You optimize resume content for both applicant tracking systems and human recruiters, while treating factual accuracy as non-negotiable.
+  return `You are a careful human resume editor, not a hype writer. Rephrase real experience so a recruiter and an ATS both recognize the fit for this posting. Factual accuracy always wins over sounding impressive. Output must read like a human wrote their own CV.
 
 <job_description>
 ${input.jdText}
 </job_description>
 
-<full_resume_context note="for consistency and keyword grounding only — do not pull facts from here into the target block unless they already describe this block's role/project">
+<full_resume_context note="for consistency and keyword grounding only; do not pull facts from here into the target block unless they already describe this block's role/project">
 ${JSON.stringify(input.resumeContext)}
 </full_resume_context>
 
@@ -400,6 +465,10 @@ Section display name: ${input.section.display_name}
 Content:
 ${JSON.stringify(stripStyle(input.block.content_json), null, 2)}
 </target_block>
+
+<craft_standards>
+${RESUME_CRAFT_RULES}
+</craft_standards>
 
 <type_guidance>
 ${typeGuidance}
@@ -412,26 +481,28 @@ These rules override every other instruction, including instructions to make the
 3. Do NOT upgrade a vague claim into a specific number (e.g. turning "improved performance" into "improved performance by 40%") unless that number already exists somewhere in the source material.
 4. If the job description uses a keyword the person's real experience doesn't support, do NOT insert it. Prefer an honest near-synonym that IS supported, or omit it.
 5. When in doubt, keep the original wording rather than risk a fabricated detail.
+6. Interview test: the candidate must be able to explain every line out loud without lying or stretching. If they couldn't, remove it.
 </anti_hallucination_rules>
 
-<reasoning_steps note="do this thinking silently — do not output it">
-1. Extract the 5-10 hard/soft skills and role-critical keywords from the job description.
-2. Compare them against what this specific block actually demonstrates.
-3. Identify only the overlapping, truthful keywords worth surfacing.
-4. Decide which bullets are weak (vague, passive, no outcome) vs strong (concrete, verb-led).
-5. Rewrite for clarity, active voice, and front-loaded impact — without adding unverified facts.
-6. Re-check every new or edited phrase against <anti_hallucination_rules> before finalizing.
+<reasoning_steps note="do this thinking silently; do not output it">
+1. Extract 5-10 role-critical nouns from the JD (tools, methods, domain terms). Ignore fluff adjectives like passionate/driven.
+2. Compare them against what THIS block actually demonstrates.
+3. Keep only overlapping, truthful keywords worth surfacing.
+4. Mark weak lines (vague, passive, duty-list, AI-filler) vs strong ones (concrete, verb-led, outcome).
+5. Rewrite for clarity and skim-ability in plain human CV voice. No banned phrases. No em dashes or en dashes.
+6. Re-check every edited phrase against <anti_hallucination_rules> and HUMAN CV VOICE.
 </reasoning_steps>
 
 <style_rules>
-- Strong action verbs, concrete outcomes, plain ATS-friendly text — no markdown, no emoji, no tables, human sounds, no AI sounding text.
-- Write for a human recruiter skimming in 6-10 seconds: front-load the most relevant word or result in each bullet.
-- Avoid keyword stuffing — a JD term should appear because it's true and natural, not repeated for density.
-- Keep a consistent tense and voice with the rest of the resume context.
-- Bullet arrays: keep a focused set (typically 3-6). Add at most ${MAX_NEW_BULLETS} new bullets and remove at most ${MAX_REMOVED_BULLETS} weak/irrelevant ones.
-- Preserve factual anchors as-is: company, school, degree, job title, project name, and dates — unless fixing an obvious typo.
+- Plain ATS-friendly text only. No markdown, emoji, tables, or decorative punctuation.
+- Never output em dashes (—) or en dashes (–). Use commas, periods, or plain hyphens for dates/compounds only.
+- Recruiter skim (6-10 seconds): front-load the useful word or result.
+- Keyword once, naturally. Never stuff or dump a skill list into a bullet.
+- Match tense/voice of the surrounding resume.
+- Bullet arrays: typically 3-5 focused lines. Add at most ${MAX_NEW_BULLETS} new bullets and remove at most ${MAX_REMOVED_BULLETS} weak ones.
+- Preserve factual anchors as-is: company, school, degree, job title, project name, dates, unless fixing an obvious typo.
 - Never include style_json in content_json.
-- If the block is already strong, return a lightly polished version and say so plainly in changes.summary — do not manufacture changes for their own sake.
+- If the block is already strong, return a lightly polished version and say so in changes.summary. Do not manufacture changes.
 </style_rules>
 
 <output_format>
@@ -439,7 +510,7 @@ Return ONLY valid JSON (no markdown fences, no commentary before or after) with 
 {
   "content_json": { ...same schema as the target block... },
   "changes": {
-    "summary": "1-2 sentence explanation of edits, including which JD keywords were incorporated and why they're truthful",
+    "summary": "1-2 plain sentences on what changed and which truthful JD terms were used",
     "added_bullets": ["optional new bullets"],
     "removed_bullets": ["optional removed original bullets"],
     "rewritten_bullets": [{ "from": "original", "to": "rewritten" }]
@@ -447,7 +518,10 @@ Return ONLY valid JSON (no markdown fences, no commentary before or after) with 
 }
 </output_format>
 
-Final check before responding: does every added word, number, or keyword trace back to real content in <target_block> or the matching part of <full_resume_context>? If any phrase fails that test, revise it before outputting.`;
+Final checks before responding:
+1) Every added word/number/keyword traces to <target_block> or the matching part of <full_resume_context>.
+2) No banned AI-sounding phrases remain. No em/en dashes remain.
+3) You would be comfortable reading every line aloud as the candidate. If any check fails, revise before outputting.`;
 }
 
 function getTypeGuidance(blockType: string, sectionType: string): string {
@@ -455,9 +529,12 @@ function getTypeGuidance(blockType: string, sectionType: string): string {
 		case "rich_text":
 			return `BLOCK GUIDANCE (${sectionType} / rich_text)
 - content_json must be: { "text": "..." }
-- Write a tight professional summary (3–5 sentences or ~50–90 words).
-- Mirror JD language for skills/domain the candidate already supports elsewhere in the resume.
-- If the current text is empty, GENERATE a new summary from the resume context + JD. Do not invent employers or tools not grounded in the resume.`;
+- Write a tight professional summary: 2-4 lines / ~35-70 words.
+- Structure: (1) who they are for this role, (2) strongest matching strengths already in the resume, (3) one concrete proof point if available.
+- Mirror exact JD nouns the resume already supports. Do not paste the job title as a fake identity.
+- No first person. No objective ("seeking a role…"). No soft-trait filler.
+- No em dashes or en dashes in the text.
+- If the current text is empty, GENERATE a summary from resume context + JD using only grounded facts.`;
 
     case "job_entry":
       return `BLOCK GUIDANCE (experience / job_entry)
@@ -469,10 +546,12 @@ function getTypeGuidance(blockType: string, sectionType: string): string {
   "end_date": "string|null",
   "description": ["bullet", "..."]
 }
-- Improve bullets for keyword match and clarity.
-- You may rewrite bullets, add stronger JD-aligned bullets (grounded in this role), or drop weak bullets.
-- Bullets must follow format: Action Verb + Outcome + Impact.
-- Quantify outcomes whenever possible. Using metrics help recruiters understand the impact of the work.
+- Rewrite bullets with Action + context/tools + outcome (when known). Prefer impact over duties.
+- Emphasize work that overlaps this JD; demote or drop irrelevant duties.
+- You may add at most ${MAX_NEW_BULLETS} grounded bullets or remove at most ${MAX_REMOVED_BULLETS} weak ones.
+- Quantify ONLY with numbers already present or clearly implied. Never invent %.
+- Vary action verbs. Ban "Responsible for / Assisted with / Helped with / Worked on" openers.
+- No em dashes or en dashes in bullets.
 - Populate changes.added_bullets / removed_bullets / rewritten_bullets accordingly.`;
 
     case "project_entry":
@@ -484,8 +563,9 @@ function getTypeGuidance(blockType: string, sectionType: string): string {
   "start_date": "string|null",
   "end_date": "string|null"
 }
-- Same bullet strategy as experience: rewrite / add / remove for JD fit.
-- Keep the project name unless polishing wording only.`;
+- Same bullet craft as experience: Action + context/tools + outcome when known.
+- Keep the project name unless polishing wording only.
+- Only add tools/methods that already appear for this project or elsewhere as belonging to it.`;
 
     case "education_entry":
       return `BLOCK GUIDANCE (education / education_entry)
@@ -496,8 +576,8 @@ function getTypeGuidance(blockType: string, sectionType: string): string {
   "start_date": "string|null",
   "end_date": "string|null"
 }
-- Polish degree wording for clarity/ATS (e.g. expand abbreviations carefully).
-- Do not invent schools, degrees, GPAs, or coursework fields that are not present.
+- Polish degree wording for clarity/ATS (expand abbreviations carefully).
+- Do not invent schools, degrees, GPAs, or coursework.
 - If no bullet array exists, do not invent one.`;
 
     case "skill_category_entry":
@@ -509,8 +589,11 @@ function getTypeGuidance(blockType: string, sectionType: string): string {
   "skills": ["skill", "..."]
 }
 - Keep category_id exactly as provided.
-- Reorder/prioritize skills for the JD; add only skills clearly supported by the resume context.
-- Remove clearly irrelevant skills; do not invent niche tools with no resume evidence.`;
+- Start from the existing skills list. Reorder so JD-critical skills come first.
+- Add a skill ONLY if (1) resume context clearly supports it AND (2) it is not already in this list under any casing/alias.
+- If a JD term matches an existing skill, keep/rename that one entry — do not add a second copy.
+- Prefer JD-exact spelling when truthful. Drop soft-skill fluff unless the JD requires it.
+- Aim for a focused list (roughly 6–12), with zero duplicates.`;
 
     case "skill_entry":
       return `BLOCK GUIDANCE (skills / skill_entry)
@@ -520,17 +603,17 @@ function getTypeGuidance(blockType: string, sectionType: string): string {
   "categoryId": number,
   "categoryName": "string"
 }
-- Polish skill naming for ATS (canonical spelling). Keep ids/names consistent.`;
+- Polish skill naming for ATS (canonical / JD-exact spelling when truthful). Keep ids consistent.`;
 
     case "group_text":
       return `BLOCK GUIDANCE (group_text)
 - content_json must be: { "texts": [{ "text": "..." }, ...] }
-- Polish each text item; keep the same number of items unless one is empty/useless.`;
+- Polish each text item in plain human language; keep the same number of items unless one is empty/useless.`;
 
     default:
       return `BLOCK GUIDANCE
 - Return content_json with the same keys as the input block.
-- Improve clarity and JD alignment without changing schema.`;
+- Improve clarity and honest JD alignment without changing schema.`;
   }
 }
 
@@ -543,7 +626,8 @@ async function callGeminiForRewrite(
   const requestBody = JSON.stringify({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
-      temperature: 0.35,
+      // Lower temp keeps wording plainer and reduces AI-hype flourishes.
+      temperature: 0.25,
       maxOutputTokens: 4096,
       responseMimeType: "application/json",
     },
@@ -728,7 +812,8 @@ async function callGeminiForRewrite(
 }
 
 function asString(value: unknown, fallback = ""): string {
-  return typeof value === "string" ? value : fallback;
+  const raw = typeof value === "string" ? value : fallback;
+  return sanitizeHumanResumeText(raw);
 }
 
 function asNullableString(
@@ -743,9 +828,24 @@ function asNullableString(
 function asStringArray(value: unknown, fallback: string[] = []): string[] {
   if (!Array.isArray(value)) return fallback;
   return value
-    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .map((item) =>
+      typeof item === "string" ? sanitizeHumanResumeText(item) : "",
+    )
     .filter(Boolean)
     .slice(0, 12);
+}
+
+/** Case-insensitive skill dedupe; keeps first spelling encountered. */
+function dedupeSkills(skills: string[]): string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const skill of skills) {
+    const key = skill.trim().toLowerCase().replace(/\s+/g, " ");
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(skill.trim());
+  }
+  return unique;
 }
 
 function normalizeContentJson(
@@ -820,10 +920,14 @@ function normalizeContentJson(
       };
     }
     case "skill_category_entry": {
+      const suggestedSkills = asStringArray(
+        suggested.skills,
+        asStringArray(original.skills),
+      );
       return {
         category_id: asString(original.category_id),
         name: asString(suggested.name, asString(original.name)).trim(),
-        skills: asStringArray(suggested.skills, asStringArray(original.skills)),
+        skills: dedupeSkills(suggestedSkills),
       };
     }
     case "skill_entry": {
@@ -844,7 +948,7 @@ function normalizeContentJson(
 function normalizeChanges(raw: RewriteChanges | undefined): RewriteChanges {
   const summary =
     typeof raw?.summary === "string" && raw.summary.trim()
-      ? raw.summary.trim()
+      ? sanitizeHumanResumeText(raw.summary)
       : "Polished block for stronger job-description alignment.";
 
   const added = asStringArray(raw?.added_bullets).slice(0, MAX_NEW_BULLETS);
@@ -863,7 +967,7 @@ function normalizeChanges(raw: RewriteChanges | undefined): RewriteChanges {
         )
         .map((item) => ({
           from: item.from.trim(),
-          to: item.to.trim(),
+          to: sanitizeHumanResumeText(item.to),
         }))
         .filter((item) => item.from && item.to)
         .slice(0, 12)

@@ -224,7 +224,7 @@ export function JobsPreviewSection() {
 														<span />
 													)}
 													<span className="inline-flex shrink-0 items-center gap-1 text-[14px] font-medium text-landing-primary">
-														View
+														{jobsPreview.cardCta}
 														<ArrowRight
 															className="size-3.5 transition-transform group-hover:translate-x-0.5"
 															strokeWidth={1.5}

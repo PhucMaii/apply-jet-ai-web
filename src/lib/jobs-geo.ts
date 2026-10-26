@@ -179,6 +179,80 @@ function normalizeKey(value: string): string {
 	return value.trim().toLowerCase().replace(/\s+/g, " ")
 }
 
+/** Known metro / CSA labels → core city for job filters. */
+const METRO_TO_CITY: Record<string, string> = {
+	"metro vancouver": "Vancouver",
+	"greater vancouver": "Vancouver",
+	"greater vancouver area": "Vancouver",
+	"vancouver metro": "Vancouver",
+	"vancouver metropolitan area": "Vancouver",
+	"greater toronto": "Toronto",
+	"greater toronto area": "Toronto",
+	gta: "Toronto",
+	"toronto metro": "Toronto",
+	"greater montreal": "Montreal",
+	"montreal metropolitan": "Montreal",
+	"greater calgary": "Calgary",
+	"calgary metro": "Calgary",
+	"greater ottawa": "Ottawa",
+	"national capital region": "Ottawa",
+	"los angeles metropolitan area": "Los Angeles",
+	"la metro": "Los Angeles",
+	"greater los angeles": "Los Angeles",
+	"las vegas valley": "Las Vegas",
+	"las vegas metro": "Las Vegas",
+	"san francisco bay area": "San Francisco",
+	"bay area": "San Francisco",
+	"seattle metro": "Seattle",
+	"seattle metropolitan area": "Seattle",
+	"new york metro": "New York",
+	"new york metropolitan area": "New York",
+	"nyc metro": "New York",
+}
+
+function looksLikeMetroOrRegionLabel(value: string): boolean {
+	const key = normalizeKey(value)
+	if (!key) return false
+	if (METRO_TO_CITY[key]) return true
+	return (
+		/^(greater|metro|metropolitan)\b/.test(key) ||
+		/\b(metro|metropolitan|area|region|regional district|csa|msa)\b/.test(
+			key,
+		)
+	)
+}
+
+/**
+ * Keep a single city name for filters (Vancouver, Toronto, Los Angeles).
+ * Strips metro / “greater area” wording from reverse-geocode and free text.
+ */
+export function toCityOnlyName(
+	raw: string | null | undefined,
+): string | null {
+	if (!raw) return null
+	let name = raw.trim().replace(/\s+/g, " ")
+	if (!name) return null
+
+	const aliased = METRO_TO_CITY[normalizeKey(name)]
+	if (aliased) return aliased
+
+	name = name
+		.replace(/^regional\s+district\s+of\s+/i, "")
+		.replace(/^(greater|metro|metropolitan)\s+/i, "")
+		.replace(
+			/\s+(metro(politan)?(\s+area)?|area|region|regional\s+district|csa|msa)$/i,
+			"",
+		)
+		.replace(/^(city|town|municipality)\s+of\s+/i, "")
+		.trim()
+
+	if (!name) return null
+	const aliasedAfterStrip = METRO_TO_CITY[normalizeKey(name)]
+	if (aliasedAfterStrip) return aliasedAfterStrip
+	if (looksLikeMetroOrRegionLabel(name)) return null
+	return name
+}
+
 function continentForCountry(country: string | null | undefined): ContinentName | null {
 	if (!country) return null
 	return COUNTRY_TO_CONTINENT[normalizeKey(country)] ?? null
@@ -225,19 +299,19 @@ export function resolveLocationContext(
 
 	if (secondaryKey && COUNTRY_TO_CONTINENT[secondaryKey]) {
 		country = secondary
-		city = primary
+		city = toCityOnlyName(primary)
 	} else if (COUNTRY_TO_CONTINENT[primaryKey]) {
 		country = primary
 	} else if (COUNTRY_CODE_TO_COUNTRY[primaryKey]) {
 		country = COUNTRY_CODE_TO_COUNTRY[primaryKey]
 	} else if (CITY_TO_COUNTRY[primaryKey]) {
-		city = primary
+		city = toCityOnlyName(primary)
 		country = CITY_TO_COUNTRY[primaryKey]
 	} else if (secondaryKey && CITY_TO_COUNTRY[secondaryKey]) {
-		city = secondary
+		city = toCityOnlyName(secondary)
 		country = CITY_TO_COUNTRY[secondaryKey]
 	} else {
-		city = primary
+		city = toCityOnlyName(primary)
 	}
 
 	const continent = continentForCountry(country)
@@ -274,7 +348,7 @@ export function buildLocationSearchContext(
 			}
 		: resolveLocationContext(query)
 
-	const city = context?.city?.trim() || null
+	const city = toCityOnlyName(context?.city) || context?.city?.trim() || null
 	const region = context?.region?.trim() || null
 	const country = context?.country?.trim() || null
 	const continent = (context?.continent ??
@@ -291,7 +365,12 @@ export function buildLocationSearchContext(
 
 /** Value shown/seeded in the location filter — prefer city for job matching. */
 export function geoLocationFilterValue(location: JobGeoLocation): string {
-	return location.city?.trim() || location.displayName
+	return (
+		toCityOnlyName(location.city) ||
+		toCityOnlyName(location.displayName) ||
+		location.city?.trim() ||
+		location.displayName
+	)
 }
 
 export function isGeoSeededLocationQuery(
@@ -310,7 +389,7 @@ export function formatGeoDisplayName(location: {
 	region: string | null
 	country: string | null
 }): string {
-	const city = location.city?.trim()
+	const city = toCityOnlyName(location.city)
 	const country = location.country?.trim()
 	if (city && country) return `${city}, ${country}`
 	if (city) return city
@@ -322,7 +401,11 @@ type BigDataCloudResponse = {
 	city?: string
 	locality?: string
 	localityInfo?: {
-		administrative?: Array<{ name?: string; order?: number }>
+		administrative?: Array<{
+			name?: string
+			order?: number
+			description?: string
+		}>
 	}
 	principalSubdivision?: string
 	countryName?: string
@@ -330,17 +413,37 @@ type BigDataCloudResponse = {
 	continent?: string
 }
 
-function parseBigDataCloudLocation(
-	data: BigDataCloudResponse,
-): JobGeoLocation | null {
-	const city =
-		data.city?.trim() ||
-		data.locality?.trim() ||
+function pickRawCityCandidate(data: BigDataCloudResponse): string | null {
+	const city = data.city?.trim() || null
+	const locality = data.locality?.trim() || null
+	const adminNames =
 		data.localityInfo?.administrative
 			?.slice()
 			.sort((a, b) => (a.order ?? 99) - (b.order ?? 99))
-			.find((entry) => entry.name?.trim())?.name?.trim() ||
-		null
+			.map((entry) => entry.name?.trim())
+			.filter((name): name is string => Boolean(name)) ?? []
+
+	const candidates = [city, locality, ...adminNames].filter(
+		(name): name is string => Boolean(name),
+	)
+
+	const cityOnly = candidates
+		.map((name) => toCityOnlyName(name))
+		.find((name): name is string => Boolean(name))
+
+	if (cityOnly) return cityOnly
+
+	for (const candidate of candidates) {
+		if (!looksLikeMetroOrRegionLabel(candidate)) return candidate
+	}
+
+	return null
+}
+
+function parseBigDataCloudLocation(
+	data: BigDataCloudResponse,
+): JobGeoLocation | null {
+	const city = pickRawCityCandidate(data)
 	const region = data.principalSubdivision?.trim() || null
 	const country = data.countryName?.trim() || null
 	const countryCode = data.countryCode?.trim()?.toUpperCase() || null

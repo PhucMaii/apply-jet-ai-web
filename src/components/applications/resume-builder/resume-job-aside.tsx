@@ -9,6 +9,7 @@ import { ApplicationsStatusBadge } from "@/components/applications/applications-
 import { DeleteApplicationControl } from "@/components/applications/delete-application-control"
 import { AccordionPanel } from "@/components/applications/resume-builder/accordion-panel"
 import { KeywordsMatchPanel } from "@/components/applications/resume-builder/keywords-match-panel"
+import { TailorFeedbackPanel } from "@/components/applications/resume-builder/tailor-feedback-panel"
 import { ScoreGauge } from "@/components/applications/resume-builder/score-gauge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,8 +30,11 @@ import {
 import { DASHBOARD_THEME } from "@/lib/dashboard-theme"
 import { PROFILE_SURFACE } from "@/lib/profile-surface"
 import type { ApplicationDetailForm } from "@/types/application-detail"
+import type { AppResumeBlock } from "@/types/app-resume"
+import type { TailorFeedbackPayload } from "@/types/tailor-feedback"
 import { cn } from "@/lib/utils"
 import { hasCompleteJobDetails } from "@/components/applications/resume-builder/app-resume-utils"
+import { JOBS_COPY } from "@/lib/jobs-copy"
 
 interface ResumeJobAsideProps {
 	form: ApplicationDetailForm
@@ -47,6 +51,14 @@ interface ResumeJobAsideProps {
 	isScoringAts: boolean
 	addedKeywordTerms: Set<string>
 	pendingKeywordTerm: string | null
+	applicationId: string
+	userId: string | null
+	tailorFeedback: TailorFeedbackPayload | null
+	feedbackOpen: boolean
+	onToggleFeedback: () => void
+	onTailorFeedbackChange: (feedback: TailorFeedbackPayload) => void
+	onFocusFeedbackBlock: (blockId: string) => void
+	onFeedbackBlockUpdated: (block: AppResumeBlock) => void
 	onToggleKeywords: () => void
 	onToggleContent: () => void
 	onAddKeyword: (keyword: ExtractedKeyword) => void
@@ -76,6 +88,14 @@ export function ResumeJobAside({
 	isScoringAts,
 	addedKeywordTerms,
 	pendingKeywordTerm,
+	applicationId,
+	userId,
+	tailorFeedback,
+	feedbackOpen,
+	onToggleFeedback,
+	onTailorFeedbackChange,
+	onFocusFeedbackBlock,
+	onFeedbackBlockUpdated,
 	onToggleKeywords,
 	onToggleContent,
 	onAddKeyword,
@@ -98,6 +118,9 @@ export function ResumeJobAside({
 				ADDABLE_KEYWORD_CATEGORIES.has(keyword.category) &&
 				!addedKeywordTerms.has(normalizeSkillName(keyword.term)),
 		).length ?? 0
+	const openFeedbackCount =
+		tailorFeedback?.items.filter((item) => item.status === "open").length ??
+		0
 
 	return (
 		<aside className="flex h-full max-h-72 min-h-0 w-full shrink-0 flex-col overflow-hidden border-t border-neutral-200 bg-white xl:max-h-none xl:border-t-0">
@@ -387,6 +410,23 @@ export function ResumeJobAside({
 								Here are some suggestions for your resume based on the job description.
 							</p>
 						</div>
+						{tailorFeedback && userId ? (
+							<AccordionPanel
+								title={JOBS_COPY.tailorFeedbackTitle}
+								count={openFeedbackCount}
+								open={feedbackOpen}
+								onToggle={onToggleFeedback}
+							>
+								<TailorFeedbackPanel
+									applicationId={applicationId}
+									userId={userId}
+									feedback={tailorFeedback}
+									onFeedbackChange={onTailorFeedbackChange}
+									onFocusBlock={onFocusFeedbackBlock}
+									onBlockUpdated={onFeedbackBlockUpdated}
+								/>
+							</AccordionPanel>
+						) : null}
 						<AccordionPanel
 							title="Keywords Match"
 							count={missingKeywordCount}

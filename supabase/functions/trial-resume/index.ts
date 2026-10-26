@@ -5,6 +5,10 @@
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { jsonResponse, STRIPE_FUNCTION_CORS } from "../_shared/stripe-cors.ts";
+import {
+  HUMAN_CV_VOICE_RULES,
+  sanitizeHumanResumeStrings,
+} from "../_shared/humanize-resume-text.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 declare const Deno: {
@@ -89,8 +93,11 @@ function buildResumePromptForTrial({
 You are an elite ATS optimization engine, senior recruiter, and hiring manager combined.
  
 Your job is NOT to rewrite the resume.
-Your job is to MAXIMIZE the candidate's probability of getting an interview for THIS specific role
-— while ensuring the final resume fills a COMPLETE, DENSE, PROFESSIONAL single page.
+Your job is to MAXIMIZE the candidate's probability of getting an interview for THIS specific role,
+while ensuring the final resume fills a COMPLETE, DENSE, PROFESSIONAL single page.
+Every line must read like a human wrote their own CV: plain, specific, professional.
+
+${HUMAN_CV_VOICE_RULES}
  
 ========================
 INPUT CONTEXT
@@ -98,13 +105,14 @@ INPUT CONTEXT
 JOB DESCRIPTION:
 ${jdText}
  
-CANDIDATE RESUME (RAW TEXT — this is the ONLY source of truth about the candidate):
+CANDIDATE RESUME (RAW TEXT; this is the ONLY source of truth about the candidate):
 """
 ${resumeText}
 """
  
 CONSTRAINTS (STRICT):
  "Do not invent companies, roles, degrees, dates, or fake metrics. You may improve wording, structure, and clarity. You may infer skills logically from demonstrated experience."
+ "Never use em dashes or en dashes in resume text. Never use AI buzzwords from HUMAN CV VOICE."
  
 ========================
 STEP 0 — EXTRACT STRUCTURED DATA FROM RAW RESUME TEXT (DO THIS FIRST, SILENTLY)
@@ -831,12 +839,14 @@ Deno.serve(async (req) => {
     );
   }
 
+  const humanResume = sanitizeHumanResumeStrings(resume);
+
   const { error: renderResumePdfError } = await supabase.functions.invoke(
     "render-resume-pdf",
     {
       headers: { "X-Secret-Key": secret },
       body: {
-        resume: resume,
+        resume: humanResume,
         visitorId: visitor.id,
         keywords: obj.keywords as {
           hardSkills: string[];
@@ -856,7 +866,7 @@ Deno.serve(async (req) => {
 
   return jsonResponse(
     {
-      resume: resume,
+      resume: humanResume,
       recommendations: recommendations,
       applicationInfo: applicationInfo,
     },

@@ -4,9 +4,12 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import "jsr:@supabase/functions-js/edge-runtime.d.ts"
+import { HUMAN_CV_VOICE_RULES } from "../_shared/humanize-resume-text.ts"
 
 function buildCoverLetterPromptForTrial({resumeText, jdText, companyName, roleTitle, hiringManager}): string {
-  return`You are an expert cover letter writer who specializes in ATS-optimized letters that also feel genuinely human and compelling. Your goal is to write a letter that passes ATS screening AND moves a hiring manager — not just a keyword-stuffed document.
+  return`You are an expert cover letter writer who specializes in ATS-optimized letters that also feel genuinely human and compelling. Your goal is to write a letter that passes ATS screening AND moves a hiring manager, not a keyword-stuffed document.
+
+${HUMAN_CV_VOICE_RULES}
 
 ## Candidate's resume (ONLY source of facts — do not fabricate or embellish anything not stated or clearly implied)
 """
@@ -30,12 +33,13 @@ ${roleTitle ? `## Role / job title\n${roleTitle}\n` : ""}
 ${hiringManager ? `## Hiring manager\n${hiringManager}\n` : ""}
 
 ## Voice & tone guidelines
-- Tone: ${tone}. Confident but not arrogant. Warm but not sycophantic. Direct but not robotic.
-- Sound like a real person who genuinely wants this specific job — not a template that could apply to any role.
-- Every letter must authentically express: (1) genuine enthusiasm to join THIS company and team, (2) a clear desire to prove themselves and make an impact, and (3) a concrete sense of how they want to contribute — not generic "I'm a hard worker" filler.
-- Avoid hollow openers like "I am writing to express my interest in..." — instead, open with something specific and energetic that hooks the reader.
+- Tone: confident but not arrogant. Warm but not sycophantic. Direct but not robotic.
+- Sound like a real person who genuinely wants this specific job, not a template that could apply to any role.
+- Every letter must authentically express: (1) genuine enthusiasm to join THIS company and team, (2) a clear desire to prove themselves and make an impact, and (3) a concrete sense of how they want to contribute. Avoid generic "I'm a hard worker" filler.
+- Avoid hollow openers like "I am writing to express my interest in...". Open with something specific and energetic that hooks the reader.
 - Use first-person naturally. Vary sentence length. Let personality show within professionalism.
-- Avoid all clichés: "team player", "fast learner", "passionate", "results-driven", "detail-oriented" — show these traits through specific examples instead.
+- Never use em dashes or en dashes. Use commas or periods instead.
+- Avoid all clichés: "team player", "fast learner", "passionate", "results-driven", "detail-oriented". Show these traits through specific examples instead.
 
 ## ATS & content requirements
 - Length: approximately ${wordCount} words (250–400 range). 3–5 body paragraphs.

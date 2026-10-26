@@ -10,6 +10,7 @@ import { exportResumePreviewAsPdf } from "@/lib/resume-export"
 import { cn } from "@/lib/utils"
 import type { ApplicationDetailForm } from "@/types/application-detail"
 import type { AppResume, AppResumeBlock, AppResumeSection, CustomSectionBlockType } from "@/types/app-resume"
+import type { TailorFeedbackPayload } from "@/types/tailor-feedback"
 import { ResumeTab } from "./resume-tab"
 import toast from "react-hot-toast"
 import useUserUsage from "@/hooks/use-user-usage"
@@ -26,6 +27,7 @@ interface ResumeStudioProps {
 	savingDetails: boolean
 	updatingStatus: boolean
 	isDeleting: boolean
+	resumeSyncKey?: number
 	onPatchForm: (patch: Partial<ApplicationDetailForm>) => void
 	onSaveApplication: () => void
 	onStatusChange: (status: ApplicationStatus) => void
@@ -74,6 +76,8 @@ interface ResumeStudioProps {
 	onDeleteAppResumeBlock: (blockId: string) => Promise<void>
 	onDeleteAppResumeSection: (sectionId: string) => Promise<void>
 	refetchApplication: () => void
+	tailorFeedback?: unknown
+	onTailorFeedbackChange?: (feedback: TailorFeedbackPayload) => void
 }
 
 export function ResumeStudio({
@@ -84,6 +88,7 @@ export function ResumeStudio({
 	savingDetails,
 	updatingStatus,
 	isDeleting,
+	resumeSyncKey = 0,
 	onPatchForm,
 	onSaveApplication,
 	onStatusChange,
@@ -100,6 +105,8 @@ export function ResumeStudio({
 	onDeleteAppResumeBlock,
 	onDeleteAppResumeSection,
 	refetchApplication,
+	tailorFeedback,
+	onTailorFeedbackChange,
 }: ResumeStudioProps) {
 	const { usage, refetch: refetchUsage } = useUserUsage()
 
@@ -230,7 +237,7 @@ export function ResumeStudio({
 
 			{!isGenerating && view === "editor" ? (
 				<ResumeTab
-					key={appResume?.id ?? "empty-resume"}
+					key={`${appResume?.id ?? "empty-resume"}-${resumeSyncKey}`}
 					form={form}
 					status={status}
 					createdAt={createdAt}
@@ -257,6 +264,8 @@ export function ResumeStudio({
 					onDeleteAppResumeBlock={onDeleteAppResumeBlock}
 					onDeleteAppResumeSection={onDeleteAppResumeSection}
 					refetchApplication={refetchApplication}
+					tailorFeedback={tailorFeedback}
+					onTailorFeedbackChange={onTailorFeedbackChange}
 				/>
 			) : null}
 			{!isGenerating && view === "tailored" && hasGenerated ? (

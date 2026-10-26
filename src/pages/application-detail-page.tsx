@@ -1,11 +1,17 @@
+import { useEffect, useState } from "react"
 import { Link, useParams } from "react-router-dom"
 import { ArrowLeft } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ApplicationDetailDocuments } from "@/components/applications/application-detail-documents"
+import { ApplicationTailorBanner } from "@/components/applications/application-tailor-banner"
 import { APPLICATIONS_THEME } from "@/lib/applications-theme"
 import { ROUTES } from "@/lib/constants"
 import { useApplicationDetail } from "@/hooks/use-application-detail"
 import { useApplications } from "@/hooks/use-applications"
+import {
+	isTailorFeedbackPayload,
+	type TailorFeedbackPayload,
+} from "@/types/tailor-feedback"
 import { cn } from "@/lib/utils"
 
 export function ApplicationDetailPage() {
@@ -40,6 +46,30 @@ export function ApplicationDetailPage() {
 	} = useApplicationDetail(applicationId)
 
 	const { deleteApplication, deletingId } = useApplications()
+	const [tailorFeedback, setTailorFeedback] =
+		useState<TailorFeedbackPayload | null>(null)
+	/** Bumps after AI tailor finishes so ResumeTab remounts with fresh blocks. */
+	const [resumeSyncKey, setResumeSyncKey] = useState(0)
+
+	useEffect(() => {
+		setTailorFeedback(
+			isTailorFeedbackPayload(record?.tailor_feedback)
+				? record.tailor_feedback
+				: null,
+		)
+	}, [record?.id, record?.tailor_feedback])
+
+	async function handleTailorReady() {
+		try {
+			await refetchApplication()
+		} catch (error) {
+			console.error(
+				"Something went wrong refetching after tailor:",
+				error,
+			)
+		}
+		setResumeSyncKey((prev) => prev + 1)
+	}
 
 	if (isLoadingApplication) {
 		return (
@@ -112,6 +142,13 @@ export function ApplicationDetailPage() {
 					</p>
 				</div>
 			) : null}
+			<ApplicationTailorBanner
+				applicationId={record.id}
+				initialStatus={record.tailor_status}
+				onReady={() => {
+					void handleTailorReady()
+				}}
+			/>
 
 			<main className="flex min-h-0 flex-1 flex-col">
 				<ApplicationDetailDocuments
@@ -131,6 +168,7 @@ export function ApplicationDetailPage() {
 					onDelete={deleteApplication}
 					refetchApplication={() => void refetchApplication()}
 					appResume={appResume}
+					resumeSyncKey={resumeSyncKey}
 					onSaveAppResumeBlock={saveAppResumeBlock}
 					onSaveAppResumeSectionDisplayName={
 						saveAppResumeSectionDisplayName
@@ -144,6 +182,8 @@ export function ApplicationDetailPage() {
 					onCreateCustomBlock={createAppResumeCustomBlock}
 					onDeleteAppResumeBlock={deleteAppResumeBlock}
 					onDeleteAppResumeSection={deleteAppResumeSection}
+					tailorFeedback={tailorFeedback}
+					onTailorFeedbackChange={setTailorFeedback}
 				/>
 			</main>
 		</div>

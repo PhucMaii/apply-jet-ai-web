@@ -20,6 +20,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state"
 import { useApplications } from "@/hooks/use-applications"
 import { APP_PAGE_CONTAINER } from "@/lib/app-nav"
+import { cn } from "@/lib/utils"
 import {
 	APPLICATION_SORT,
 	countApplicationsByStatus,
@@ -110,16 +111,25 @@ export function ApplicationsPage() {
 
 	const openQuickAdd = () => setIsQuickAddOpen(true)
 	const hasRows = rows.length > 0
+	const isFullBoard =
+		isBoard && hasRows && !loading && visibleRows.length > 0
 
 	return (
-		<div className={APP_PAGE_CONTAINER}>
-			{FEATURES.pgwp ? (
-				<div className="mb-8">
+		<div
+			className={cn(
+				APP_PAGE_CONTAINER,
+				isFullBoard &&
+					"flex max-w-[100rem] flex-col lg:h-dvh lg:max-h-dvh lg:overflow-hidden lg:py-5",
+			)}
+		>
+			{FEATURES.pgwp && !isFullBoard ? (
+				<div className="mb-8 shrink-0">
 					<PgwpTrackerHero />
 				</div>
 			) : null}
 
 			<AppPageHeader
+				className="shrink-0"
 				title={APPLICATIONS_COPY.title}
 				description={
 					hasRows
@@ -157,29 +167,41 @@ export function ApplicationsPage() {
 			/>
 
 			{loadError ? (
-				<p className="mt-6 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
+				<p className="mt-6 shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700" role="alert">
 					{loadError}
 				</p>
 			) : null}
 
-			<div className="mt-8">
+			<div
+				className={cn(
+					"mt-6 sm:mt-8",
+					isFullBoard && "flex min-h-0 flex-1 flex-col lg:mt-5",
+				)}
+			>
 				{loading ? (
 					<ApplicationsSkeleton />
 				) : !hasRows ? (
 					<ApplicationsEmptyState onQuickAdd={openQuickAdd} />
 				) : (
-					<div className="space-y-4">
-						<ApplicationsToolbar
-							search={search}
-							onSearchChange={setSearch}
-							status={statusFilter}
-							onStatusChange={setStatusFilter}
-							statusCounts={statusCounts}
-							sort={sort}
-							onSortChange={setSort}
-							view={view}
-							onViewChange={handleViewChange}
-						/>
+					<div
+						className={cn(
+							"space-y-4",
+							isFullBoard && "flex min-h-0 flex-1 flex-col space-y-3 lg:space-y-3",
+						)}
+					>
+						<div className="shrink-0">
+							<ApplicationsToolbar
+								search={search}
+								onSearchChange={setSearch}
+								status={statusFilter}
+								onStatusChange={setStatusFilter}
+								statusCounts={statusCounts}
+								sort={sort}
+								onSortChange={setSort}
+								view={view}
+								onViewChange={handleViewChange}
+							/>
+						</div>
 
 						{visibleRows.length === 0 ? (
 							<EmptyState
@@ -193,12 +215,20 @@ export function ApplicationsPage() {
 								}
 							/>
 						) : isBoard ? (
-							<ApplicationsBoard
-								rows={visibleRows}
-								updatingId={updatingId}
-								resolveStatus={resolveStatus}
-								onStatusChange={(id, next) => void handleStatusChange(id, next)}
-							/>
+							<div
+								className={cn(
+									"flex min-h-[24rem] flex-col",
+									isFullBoard &&
+										"min-h-0 flex-1 lg:min-h-0",
+								)}
+							>
+								<ApplicationsBoard
+									rows={visibleRows}
+									updatingId={updatingId}
+									resolveStatus={resolveStatus}
+									onStatusChange={(id, next) => void handleStatusChange(id, next)}
+								/>
+							</div>
 						) : (
 							<ApplicationsTable
 								rows={visibleRows}
